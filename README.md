@@ -99,7 +99,8 @@ separation and contrast in both themes. Every chart has a table view.
 
 Exercise photos come from the [public domain Free Exercise DB](https://github.com/yuhonas/free-exercise-db/blob/a859101d633a01c4a1a920d6a8ce41dabba0705f/LICENSE.md) at a pinned revision and load while online.
 Bodypart illustrations are bundled with the app and remain available offline.
-Exercise demos use YouTube embeds only after the user taps Watch demo.
+YouTube exercise demos load only after the user taps Watch demo.
+The Barbell Curl demo opens its original Vimeo page; the video is not copied into FitTune.
 
 ## Deployment
 

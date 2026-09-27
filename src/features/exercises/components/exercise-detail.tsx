@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ExerciseForm } from "./exercise-form";
-import { ExercisePhoto, ExerciseVideo, exerciseVideoId, hasExercisePhotos } from "./exercise-media";
+import { ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos } from "./exercise-media";
 import { archiveExercise, exerciseHistoryQuery } from "@/api/exercises";
 import { queryKeys } from "@/api/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
@@ -46,7 +46,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const { weightUnit, distanceUnit } = preferences;
   const [editing, setEditing] = useState(false);
   const trend = trendSeries(history, preferences);
-  const videoId = exerciseVideoId(exercise.name, exercise.video_id, exercise.is_custom);
+  const videoSource = exerciseVideoSource(exercise.name, exercise.video_id, exercise.is_custom);
   const hasPhotos = hasExercisePhotos(exercise.name, exercise.is_custom);
 
   return (
@@ -169,7 +169,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
                 />
               ) : null}
             </div>
-            {videoId ? <div className="mt-3"><ExerciseVideo videoId={videoId} name={exercise.name} /></div> : null}
+            {videoSource ? <div className="mt-3"><ExerciseVideo source={videoSource} name={exercise.name} /></div> : null}
             {hasPhotos ? (
               <a
                 href="https://github.com/yuhonas/free-exercise-db"

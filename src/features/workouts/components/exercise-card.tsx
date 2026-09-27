@@ -17,7 +17,7 @@ import { useWorkoutStore } from "../store";
 import { SET_GRID, SetRow } from "./set-row";
 import { exerciseHistoryQuery } from "@/api/exercises";
 import { Button } from "@/components/ui/button";
-import { ExercisePhoto, ExerciseVideo, exerciseVideoId } from "@/features/exercises/components/exercise-media";
+import { ExercisePhoto, ExerciseVideo, exerciseVideoSource } from "@/features/exercises/components/exercise-media";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +51,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
   const previous = useMemo(() => previousSets(history, workoutId), [history, workoutId]);
   const labels = useMemo(() => setLabels(exercise.sets.map((set) => set.kind)), [exercise.sets]);
   const exerciseId = exercise.id;
-  const videoId = history ? exerciseVideoId(history.exercise.name, history.exercise.video_id, history.exercise.is_custom) : null;
+  const videoSource = history ? exerciseVideoSource(history.exercise.name, history.exercise.video_id, history.exercise.is_custom) : null;
 
   const onChange = useCallback(
     (setId: string, patch: Partial<Omit<DraftSet, "id">>) => edit(edits.updateSet(exerciseId, setId, patch)),
@@ -172,9 +172,9 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
         </DropdownMenu>
       </header>
 
-      {videoId ? (
+      {videoSource ? (
         <div className="mb-3 px-1">
-          <ExerciseVideo videoId={videoId} name={exercise.exercise_name} />
+          <ExerciseVideo source={videoSource} name={exercise.exercise_name} />
         </div>
       ) : null}
 

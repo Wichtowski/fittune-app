@@ -53,15 +53,18 @@ const catalogPhotos: Record<string, string> = {
   "Jump Rope": "Rope_Jumping",
 };
 
-const catalogVideos: Record<string, string> = {
-  "Barbell Bench Press": "hWbUlkb5Ms4",
-  "Barbell Back Squat": "8060FZiT5TA",
-  "Conventional Deadlift": "ZaTM37cfiDs",
-  "Pull-Up": "aNUSgyWRJYA",
+type ExerciseVideoSource = { provider: "youtube" | "vimeo"; id: string };
+
+const catalogVideos: Record<string, ExerciseVideoSource> = {
+  "Barbell Bench Press": { provider: "youtube", id: "hWbUlkb5Ms4" },
+  "Barbell Back Squat": { provider: "youtube", id: "8060FZiT5TA" },
+  "Conventional Deadlift": { provider: "youtube", id: "ZaTM37cfiDs" },
+  "Pull-Up": { provider: "youtube", id: "aNUSgyWRJYA" },
+  "Barbell Curl": { provider: "vimeo", id: "278191577" },
 };
 
-export function exerciseVideoId(name: string, videoId: string | null, isCustom: boolean): string | null {
-  return videoId || (isCustom ? null : catalogVideos[name] ?? null);
+export function exerciseVideoSource(name: string, videoId: string | null, isCustom: boolean): ExerciseVideoSource | null {
+  return videoId ? { provider: "youtube", id: videoId } : isCustom ? null : catalogVideos[name] ?? null;
 }
 
 export function hasExercisePhotos(name: string, isCustom: boolean): boolean {
@@ -103,19 +106,29 @@ export function ExercisePhoto({
   );
 }
 
-export function ExerciseVideo({ videoId, name }: { videoId: string; name: string }) {
+export function ExerciseVideo({ source, name }: { source: ExerciseVideoSource; name: string }) {
   const [playing, setPlaying] = useState(false);
+  if (source.provider === "vimeo") {
+    return (
+      <Button variant="secondary" asChild>
+        <a href={`https://vimeo.com/${source.id}`} target="_blank" rel="noopener noreferrer">
+          <PlayIcon aria-hidden /> Watch demo on Vimeo
+        </a>
+      </Button>
+    );
+  }
+
   return playing ? (
     <div>
       <iframe
         className="aspect-video w-full rounded-xl"
-        src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`}
+        src={`https://www.youtube-nocookie.com/embed/${source.id}?autoplay=1`}
         title={`${name} exercise demo`}
         loading="lazy"
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
       />
-      <a href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-muted-foreground hover:underline">Open on YouTube</a>
+      <a href={`https://www.youtube.com/watch?v=${source.id}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-muted-foreground hover:underline">Open on YouTube</a>
     </div>
   ) : (
     <Button variant="secondary" onClick={() => setPlaying(true)}>
