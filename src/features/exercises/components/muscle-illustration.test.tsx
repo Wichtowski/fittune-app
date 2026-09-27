@@ -33,6 +33,15 @@ describe("muscle map", () => {
     for (const region of container.querySelectorAll('[data-muscle="glutes"], [data-muscle="hamstrings"]')) expect(region).toHaveAttribute("data-engagement", "secondary");
   });
 
+  it("colours muscles on a heat scale where the hardest working muscle is red and helpers are green", () => {
+    const { container } = render(<MuscleMap muscle="chest" secondaryMuscles={["triceps"]} />);
+    const fill = (engagement: string) => container.querySelector(`[data-engagement="${engagement}"] path`)?.getAttribute("class");
+    expect(fill("primary")).toContain("fill-muscle-load-high");
+    expect(fill("secondary")).toContain("fill-muscle-load-low");
+    expect(screen.getByText("Primary").querySelector("span")).toHaveClass("bg-muscle-load-high");
+    expect(screen.getByText("Secondary").querySelector("span")).toHaveClass("bg-muscle-load-low");
+  });
+
   it("handles full-body and cardio without inventing specific cardio targets", () => {
     const { container, rerender } = render(<MuscleMap muscle="full_body" secondaryMuscles={["abs"]} />);
     expect(container.querySelector('[data-engagement="inactive"], [data-engagement="secondary"]')).toBeNull();

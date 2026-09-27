@@ -15,8 +15,8 @@ function engagement(region: MuscleRegion, muscle: Muscle, secondaryMuscles: read
 }
 
 const regionColors = {
-  primary: "fill-primary stroke-background",
-  secondary: "fill-endurance stroke-background",
+  primary: "fill-muscle-load-high stroke-background",
+  secondary: "fill-muscle-load-low stroke-background",
   inactive: "fill-slate-400/35 stroke-background dark:fill-slate-500/40",
 };
 
@@ -27,7 +27,7 @@ export function MuscleIllustration({ muscle, secondaryMuscles = [], className = 
   return (
     <svg viewBox="0 0 340 410" role="img" aria-label={label} className={className}>
       <title>Muscle map: front and back</title>
-      <desc>Primary muscles are lime. Secondary muscles are orange. Other muscles are grey.</desc>
+      <desc>Primary muscles are red. Secondary muscles are green. Other muscles are grey.</desc>
       {(["front", "back"] as const).map((view, index) => (
         <g key={view} transform={`translate(${index * 180} 0)`} strokeWidth="0.85" strokeLinejoin="round">
           <path
@@ -77,12 +77,12 @@ export function MuscleMap({ muscle, secondaryMuscles = [] }: Omit<MuscleIllustra
       <MuscleIllustration muscle={muscle} secondaryMuscles={secondary} className="mx-auto w-full max-w-72" />
       <dl className="mt-4 grid gap-2 border-t pt-3 text-xs">
         <div className="flex gap-2">
-          <dt className="flex shrink-0 items-start gap-2 text-muted-foreground"><span aria-hidden className="mt-0.5 size-2.5 rounded-full bg-primary" />Primary</dt>
+          <dt className="flex shrink-0 items-start gap-2 text-muted-foreground"><span aria-hidden className="mt-0.5 size-2.5 rounded-full bg-muscle-load-high" />Primary</dt>
           <dd className="font-medium">{muscleLabels[muscle]}</dd>
         </div>
         {secondary.length ? (
           <div className="flex gap-2">
-            <dt className="flex shrink-0 items-start gap-2 text-muted-foreground"><span aria-hidden className="mt-0.5 size-2.5 rounded-full bg-endurance" />Secondary</dt>
+            <dt className="flex shrink-0 items-start gap-2 text-muted-foreground"><span aria-hidden className="mt-0.5 size-2.5 rounded-full bg-muscle-load-low" />Secondary</dt>
             <dd className="font-medium">{secondary.map((m) => muscleLabels[m]).join(", ")}</dd>
           </div>
         ) : null}
