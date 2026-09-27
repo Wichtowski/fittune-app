@@ -34,6 +34,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatTile } from "@/features/analytics/components/stat-tile";
 import { MuscleIllustration } from "@/features/exercises/components/muscle-illustration";
+import { equipmentSummary } from "@/features/places/format";
 import { usePreferences } from "@/hooks/use-preferences";
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
@@ -41,7 +42,7 @@ import { formatVolume } from "@/lib/units";
 import type { Page } from "@/schemas/common";
 import type { Workout, WorkoutSummary } from "@/schemas/workout";
 
-type Viewable = Pick<Workout, "id" | "title" | "notes" | "started_at" | "ended_at" | "routine_id" | "exercises">;
+type Viewable = Pick<Workout, "id" | "title" | "notes" | "started_at" | "ended_at" | "routine_id" | "exercises" | "place">;
 
 export function WorkoutDetail({ workoutId, justCompleted = false }: { workoutId: string; justCompleted?: boolean }) {
   // A workout finished offline is shown from the device until the server has it.
@@ -80,6 +81,12 @@ function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; loc
         title={workout.title}
         actions={<WorkoutActions workout={workout} canEdit={!local} />}
       />
+      {workout.place ? (
+        <div className="mb-4 rounded-xl border bg-muted/50 p-4">
+          <p className="font-medium">{workout.place.name}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{equipmentSummary(workout.place)}</p>
+        </div>
+      ) : null}
       {local ? <SyncIndicator className="mb-4" /> : null}
 
       {justCompleted ? (

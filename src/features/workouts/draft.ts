@@ -5,6 +5,7 @@
  */
 import { newId } from "@/lib/id";
 import type { Muscle, SetKind, Tracking } from "@/schemas/common";
+import type { Place } from "@/schemas/place";
 import type { Routine } from "@/schemas/routine";
 import type { Workout, WorkoutInput, WorkoutSet } from "@/schemas/workout";
 
@@ -26,6 +27,7 @@ export type DraftWorkout = {
   title: string;
   notes: string | null;
   routine_id: string | null;
+  place?: Place | null;
   started_at: string;
   ended_at: string | null;
   revision: number;
@@ -61,12 +63,13 @@ export function emptySet(): DraftSet {
   };
 }
 
-export function createWorkout(init: { title?: string; routine_id?: string | null; exercises?: DraftExercise[] } = {}): DraftWorkout {
+export function createWorkout(init: { title?: string; routine_id?: string | null; exercises?: DraftExercise[]; place?: Place | null } = {}): DraftWorkout {
   return {
     id: newId(),
     title: init.title?.trim() || defaultTitle(),
     notes: null,
     routine_id: init.routine_id ?? null,
+    place: init.place ? { ...init.place, equipment: [...init.place.equipment] } : null,
     started_at: new Date().toISOString(),
     ended_at: null,
     revision: 1,
@@ -145,6 +148,8 @@ function mapExercise(exerciseId: string, fn: (exercise: DraftExercise) => DraftE
 
 export const edits = {
   rename: (title: string): Edit => (w) => ({ ...w, title }),
+
+  setPlace: (place: Place | null): Edit => (w) => ({ ...w, place: place ? { ...place, equipment: [...place.equipment] } : null }),
 
   setNotes: (notes: string): Edit => (w) => ({ ...w, notes: notes.trim() ? notes : null }),
 
@@ -248,6 +253,7 @@ export function toWorkoutInput(workout: DraftWorkout): WorkoutInput {
     title: workout.title.trim() || defaultTitle(new Date(workout.started_at)),
     notes: workout.notes?.trim() || null,
     routine_id: workout.routine_id,
+    place_version_id: workout.place === undefined ? undefined : workout.place?.version_id ?? null,
     started_at: workout.started_at,
     ended_at: workout.ended_at,
     revision: workout.revision,

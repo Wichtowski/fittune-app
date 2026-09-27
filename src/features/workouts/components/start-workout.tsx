@@ -1,28 +1,36 @@
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ClipboardListIcon, CloudDownloadIcon, PlayIcon, RotateCcwIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { createWorkout, workoutFromPrevious, workoutFromRoutine } from "../draft";
 import { useWorkoutStore } from "../store";
+import { placesQuery } from "@/api/places";
 import { routinesQuery } from "@/api/routines";
 import { workoutQuery, workoutsInfiniteQuery } from "@/api/workouts";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlacePicker } from "@/features/places/components/place-picker";
+import { startingPlace } from "@/features/places/select";
 import { formatDay } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
 import type { Routine } from "@/schemas/routine";
 
 export function StartWorkout() {
+  const [pickedPlaceId, setPickedPlaceId] = useState<string | null>(null);
   const start = useWorkoutStore((state) => state.start);
   const queryClient = useQueryClient();
   const routines = useQuery(routinesQuery());
+  const places = useQuery(placesQuery());
   const recent = useInfiniteQuery(workoutsInfiniteQuery("completed"));
   const remote = useInfiniteQuery(workoutsInfiniteQuery("in_progress"));
   const lastWorkout = recent.data?.pages[0]?.items[0];
   const unfinished = remote.data?.pages[0]?.items[0];
+  // Every new workout needs a place, so the exercise picker can match the equipment there
+  const place = startingPlace(places.data ?? [], pickedPlaceId, lastWorkout?.place?.id);
 
   const load = async (id: string) => {
     try {
@@ -36,7 +44,7 @@ export function StartWorkout() {
   const repeatLast = async () => {
     if (!lastWorkout) return;
     const workout = await load(lastWorkout.id);
-    if (workout) start(workoutFromPrevious(workout));
+    if (workout && place) start({ ...workoutFromPrevious(workout), place });
   };
 
   const continueRemote = async () => {
@@ -49,6 +57,8 @@ export function StartWorkout() {
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader title="Workout" eyebrow="Ready when you are" />
+
+      <PlacePicker value={place} onChange={(picked) => setPickedPlaceId(picked.id)} />
 
       <div className="grid gap-3">
         {unfinished ? (
@@ -67,12 +77,12 @@ export function StartWorkout() {
           </button>
         ) : null}
 
-        <Button size="lg" className="h-16 text-lg" onClick={() => start(createWorkout())}>
+        <Button size="lg" className="h-16 text-lg" disabled={!place} onClick={() => place && start(createWorkout({ place }))}>
           <PlayIcon className="fill-current" aria-hidden /> Start empty workout
         </Button>
 
         {lastWorkout ? (
-          <Button size="lg" variant="secondary" onClick={() => void repeatLast()}>
+          <Button size="lg" variant="secondary" disabled={!place} onClick={() => void repeatLast()}>
             <RotateCcwIcon aria-hidden /> Repeat “{lastWorkout.title}”
           </Button>
         ) : null}
@@ -95,7 +105,7 @@ export function StartWorkout() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {routines.data.map((routine) => (
               <li key={routine.id}>
-                <RoutineStartCard routine={routine} onStart={() => start(workoutFromRoutine(routine))} />
+                <RoutineStartCard routine={routine} disabled={!place} onStart={() => place && start({ ...workoutFromRoutine(routine), place })} />
               </li>
             ))}
           </ul>
@@ -116,7 +126,7 @@ export function StartWorkout() {
   );
 }
 
-function RoutineStartCard({ routine, onStart }: { routine: Routine; onStart: () => void }) {
+function RoutineStartCard({ routine, disabled, onStart }: { routine: Routine; disabled: boolean; onStart: () => void }) {
   const muscles = [...new Set(routine.exercises.map((e) => muscleLabels[e.primary_muscle]))].slice(0, 3);
   return (
     <div className="flex h-full flex-col gap-3 rounded-2xl border bg-card p-4">
@@ -131,7 +141,7 @@ function RoutineStartCard({ routine, onStart }: { routine: Routine; onStart: () 
           {muscles.join(" · ")}
           {routine.last_performed_at ? ` · last ${formatDay(routine.last_performed_at)}` : ""}
         </span>
-        <Button size="sm" onClick={onStart}>
+        <Button size="sm" disabled={disabled} onClick={onStart}>
           <PlayIcon className="size-4 fill-current" aria-hidden /> Start
         </Button>
       </div>

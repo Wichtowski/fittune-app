@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { equipmentSummary } from "@/features/places/format";
 import { equipmentLabels, muscleLabels } from "@/lib/labels";
 import { MUSCLES, type Muscle } from "@/schemas/common";
+import type { Place } from "@/schemas/place";
 import type { Exercise } from "@/schemas/exercise";
 
 type ExercisePickerProps = {
@@ -19,21 +21,24 @@ type ExercisePickerProps = {
   onOpenChange: (open: boolean) => void;
   onPick: (exercises: Exercise[]) => void;
   title?: string;
+  place?: Place | null;
 };
 
 /** Multi-select exercise search; works offline from the cached library. */
-export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exercises" }: ExercisePickerProps) {
+export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exercises", place }: ExercisePickerProps) {
   const { data, error, isPending, refetch } = useQuery(exercisesQuery());
+  const [showAll, setShowAll] = useState(false);
   const [q, setQ] = useState("");
   const [muscle, setMuscle] = useState<Muscle | undefined>();
   const [selected, setSelected] = useState<string[]>([]);
 
-  const results = useMemo(() => filterExercises(data ?? [], { q, muscle }), [data, q, muscle]);
+  const results = useMemo(() => filterExercises(data ?? [], { q, muscle, availableEquipment: place && !showAll ? place.equipment : undefined }), [data, q, muscle, place, showAll]);
 
   const close = (next: boolean) => {
     onOpenChange(next);
     if (!next) {
       setSelected([]);
+      setShowAll(false);
       setQ("");
       setMuscle(undefined);
     }
@@ -48,6 +53,13 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
   return (
     <ResponsiveDialog open={open} onOpenChange={close} title={title} className="md:max-w-2xl">
       <div className="flex min-h-[60dvh] flex-col gap-3 md:min-h-0">
+        {place ? (
+          <div className="rounded-xl border bg-muted/50 p-3 text-sm">
+            <p className="font-medium">Equipment at {place.name}</p>
+            <p className="text-muted-foreground">{equipmentSummary(place)}</p>
+            <label className="mt-2 flex min-h-9 cursor-pointer items-center gap-2"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} className="size-4 accent-primary" />Show all exercises, including other equipment</label>
+          </div>
+        ) : null}
         <div className="relative">
           <SearchIcon className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input

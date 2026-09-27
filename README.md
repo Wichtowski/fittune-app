@@ -40,6 +40,7 @@ src/
 │   ├── workouts/      - local-first workout draft, store, background sync, tracker UI
 │   ├── exercises/     - library, search, custom exercises, per-exercise history
 │   ├── routines/      - planning editor
+│   ├── places/        - saved workout locations and editable equipment presets
 │   ├── activity/      - quick log + optimistic mutations for runs/rides/…
 │   ├── progress/      - range-scoped analytics and personal records
 │   ├── analytics/     - shared chart kit (columns, trend line, bar list, stat tile)
@@ -76,6 +77,14 @@ a pure function in `draft.ts` that updates the UI straight away and bumps a `rev
 **Activities** use client-generated ids plus optimistic mutations. Paused offline writes are
 persisted, then replayed when the app next starts.
 
+**Workout places.** Every new workout starts at a place (Home, Gym or a custom one), so the first workout asks the user to add one.
+The start screen preselects the place of the latest workout, and the place can be changed during a workout.
+Each place has editable equipment suggestions; bodyweight is always available, and the exercise picker can explicitly show all equipment.
+A user can keep up to 10 places, and creating, editing and archiving them requires a connection.
+Cached places can be selected offline, and their immutable setup is saved with the workout draft and synced through the existing outbox.
+Editing or archiving a place preserves past and active workout setups until the user explicitly selects a different version.
+Changing places never removes exercises already in the workout.
+
 **Offline and PWA.** The service worker precaches the app shell. When a new version is ready you
 get an "Update" toast; the app never reloads itself in the middle of a workout. API responses
 are cached per user by TanStack Query, never by the service worker.
@@ -103,6 +112,9 @@ YouTube exercise demos load only after the user taps Watch demo.
 The Barbell Curl demo opens its original Vimeo page; the video is not copied into FitTune.
 
 ## Deployment
+
+Deploy the API's workout places migration and `/api/v1/places` endpoints before this client version.
+Existing workouts and cached drafts without a place remain valid.
 
 The static build is served from the shared VPS by the platform-edge Caddy on
 `fittune.oskarwichtowski.com`, which also sets the security headers and the SPA fallback.

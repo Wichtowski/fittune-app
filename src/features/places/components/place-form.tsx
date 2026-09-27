@@ -1,0 +1,82 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+import { placeKindLabels, placePresets } from "../presets";
+import { savePlace } from "@/api/places";
+import { queryKeys } from "@/api/query-keys";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { applyServerErrors } from "@/lib/form-errors";
+import { equipmentLabels } from "@/lib/labels";
+import { EQUIPMENT } from "@/schemas/common";
+import { PLACE_KINDS, type Place, type PlaceInput, placeInputSchema } from "@/schemas/place";
+
+export function PlaceForm({ id, place, onDone }: { id: string; place?: Place; onDone: () => void }) {
+  const online = useOnlineStatus();
+  const queryClient = useQueryClient();
+  const form = useForm<PlaceInput>({
+    resolver: zodResolver(placeInputSchema),
+    defaultValues: place ? { name: place.name, kind: place.kind, equipment: [...place.equipment] } : placePresets.home,
+  });
+  const mutation = useMutation({
+    mutationFn: (values: PlaceInput) => savePlace(id, values),
+    onSuccess: (saved) => {
+      queryClient.setQueryData<Place[]>(queryKeys.places, (current = []) => [...current.filter((p) => p.id !== saved.id), saved]);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.places });
+      toast.success(place ? "Place updated. Existing workouts keep their setup." : "Place added");
+      onDone();
+    },
+    onError: (error) => applyServerErrors(error, form.setError),
+  });
+
+  return (
+    <Form {...form}>
+      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))} noValidate>
+        {!place ? (
+          <fieldset className="grid gap-2">
+            <legend className="mb-2 text-sm font-medium">Start with a template</legend>
+            <div className="flex gap-2">
+              {PLACE_KINDS.map((kind) => <Button key={kind} type="button" variant="secondary" size="sm" onClick={() => form.reset(placePresets[kind])}>{placeKindLabels[kind]}</Button>)}
+            </div>
+            <p className="text-xs text-muted-foreground">Suggested equipment only. Review the list to match your setup.</p>
+          </fieldset>
+        ) : null}
+        <FormField control={form.control} name="name" render={({ field }) => (
+          <FormItem><FormLabel>Place name</FormLabel><FormControl><Input {...field} placeholder="e.g. Home or Downtown gym" maxLength={80} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="kind" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Place type</FormLabel>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+              <SelectContent>{PLACE_KINDS.map((kind) => <SelectItem key={kind} value={kind}>{placeKindLabels[kind]}</SelectItem>)}</SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="equipment" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Available equipment</FormLabel>
+            <div className="grid grid-cols-2 gap-2">
+              {EQUIPMENT.filter((item) => item !== "none").map((item) => (
+                <label key={item} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm has-checked:border-primary has-checked:bg-primary/10">
+                  <input type="checkbox" checked={field.value.includes(item)} onChange={(event) => field.onChange(event.target.checked ? [...field.value, item] : field.value.filter((value) => value !== item))} className="size-4 accent-primary" />
+                  {equipmentLabels[item]}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Bodyweight exercises are always available. Leave all equipment unchecked for a bodyweight-only place.</p>
+            <FormMessage />
+          </FormItem>
+        )} />
+        {!online ? <p className="text-sm text-muted-foreground">Connect to save changes to places.</p> : null}
+        <Button type="submit" disabled={!online || mutation.isPending}>{mutation.isPending ? "Saving…" : place ? "Save place" : "Add place"}</Button>
+      </form>
+    </Form>
+  );
+}

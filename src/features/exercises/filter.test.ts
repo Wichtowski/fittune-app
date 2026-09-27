@@ -34,6 +34,14 @@ describe("filterExercises", () => {
     expect(filterExercises(library, { q: "  PRESS " })).toHaveLength(2);
   });
 
+  it("uses the selected place equipment while keeping bodyweight available", () => {
+    const exercises = [...library, exercise("Push-Up", { equipment: "none" })];
+    expect(filterExercises(exercises, { availableEquipment: ["dumbbell"] }).map((e) => e.name)).toEqual(["Incline Dumbbell Press", "Push-Up"]);
+    expect(filterExercises(exercises, { availableEquipment: [] }).map((e) => e.name)).toEqual(["Push-Up"]);
+    expect(filterExercises(exercises, { availableEquipment: undefined })).toHaveLength(4);
+    expect(filterExercises(exercises, { availableEquipment: ["dumbbell"], q: "press", muscle: "chest" }).map((e) => e.name)).toEqual(["Incline Dumbbell Press"]);
+  });
+
   it("matches primary or secondary muscle and equipment", () => {
     expect(filterExercises(library, { muscle: "triceps" }).map((e) => e.name)).toEqual([
       "Barbell Bench Press",

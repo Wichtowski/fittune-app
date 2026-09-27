@@ -83,6 +83,22 @@ describe("workout draft", () => {
     expect(needsSync({ ...workout, failedRevision: workout.revision })).toBe(false);
   });
 
+  it("persists the selected setup through offline edits and finishing without changing exercises", () => {
+    const place = { id: "place", version_id: "version-1", name: "Home", kind: "home" as const, equipment: ["band" as const] };
+    const draft = revise(withBench(), edits.setPlace(place));
+    place.name = "Gym";
+    place.equipment.length = 0;
+    const restored = JSON.parse(JSON.stringify(draft)) as typeof draft;
+    expect(restored.place).toMatchObject({ name: "Home", equipment: ["band"] });
+    expect(needsSync(restored)).toBe(true);
+    expect(toWorkoutInput(revise(restored, edits.finish())).place_version_id).toBe("version-1");
+    const cleared = revise(restored, edits.setPlace(null));
+    expect(cleared.exercises).toEqual(restored.exercises);
+    expect(cleared.revision).toBe(restored.revision + 1);
+    expect(toWorkoutInput(cleared).place_version_id).toBeNull();
+    expect(toWorkoutInput({ ...restored, place: undefined }).place_version_id).toBeUndefined();
+  });
+
   it("builds the API body without local-only fields", () => {
     const input = toWorkoutInput(withBench());
     expect(input).not.toHaveProperty("syncedRevision");

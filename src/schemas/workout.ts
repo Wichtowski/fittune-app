@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { LIMITS, muscleSchema, setKindSchema, timestampSchema, trackingSchema } from "./common";
 
+import { placeSchema } from "./place";
+
 const nullableNumber = z.number().nullable();
 
 export const workoutSetSchema = z.object({
@@ -31,6 +33,7 @@ export type WorkoutExercise = z.infer<typeof workoutExerciseSchema>;
 export const workoutSchema = z.object({
   id: z.guid(),
   routine_id: z.guid().nullable(),
+  place: placeSchema.nullish(),
   title: z.string(),
   notes: z.string().nullable(),
   started_at: timestampSchema,
@@ -47,6 +50,7 @@ export type WorkoutInput = {
   title: string;
   notes: string | null;
   routine_id: string | null;
+  place_version_id?: string | null;
   started_at: string;
   ended_at: string | null;
   revision: number;
@@ -62,6 +66,7 @@ export type WorkoutInput = {
 export const workoutSummarySchema = z.object({
   id: z.guid(),
   routine_id: z.guid().nullable(),
+  place: placeSchema.nullish(),
   title: z.string(),
   started_at: timestampSchema,
   ended_at: timestampSchema.nullable(),

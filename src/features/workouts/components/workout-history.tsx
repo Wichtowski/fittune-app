@@ -99,6 +99,7 @@ export function WorkoutHistory() {
                     >
                       {workout.title}
                     </Link>
+                    {workout.place ? <p className="text-xs text-muted-foreground">{workout.place.name}</p> : null}
                     <p className="truncate text-muted-foreground">{workout.exercise_names.join(", ")}</p>
                   </td>
                   <td className="text-right">{formatDuration(workout.duration_seconds)}</td>
