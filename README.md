@@ -17,8 +17,8 @@ Zod · React Hook Form · vite-plugin-pwa (Workbox) · Recharts · Zustand (loca
 
 ```bash
 bun install
-cp .env.example .env.local   # optional; .env.development already points at localhost:8080
-bun run dev                  # http://localhost:5173 (run fittune-api on :8080)
+cp .env.example .env.local   # optional; .env.development already points at localhost:4733
+bun run dev                  # http://localhost:5173 (run fittune-api on :4733)
 ```
 
 | Command | What it does |
@@ -109,6 +109,6 @@ static assets (`wrangler.jsonc`, SPA fallback, security headers in `public/_head
 | `deploy-release.yml` | Run manually on a tag: validates it, then runs `deploy-frontend.yml` |
 | `deploy-frontend.yml` | `bun run build` with `VITE_API_BASE_URL` / `VITE_APP_VERSION`, then `wrangler deploy` |
 
-Secrets: `VITE_API_BASE_URL` (e.g. `https://apifittune.oskarwichtowski.com`),
+Secrets: `VITE_API_BASE_URL` (e.g. `https://api-fittune.oskarwichtowski.com`),
 `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`. Add the app's origin to the API's
 `FITTUNE_CORS_ORIGINS`.
