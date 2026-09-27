@@ -48,6 +48,7 @@ export const registerFormSchema = z
     password: passwordSchema,
     confirm_password: z.string(),
     display_name: z.string().trim().max(64),
+    invite_code: z.string().trim().min(1, "Enter the invite code you were given"),
   })
   .refine((v) => v.password === v.confirm_password, {
     path: ["confirm_password"],
@@ -65,6 +66,7 @@ export type RegisterInput = {
   password: string;
   display_name?: string | null;
   birthday?: string | null;
+  invite_code: string;
 };
 
 export const profileFormSchema = z.object({
