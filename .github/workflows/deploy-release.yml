@@ -35,7 +35,7 @@ jobs:
           fi
 
   deploy_frontend:
-    name: Deploy frontend to Cloudflare Workers
+    name: Deploy frontend to VPS
     needs: validate_ref
     uses: ./.github/workflows/deploy-frontend.yml
     secrets: inherit

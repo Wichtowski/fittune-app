@@ -99,16 +99,17 @@ separation and contrast in both themes. Every chart has a table view.
 
 ## Deployment
 
-The deploy mirrors the EchoTrade frontend setup: a static build served as Cloudflare Workers
-static assets (`wrangler.jsonc`, SPA fallback, security headers in `public/_headers`).
+The static build is served from the shared VPS by the platform-edge Caddy on
+`fittune.oskarwichtowski.com`, which also sets the security headers and the SPA fallback.
+Each release is unpacked into `/srv/fittune/static/releases/<tag>-<sha>` and the `current` symlink
+is switched atomically; the five newest releases are kept for rollback.
 
 | Workflow | What it does |
 |----------|--------------|
 | `ci.yml` | Lint, test, type-check and build on PRs and `main` |
 | `create-release-tag.yml` | Tags every merge to `main` with the next `x.y.z` |
 | `deploy-release.yml` | Run manually on a tag: validates it, then runs `deploy-frontend.yml` |
-| `deploy-frontend.yml` | `bun run build` with `VITE_API_BASE_URL` / `VITE_APP_VERSION`, then `wrangler deploy` |
+| `deploy-frontend.yml` | `bun run build` with `VITE_API_BASE_URL` / `VITE_APP_VERSION`, uploads to the VPS and switches `current` |
 
-Secrets: `VITE_API_BASE_URL` (e.g. `https://api-fittune.oskarwichtowski.com`),
-`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`. Add the app's origin to the API's
-`FITTUNE_CORS_ORIGINS`.
+Secrets: `VITE_API_BASE_URL` (`https://api-fittune.oskarwichtowski.com`), `DEPLOY_HOST`,
+`DEPLOY_USER`, `DEPLOY_SSH_KEY`. Add the app's origin to the API's `FITTUNE_CORS_ORIGINS`.

@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-frontend-${{ github.ref }}
+  group: deploy-frontend
   cancel-in-progress: false
 
 jobs:
@@ -18,12 +18,12 @@ jobs:
     env:
       VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
       VITE_APP_VERSION: ${{ github.ref_name }}
+      RELEASE_ID: ${{ github.ref_name }}-${{ github.sha }}
 
     steps:
       - name: Checkout selected ref
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
           ref: ${{ github.ref }}
 
       - name: Setup Bun
@@ -37,8 +37,53 @@ jobs:
       - name: Build static PWA
         run: bun run build
 
-      - name: Deploy to Cloudflare Workers
-        run: bun x wrangler deploy
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Package build
+        run: tar -czf fittune-web.tar.gz -C dist .
+
+      - name: Copy build to VPS
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: fittune-web.tar.gz
+          target: /tmp
+
+      # Caddy in platform-edge serves /srv/fittune/static/current
+      - name: Activate release on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          envs: RELEASE_ID
+          script: |
+            set -euo pipefail
+
+            if [[ ! "$RELEASE_ID" =~ ^[A-Za-z0-9._-]+$ ]]; then
+              echo "Invalid release id: $RELEASE_ID" >&2
+              exit 1
+            fi
+
+            static_dir=/srv/fittune/static
+            release_dir="${static_dir}/releases/${RELEASE_ID}"
+
+            if [[ ! -d "${static_dir}/releases" ]]; then
+              echo "Missing static release directory: ${static_dir}/releases" >&2
+              exit 1
+            fi
+
+            rm -rf "$release_dir"
+            mkdir "$release_dir"
+            tar -xzf /tmp/fittune-web.tar.gz -C "$release_dir"
+            rm -f /tmp/fittune-web.tar.gz
+
+            ln -sfn "$release_dir" "${static_dir}/current.next"
+            mv -Tf "${static_dir}/current.next" "${static_dir}/current"
+
+            # Keep the five newest releases for quick rollback
+            find "${static_dir}/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+              | sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
+
+            echo "Serving ${release_dir}"
