@@ -100,7 +100,7 @@ export function ExercisePhoto({
           className="absolute inset-0 size-full object-cover"
           onError={() => setFailedSrc(src)}
         />
-      ) : <MuscleIllustration muscle={muscle} className="h-4/5 w-4/5" />}
+      ) : <MuscleIllustration muscle={muscle} compact className="h-4/5 w-4/5" />}
     </span>
   );
 }

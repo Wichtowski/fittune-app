@@ -35,11 +35,28 @@ describe("muscle map", () => {
 
   it("colours muscles on a heat scale where the hardest working muscle is red and helpers are green", () => {
     const { container } = render(<MuscleMap muscle="chest" secondaryMuscles={["triceps"]} />);
-    const fill = (engagement: string) => container.querySelector(`[data-engagement="${engagement}"] path`)?.getAttribute("class");
+    const fill = (engagement: string) => container.querySelector(`[data-engagement="${engagement}"]`)?.getAttribute("class");
     expect(fill("primary")).toContain("fill-muscle-load-high");
     expect(fill("secondary")).toContain("fill-muscle-load-low");
     expect(screen.getByText("Primary").querySelector("span")).toHaveClass("bg-muscle-load-high");
     expect(screen.getByText("Secondary").querySelector("span")).toHaveClass("bg-muscle-load-low");
+  });
+
+  it("draws the skeleton without ever highlighting bones as worked muscles", () => {
+    const { container } = render(<MuscleMap muscle="full_body" />);
+    const bones = container.querySelectorAll('[data-kind="bone"]');
+    expect(bones.length).toBeGreaterThan(0);
+    for (const bone of bones) expect(bone).not.toHaveAttribute("data-engagement");
+    expect(screen.getByRole("link", { name: /BodyParts3D/ })).toHaveAttribute("href", "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/");
+  });
+
+  it("keeps compact thumbnails to the view that shows the worked muscles", () => {
+    const { container, rerender } = render(<MuscleIllustration muscle="lats" secondaryMuscles={["biceps"]} compact />);
+    expect(screen.getByRole("img")).toHaveTextContent("Muscle map: back");
+    expect(container.querySelector('[data-kind="bone"], [data-engagement="inactive"]')).toBeNull();
+    expect(container.querySelector('[data-muscle="lats"]')).toHaveAttribute("data-engagement", "primary");
+    rerender(<MuscleIllustration muscle="chest" compact />);
+    expect(screen.getByRole("img")).toHaveTextContent("Muscle map: front");
   });
 
   it("handles full-body and cardio without inventing specific cardio targets", () => {

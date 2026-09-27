@@ -1,62 +1,86 @@
-import { anatomy, bodyOutline, type MuscleRegion } from "../muscle-anatomy";
+import { anatomyViewBox, anatomyViews, focusView, type AnatomyRegion, type ViewName } from "../anatomy";
 import { muscleLabels } from "@/lib/labels";
 import type { Muscle } from "@/schemas/common";
 
 type MuscleIllustrationProps = {
   muscle: Muscle;
   secondaryMuscles?: readonly Muscle[];
+  // Compact draws only the view that shows the most of the primary muscle, for thumbnails
+  compact?: boolean;
   className?: string;
 };
 
-function engagement(region: MuscleRegion, muscle: Muscle, secondaryMuscles: readonly Muscle[]) {
+type Engagement = "primary" | "secondary" | "inactive";
+
+function engagement(region: AnatomyRegion, muscle: Muscle, secondaryMuscles: readonly Muscle[]): Engagement {
   if (muscle === "full_body" || region.muscle === muscle) return "primary";
   if (secondaryMuscles.includes("full_body") || (region.muscle && secondaryMuscles.includes(region.muscle))) return "secondary";
   return "inactive";
 }
 
-const regionColors = {
-  primary: "fill-muscle-load-high stroke-background",
-  secondary: "fill-muscle-load-low stroke-background",
-  inactive: "fill-slate-400/35 stroke-background dark:fill-slate-500/40",
+const regionColors: Record<Engagement | "bone", string> = {
+  primary: "fill-muscle-load-high",
+  secondary: "fill-muscle-load-low",
+  inactive: "fill-anatomy-muscle",
+  // Bones share the untrained muscle colour so only worked muscles stand out
+  bone: "fill-anatomy-muscle",
 };
 
-export function MuscleIllustration({ muscle, secondaryMuscles = [], className = "" }: MuscleIllustrationProps) {
+const VIEW_GAP = 24;
+const LABEL_SPACE = 14;
+
+function BodyView({ view, muscle, secondary, compact }: { view: ViewName; muscle: Muscle; secondary: readonly Muscle[]; compact: boolean }) {
+  const { silhouette, regions } = anatomyViews[view];
+  return (
+    <>
+      <path d={silhouette} className="fill-anatomy-muscle" />
+      {regions.map((region) => {
+        if (region.kind === "bone") {
+          return compact ? null : (
+            <path key={region.name} d={region.d} data-kind="bone" className={regionColors.bone}>
+              <title>{region.name}</title>
+            </path>
+          );
+        }
+        const state = engagement(region, muscle, secondary);
+        if (compact && state === "inactive") return null;
+        return (
+          <path key={region.name} d={region.d} data-muscle={region.muscle ?? undefined} data-engagement={state} className={regionColors[state]}>
+            <title>{region.name}{state !== "inactive" ? ` (${state})` : ""}</title>
+          </path>
+        );
+      })}
+    </>
+  );
+}
+
+export function MuscleIllustration({ muscle, secondaryMuscles = [], compact = false, className = "" }: MuscleIllustrationProps) {
   const secondary = [...new Set(secondaryMuscles)].filter((m) => m !== muscle);
   const label = `${muscle.replaceAll("_", " ")} bodypart illustration${secondary.length ? `; secondary: ${secondary.map((m) => muscleLabels[m]).join(", ")}` : ""}`;
+  const { width, height } = anatomyViewBox;
+
+  if (compact) {
+    const view = muscle === "full_body" || muscle === "cardio" ? "front" : focusView[muscle];
+    return (
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label} className={className}>
+        <title>{`Muscle map: ${view}`}</title>
+        <g stroke="var(--background)" strokeWidth="0.25" strokeLinejoin="round">
+          <BodyView view={view} muscle={muscle} secondary={secondary} compact />
+        </g>
+      </svg>
+    );
+  }
 
   return (
-    <svg viewBox="0 0 340 410" role="img" aria-label={label} className={className}>
+    <svg viewBox={`0 0 ${width * 2 + VIEW_GAP} ${height + LABEL_SPACE}`} role="img" aria-label={label} className={className}>
       <title>Muscle map: front and back</title>
-      <desc>Primary muscles are red. Secondary muscles are green. Other muscles are grey.</desc>
+      <desc>Primary muscles are red. Secondary muscles are green. Other muscles and bones are grey.</desc>
       {(["front", "back"] as const).map((view, index) => (
-        <g key={view} transform={`translate(${index * 180} 0)`} strokeWidth="0.85" strokeLinejoin="round">
-          <path
-            d="M80 10 C66 10 62 20 63 32 L61 33 63 43 67 45 Q68 53 74 55 L74 64 86 64 86 55 Q92 53 93 45 L97 43 99 33 97 32 C98 20 94 10 80 10Z"
-            className="fill-slate-400/25 stroke-slate-400/20"
-          />
-          {[false, true].map((mirror) => (
-            <g key={String(mirror)} transform={mirror ? "translate(160 0) scale(-1 1)" : undefined}>
-              <path d={bodyOutline} className="fill-slate-400/15 stroke-slate-400/20" />
-              {anatomy[view].map((region) => {
-                const state = engagement(region, muscle, secondary);
-                return (
-                  <g key={region.name} data-muscle={region.muscle ?? undefined} data-engagement={state}>
-                    <title>{region.name}{state !== "inactive" ? ` (${state})` : ""}</title>
-                    <path d={region.d} className={regionColors[state]} />
-                    {region.fibres ? (
-                      <path d={region.fibres} fill="none" className="stroke-background/25" strokeWidth="0.65" />
-                    ) : null}
-                  </g>
-                );
-              })}
-              <path
-                d="M53 283 Q60 279 65 284 L63 291 Q58 295 54 290Z M55 358 54 371 M60 358 60 371 M15 204 12 212 M19 206 17 216 M23 207 22 217"
-                fill="none"
-                className="stroke-slate-400/35"
-              />
-            </g>
-          ))}
-          <text x="80" y="404" textAnchor="middle" className="fill-muted-foreground text-[10px] tracking-[2px] uppercase">
+        <g key={view} transform={`translate(${index * (width + VIEW_GAP)} 0)`}>
+          <g stroke="var(--background)" strokeWidth="0.2" strokeLinejoin="round">
+            <BodyView view={view} muscle={muscle} secondary={secondary} compact={false} />
+          </g>
+          <text x={width / 2} y={height + LABEL_SPACE - 2} textAnchor="middle" className="fill-muted-foreground text-[8px] tracking-[2px] uppercase">
             {view}
           </text>
         </g>
@@ -65,7 +89,7 @@ export function MuscleIllustration({ muscle, secondaryMuscles = [], className = 
   );
 }
 
-export function MuscleMap({ muscle, secondaryMuscles = [] }: Omit<MuscleIllustrationProps, "className">) {
+export function MuscleMap({ muscle, secondaryMuscles = [] }: Pick<MuscleIllustrationProps, "muscle" | "secondaryMuscles">) {
   const secondary = [...new Set(secondaryMuscles)].filter((m) => m !== muscle && muscle !== "full_body");
 
   return (
@@ -74,7 +98,7 @@ export function MuscleMap({ muscle, secondaryMuscles = [] }: Omit<MuscleIllustra
         <span className="font-semibold">Muscles worked</span>
         <span className="text-xs text-muted-foreground">Front & back</span>
       </figcaption>
-      <MuscleIllustration muscle={muscle} secondaryMuscles={secondary} className="mx-auto w-full max-w-72" />
+      <MuscleIllustration muscle={muscle} secondaryMuscles={secondary} className="mx-auto w-full max-w-80" />
       <dl className="mt-4 grid gap-2 border-t pt-3 text-xs">
         <div className="flex gap-2">
           <dt className="flex shrink-0 items-start gap-2 text-muted-foreground"><span aria-hidden className="mt-0.5 size-2.5 rounded-full bg-muscle-load-high" />Primary</dt>
@@ -88,6 +112,9 @@ export function MuscleMap({ muscle, secondaryMuscles = [] }: Omit<MuscleIllustra
         ) : null}
       </dl>
       {muscle === "cardio" ? <p className="mt-3 text-xs text-muted-foreground">Cardio describes the activity, not a specific muscle group.</p> : null}
+      <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/" target="_blank" rel="noreferrer" className="mt-3 block text-xs text-muted-foreground hover:underline">
+        Anatomy: BodyParts3D, © DBCLS, CC BY 4.0
+      </a>
     </figure>
   );
 }

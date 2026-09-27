@@ -1,4 +1,4 @@
-.PHONY: install dev build preview typecheck lint test check deploy
+.PHONY: install dev build preview typecheck lint test check deploy anatomy
 
 install:
 	bun install
@@ -25,3 +25,6 @@ check: typecheck lint test
 
 deploy:
 	bun run deploy
+
+anatomy:
+	uv run scripts/anatomy/build.py

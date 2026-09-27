@@ -110,7 +110,7 @@ function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; loc
           <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {muscles.map(({ muscle, sets }) => (
               <li key={muscle} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2">
-                <MuscleIllustration muscle={muscle} className="size-12 shrink-0" />
+                <MuscleIllustration muscle={muscle} compact className="size-12 shrink-0" />
                 <span className="min-w-0 text-sm">
                   <span className="block font-medium">{muscleLabels[muscle]}</span>
                   <span className="text-muted-foreground">{sets} working {sets === 1 ? "set" : "sets"}</span>
