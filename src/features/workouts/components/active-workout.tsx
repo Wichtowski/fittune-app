@@ -1,0 +1,197 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { EllipsisIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { type DraftWorkout, edits, totals } from "../draft";
+import { useWorkoutStore } from "../store";
+import { ExerciseCard } from "./exercise-card";
+import { FinishWorkoutDialog } from "./finish-workout-dialog";
+import { RestTimer } from "./rest-timer";
+import { SyncIndicator } from "./sync-indicator";
+import { queryKeys } from "@/api/query-keys";
+import { deleteWorkout } from "@/api/workouts";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
+import { ExercisePicker } from "@/features/exercises/components/exercise-picker";
+import { useNow } from "@/hooks/use-now";
+import { usePreferences } from "@/hooks/use-preferences";
+import { useWakeLock } from "@/hooks/use-wake-lock";
+import { formatClock } from "@/lib/format";
+import { formatVolume } from "@/lib/units";
+
+export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
+  const edit = useWorkoutStore((state) => state.edit);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const now = useNow();
+  const { weightUnit } = usePreferences();
+  useWakeLock(true);
+
+  const elapsed = (now - new Date(workout.started_at).getTime()) / 1000;
+  const summary = totals(workout);
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <header className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-3 backdrop-blur-xl md:static md:mx-0 md:px-0 md:pt-8">
+        <div className="flex items-center gap-2">
+          <input
+            defaultValue={workout.title}
+            key={workout.id}
+            onBlur={(event) => {
+              const title = event.target.value.trim();
+              if (title && title !== workout.title) edit(edits.rename(title));
+            }}
+            aria-label="Workout title"
+            className="min-w-0 flex-1 truncate bg-transparent font-display text-2xl font-bold tracking-wide uppercase outline-none focus:underline md:text-3xl"
+          />
+          <FinishWorkoutDialog workout={workout} />
+          <WorkoutMenu onDiscard={() => setConfirmDiscard(true)} />
+        </div>
+        <dl className="mt-2 grid grid-cols-3 gap-2 text-center">
+          <Stat label="Time" value={formatClock(elapsed)} accent />
+          <Stat label="Volume" value={formatVolume(summary.volumeKg, weightUnit)} />
+          <Stat label="Sets" value={`${summary.completedSets}/${summary.totalSets}`} />
+        </dl>
+        <SyncIndicator className="mt-2 justify-center" />
+      </header>
+
+      <div className="mt-2 grid gap-3">
+        {workout.exercises.map((exercise, index) => (
+          <ExerciseCard
+            key={exercise.id}
+            workoutId={workout.id}
+            exercise={exercise}
+            index={index}
+            count={workout.exercises.length}
+          />
+        ))}
+
+        {workout.exercises.length === 0 ? (
+          <p className="rounded-2xl border border-dashed px-6 py-10 text-center text-muted-foreground">
+            Add your first exercise to start logging sets.
+          </p>
+        ) : null}
+
+        <Button size="lg" variant={workout.exercises.length === 0 ? "default" : "secondary"} onClick={() => setPickerOpen(true)}>
+          <PlusIcon aria-hidden /> Add exercise
+        </Button>
+
+        <Textarea
+          key={`${workout.id}-notes`}
+          defaultValue={workout.notes ?? ""}
+          onBlur={(event) => edit(edits.setNotes(event.target.value))}
+          placeholder="Workout notes"
+          aria-label="Workout notes"
+          className="mt-2"
+        />
+      </div>
+
+      <ExercisePicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onPick={(exercises) =>
+          edit(
+            edits.addExercises(
+              exercises.map((e) => ({
+                exercise_id: e.id,
+                exercise_name: e.name,
+                tracking: e.tracking,
+                primary_muscle: e.primary_muscle,
+              })),
+            ),
+          )
+        }
+      />
+      <DiscardDialog open={confirmDiscard} onOpenChange={setConfirmDiscard} workout={workout} />
+      <RestTimer />
+    </div>
+  );
+}
+
+function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="rounded-xl bg-muted/60 px-2 py-1.5">
+      <dt className="text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase">{label}</dt>
+      <dd className={`font-display text-2xl leading-tight font-bold tabular ${accent ? "text-primary-strong" : ""}`}>{value}</dd>
+    </div>
+  );
+}
+
+function WorkoutMenu({ onDiscard }: { onDiscard: () => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" aria-label="Workout options">
+          <EllipsisIcon aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem variant="destructive" onSelect={onDiscard}>
+          <Trash2Icon aria-hidden /> Discard workout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function DiscardDialog({
+  open,
+  onOpenChange,
+  workout,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  workout: DraftWorkout;
+}) {
+  const discard = useWorkoutStore((state) => state.discard);
+  const restore = useWorkoutStore((state) => state.start);
+  const queryClient = useQueryClient();
+  const remove = useMutation({
+    mutationFn: deleteWorkout,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all }),
+  });
+
+  const onConfirm = () => {
+    const removed = discard();
+    // Only workouts the server has seen need deleting there; the local copy is gone instantly.
+    if (removed && removed.syncedRevision > 0) {
+      remove.mutate(removed.id, {
+        onError: () => {
+          restore(removed);
+          toast.error("Couldn't discard the saved workout. Try again when you're online.");
+        },
+      });
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Discard this workout?</AlertDialogTitle>
+          <AlertDialogDescription>
+            All {workout.exercises.length} exercises and their sets will be deleted. This can't be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>
+            Discard
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}

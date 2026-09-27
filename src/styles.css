@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource/barlow-condensed/500.css";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * FitTune visual language: a graphite "gym floor" base with a volt accent for strength
+ * training and an ember accent for endurance. Numbers use a condensed display face so
+ * training data stays large and legible at arm's length.
+ */
+:root {
+  --background: oklch(0.985 0.003 260);
+  --foreground: oklch(0.2 0.012 260);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --muted: oklch(0.955 0.005 260);
+  --muted-foreground: oklch(0.48 0.015 260);
+  --secondary: oklch(0.93 0.006 260);
+  --secondary-foreground: var(--foreground);
+  --accent: oklch(0.94 0.008 260);
+  --accent-foreground: var(--foreground);
+  --primary: oklch(0.87 0.2 126);
+  --primary-foreground: oklch(0.22 0.05 130);
+  --primary-strong: oklch(0.52 0.14 132);
+  --endurance: oklch(0.7 0.18 42);
+  --endurance-foreground: oklch(0.2 0.05 40);
+  --endurance-strong: oklch(0.56 0.17 40);
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.2 0.012 260 / 10%);
+  --input: oklch(0.2 0.012 260 / 14%);
+  --ring: oklch(0.6 0.16 130);
+  --chart-grid: oklch(0.2 0.012 260 / 8%);
+  --chart-axis: oklch(0.48 0.015 260);
+  /* Data colours validated for CVD separation and contrast on the light card surface. */
+  --chart-strength: #28621a;
+  --chart-endurance: #e46212;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: oklch(0.16 0.008 260);
+  --foreground: oklch(0.97 0.004 260);
+  --card: oklch(0.205 0.01 260);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.225 0.011 260);
+  --popover-foreground: var(--foreground);
+  --muted: oklch(0.245 0.012 260);
+  --muted-foreground: oklch(0.72 0.014 260);
+  --secondary: oklch(0.27 0.013 260);
+  --secondary-foreground: var(--foreground);
+  --accent: oklch(0.29 0.014 260);
+  --accent-foreground: var(--foreground);
+  --primary: oklch(0.9 0.2 126);
+  --primary-foreground: oklch(0.2 0.05 130);
+  --primary-strong: oklch(0.9 0.2 126);
+  --endurance: oklch(0.74 0.17 45);
+  --endurance-foreground: oklch(0.2 0.05 40);
+  --endurance-strong: oklch(0.78 0.15 50);
+  --destructive: oklch(0.66 0.21 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.9 0.2 126 / 60%);
+  --chart-grid: oklch(1 0 0 / 7%);
+  --chart-axis: oklch(0.68 0.014 260);
+  /* Stepped separately for the dark surface (not an automatic flip). */
+  --chart-strength: #6da730;
+  --chart-endurance: #c03900;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-strong: var(--primary-strong);
+  --color-endurance: var(--endurance);
+  --color-endurance-foreground: var(--endurance-foreground);
+  --color-endurance-strong: var(--endurance-strong);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-strength: var(--chart-strength);
+  --color-chart-endurance: var(--chart-endurance);
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Inter Variable", ui-sans-serif, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --animate-pulse-ring: pulse-ring 1.6s ease-out infinite;
+
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 60%, transparent); }
+    100% { box-shadow: 0 0 0 12px transparent; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    overscroll-behavior-y: none;
+  }
+
+  /* Numeric training data: tabular so columns of weights and reps line up. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* Safe-area helpers for notched phones and a future Capacitor shell. */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
