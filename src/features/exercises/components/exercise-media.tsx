@@ -90,7 +90,6 @@ export function ExercisePhoto({
 
   return (
     <span className={`relative flex items-center justify-center overflow-hidden bg-muted/50 ${className}`}>
-      <MuscleIllustration muscle={muscle} className="h-4/5 w-4/5" />
       {src && failedSrc !== src ? (
         <img
           src={src}
@@ -101,7 +100,7 @@ export function ExercisePhoto({
           className="absolute inset-0 size-full object-cover"
           onError={() => setFailedSrc(src)}
         />
-      ) : null}
+      ) : <MuscleIllustration muscle={muscle} className="h-4/5 w-4/5" />}
     </span>
   );
 }

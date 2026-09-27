@@ -18,6 +18,7 @@ import { SET_GRID, SetRow } from "./set-row";
 import { exerciseHistoryQuery } from "@/api/exercises";
 import { Button } from "@/components/ui/button";
 import { ExercisePhoto, ExerciseVideo, exerciseVideoSource } from "@/features/exercises/components/exercise-media";
+import { MuscleMap } from "@/features/exercises/components/muscle-illustration";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -172,11 +173,15 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
         </DropdownMenu>
       </header>
 
-      {videoSource ? (
-        <div className="mb-3 px-1">
-          <ExerciseVideo source={videoSource} name={exercise.exercise_name} />
+      <details className="mb-3 rounded-xl border bg-muted/20">
+        <summary className="cursor-pointer rounded-xl px-3 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">
+          {videoSource ? "Muscles & demo" : "Muscles worked"}
+        </summary>
+        <div className={`grid items-start gap-3 p-3 pt-0 ${videoSource ? "sm:grid-cols-2" : ""}`}>
+          <MuscleMap muscle={exercise.primary_muscle} secondaryMuscles={history?.exercise.secondary_muscles} />
+          {videoSource ? <ExerciseVideo key={`${videoSource.provider}-${videoSource.id}`} source={videoSource} name={exercise.exercise_name} /> : null}
         </div>
-      ) : null}
+      </details>
 
       {showNotes ? (
         <Textarea
