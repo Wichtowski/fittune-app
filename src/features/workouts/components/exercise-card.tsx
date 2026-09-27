@@ -17,6 +17,7 @@ import { useWorkoutStore } from "../store";
 import { SET_GRID, SetRow } from "./set-row";
 import { exerciseHistoryQuery } from "@/api/exercises";
 import { Button } from "@/components/ui/button";
+import { ExercisePhoto, ExerciseVideo, exerciseVideoId } from "@/features/exercises/components/exercise-media";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
   const previous = useMemo(() => previousSets(history, workoutId), [history, workoutId]);
   const labels = useMemo(() => setLabels(exercise.sets.map((set) => set.kind)), [exercise.sets]);
   const exerciseId = exercise.id;
+  const videoId = history ? exerciseVideoId(history.exercise.name, history.exercise.video_id, history.exercise.is_custom) : null;
 
   const onChange = useCallback(
     (setId: string, patch: Partial<Omit<DraftSet, "id">>) => edit(edits.updateSet(exerciseId, setId, patch)),
@@ -112,6 +114,12 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
   return (
     <section className="rounded-2xl border bg-card p-3 md:p-4" aria-label={exercise.exercise_name}>
       <header className="mb-2 flex items-start gap-2 px-1">
+        <ExercisePhoto
+          name={exercise.exercise_name}
+          muscle={exercise.primary_muscle}
+          isCustom={history?.exercise.is_custom ?? true}
+          className="size-12 shrink-0 rounded-xl"
+        />
         <div className="min-w-0 flex-1">
           <Link
             to="/exercises/$exerciseId"
@@ -163,6 +171,12 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
+
+      {videoId ? (
+        <div className="mb-3 px-1">
+          <ExerciseVideo videoId={videoId} name={exercise.exercise_name} />
+        </div>
+      ) : null}
 
       {showNotes ? (
         <Textarea

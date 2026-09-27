@@ -229,6 +229,15 @@ export function totals(workout: Pick<DraftWorkout, "exercises">): WorkoutTotals 
   return { completedSets, totalSets, volumeKg, reps };
 }
 
+export function workedMuscles(workout: Pick<DraftWorkout, "exercises">): { muscle: Muscle; sets: number }[] {
+  const counts = new Map<Muscle, number>();
+  for (const exercise of workout.exercises) {
+    const sets = exercise.sets.filter((set) => set.completed && set.kind !== "warmup").length;
+    if (sets) counts.set(exercise.primary_muscle, (counts.get(exercise.primary_muscle) ?? 0) + sets);
+  }
+  return [...counts].map(([muscle, sets]) => ({ muscle, sets })).sort((a, b) => b.sets - a.sets);
+}
+
 export function needsSync(workout: DraftWorkout): boolean {
   return workout.revision > workout.syncedRevision && workout.failedRevision !== workout.revision;
 }

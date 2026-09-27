@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ExerciseForm } from "./exercise-form";
+import { ExercisePhoto, ExerciseVideo, exerciseVideoId, hasExercisePhotos } from "./exercise-media";
 import { archiveExercise, exerciseHistoryQuery } from "@/api/exercises";
 import { queryKeys } from "@/api/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
@@ -45,6 +46,8 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const { weightUnit, distanceUnit } = preferences;
   const [editing, setEditing] = useState(false);
   const trend = trendSeries(history, preferences);
+  const videoId = exerciseVideoId(exercise.name, exercise.video_id, exercise.is_custom);
+  const hasPhotos = hasExercisePhotos(exercise.name, exercise.is_custom);
 
   return (
     <>
@@ -148,18 +151,36 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
         </div>
 
         <aside className="grid content-start gap-4">
-          {exercise.video_id ? (
-            <Card className="overflow-hidden">
-              <iframe
-                className="aspect-video w-full"
-                src={`https://www.youtube-nocookie.com/embed/${exercise.video_id}`}
-                title={`${exercise.name} demo`}
-                loading="lazy"
-                allow="encrypted-media; picture-in-picture"
-                allowFullScreen
+          <Card className="overflow-hidden p-3">
+            <div className={hasPhotos ? "grid grid-cols-2 gap-2" : "grid"}>
+              <ExercisePhoto
+                name={exercise.name}
+                muscle={exercise.primary_muscle}
+                isCustom={exercise.is_custom}
+                className="aspect-[4/3] rounded-xl"
               />
-            </Card>
-          ) : null}
+              {hasPhotos ? (
+                <ExercisePhoto
+                  name={exercise.name}
+                  muscle={exercise.primary_muscle}
+                  isCustom={exercise.is_custom}
+                  frame={1}
+                  className="aspect-[4/3] rounded-xl"
+                />
+              ) : null}
+            </div>
+            {videoId ? <div className="mt-3"><ExerciseVideo videoId={videoId} name={exercise.name} /></div> : null}
+            {hasPhotos ? (
+              <a
+                href="https://github.com/yuhonas/free-exercise-db"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 block text-xs text-muted-foreground hover:underline"
+              >
+                Exercise photos: Free Exercise DB
+              </a>
+            ) : null}
+          </Card>
           <Card className="p-5">
             <h3 className="font-semibold">How it's tracked</h3>
             <p className="mt-1 text-sm text-muted-foreground">{trackingLabels[exercise.tracking]}</p>

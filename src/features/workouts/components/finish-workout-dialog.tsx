@@ -31,7 +31,7 @@ export function FinishWorkoutDialog({ workout }: { workout: DraftWorkout }) {
 
   const onFinish = () => {
     const finished = finish();
-    if (finished) void navigate({ to: "/workouts/$workoutId", params: { workoutId: finished.id }, replace: true });
+    if (finished) void navigate({ to: "/workouts/$workoutId", params: { workoutId: finished.id }, search: { completed: true }, replace: true });
   };
 
   return (

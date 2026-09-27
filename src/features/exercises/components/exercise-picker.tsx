@@ -3,6 +3,7 @@ import { CheckIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { filterExercises } from "../filter";
+import { ExercisePhoto } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { equipmentLabels, muscleLabels } from "@/lib/labels";
-import { cn } from "@/lib/utils";
 import { MUSCLES, type Muscle } from "@/schemas/common";
 import type { Exercise } from "@/schemas/exercise";
 
@@ -98,13 +98,18 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
                       }
                       className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left transition-colors hover:bg-accent aria-pressed:bg-primary/10"
                     >
-                      <span
-                        className={cn(
-                          "flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted font-display text-lg font-bold text-muted-foreground uppercase",
-                          isSelected && "bg-primary text-primary-foreground",
-                        )}
-                      >
-                        {isSelected ? <CheckIcon className="size-5" aria-hidden /> : exercise.name.slice(0, 1)}
+                      <span className="relative size-10 shrink-0">
+                        <ExercisePhoto
+                          name={exercise.name}
+                          muscle={exercise.primary_muscle}
+                          isCustom={exercise.is_custom}
+                          className="size-10 rounded-xl"
+                        />
+                        {isSelected ? (
+                          <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-primary/85 text-primary-foreground">
+                            <CheckIcon className="size-5" aria-hidden />
+                          </span>
+                        ) : null}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{exercise.name}</span>

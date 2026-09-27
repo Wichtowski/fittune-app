@@ -97,6 +97,10 @@ endurance. Tokens live in `src/styles.css` (light and dark), and training number
 condensed display face. Chart colours are separate data tokens, checked for colour-blind
 separation and contrast in both themes. Every chart has a table view.
 
+Exercise photos come from the [public domain Free Exercise DB](https://github.com/yuhonas/free-exercise-db/blob/a859101d633a01c4a1a920d6a8ce41dabba0705f/LICENSE.md) at a pinned revision and load while online.
+Bodypart illustrations are bundled with the app and remain available offline.
+Exercise demos use YouTube embeds only after the user taps Watch demo.
+
 ## Deployment
 
 The static build is served from the shared VPS by the platform-edge Caddy on
