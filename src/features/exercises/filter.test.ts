@@ -11,6 +11,7 @@ function exercise(name: string, overrides: Partial<Exercise> = {}): Exercise {
     primary_muscle: "chest",
     secondary_muscles: [],
     equipment: "barbell",
+    requires: [],
     difficulty: "beginner",
     video_id: null,
     instructions: null,
@@ -23,9 +24,9 @@ function exercise(name: string, overrides: Partial<Exercise> = {}): Exercise {
 }
 
 const library = [
-  exercise("Barbell Bench Press", { secondary_muscles: ["triceps"] }),
-  exercise("Incline Dumbbell Press", { equipment: "dumbbell" }),
-  exercise("Triceps Pushdown", { primary_muscle: "triceps", equipment: "cable" }),
+  exercise("Barbell Bench Press", { secondary_muscles: ["triceps"], requires: ["barbell", "flat_bench", "squat_rack"] }),
+  exercise("Incline Dumbbell Press", { equipment: "dumbbell", requires: ["dumbbells", "adjustable_bench"] }),
+  exercise("Triceps Pushdown", { primary_muscle: "triceps", equipment: "cable", requires: ["cable_station"] }),
 ];
 
 describe("filterExercises", () => {
@@ -34,12 +35,16 @@ describe("filterExercises", () => {
     expect(filterExercises(library, { q: "  PRESS " })).toHaveLength(2);
   });
 
-  it("uses the selected place equipment while keeping bodyweight available", () => {
-    const exercises = [...library, exercise("Push-Up", { equipment: "none" })];
-    expect(filterExercises(exercises, { availableEquipment: ["dumbbell"] }).map((e) => e.name)).toEqual(["Incline Dumbbell Press", "Push-Up"]);
-    expect(filterExercises(exercises, { availableEquipment: [] }).map((e) => e.name)).toEqual(["Push-Up"]);
-    expect(filterExercises(exercises, { availableEquipment: undefined })).toHaveLength(4);
-    expect(filterExercises(exercises, { availableEquipment: ["dumbbell"], q: "press", muscle: "chest" }).map((e) => e.name)).toEqual(["Incline Dumbbell Press"]);
+  it("shows only exercises whose required equipment is all at the place", () => {
+    const exercises = [...library, exercise("Push-Up", { equipment: "none" }), exercise("Pull-Up", { equipment: "none", requires: ["pull_up_bar"] })];
+    const names = (available: Parameters<typeof filterExercises>[1]["availableEquipment"]) =>
+      filterExercises(exercises, { availableEquipment: available }).map((e) => e.name);
+    // A barbell alone is not enough for the bench press, which also needs a bench and a rack
+    expect(names(["barbell", "dumbbells", "adjustable_bench"])).toEqual(["Incline Dumbbell Press", "Push-Up"]);
+    expect(names(["barbell", "flat_bench", "squat_rack", "pull_up_bar"])).toEqual(["Barbell Bench Press", "Push-Up", "Pull-Up"]);
+    expect(names([])).toEqual(["Push-Up"]);
+    expect(names(undefined)).toHaveLength(5);
+    expect(filterExercises(exercises, { availableEquipment: ["dumbbells", "adjustable_bench"], q: "press", muscle: "chest" }).map((e) => e.name)).toEqual(["Incline Dumbbell Press"]);
   });
 
   it("matches primary or secondary muscle and equipment", () => {

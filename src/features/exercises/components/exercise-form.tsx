@@ -10,6 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { EquipmentChecklist } from "@/features/places/components/equipment-checklist";
 import { applyServerErrors } from "@/lib/form-errors";
 import { difficultyLabels, equipmentLabels, muscleLabels, trackingLabels } from "@/lib/labels";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ function defaults(exercise?: Exercise): ExerciseInputForm {
     primary_muscle: exercise?.primary_muscle ?? "chest",
     secondary_muscles: exercise?.secondary_muscles ?? [],
     equipment: exercise?.equipment ?? "barbell",
+    requires: exercise?.requires ?? [],
     difficulty: exercise?.difficulty ?? "beginner",
     video_id: exercise?.video_id ?? "",
     instructions: exercise?.instructions ?? "",
@@ -101,6 +103,19 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
                   );
                 })}
               </div>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="requires"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Equipment needed</FormLabel>
+              <FormDescription>Everything the exercise needs. It shows up at places that have all of it; leave empty for bodyweight.</FormDescription>
+              <EquipmentChecklist value={field.value} onChange={field.onChange} />
+              <FormMessage />
             </FormItem>
           )}
         />

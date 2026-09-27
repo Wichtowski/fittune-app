@@ -48,7 +48,7 @@ export function PlacePicker({ value, onChange }: { value: Place | null | undefin
               {places.map((place) => <SelectItem key={place.id} value={place.version_id}>{place.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          <p className="mt-2 text-xs text-muted-foreground">{value ? equipmentSummary(value) : "Choose a place to match exercises to the equipment available."}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{value ? equipmentSummary(value, 6) : "Choose a place to match exercises to the equipment available."}</p>
           {savedSetup && query.data ? <p className="mt-2 text-xs text-muted-foreground">This workout keeps its saved setup. Select another setup to change it.</p> : null}
         </>
       )}
@@ -100,7 +100,7 @@ function PlacesDialog({ open, startAdding, onOpenChange }: { open: boolean; star
                   <div className="min-w-0"><p className="break-words font-medium">{place.name}</p><p className="text-xs text-muted-foreground">{placeKindLabels[place.kind]}</p></div>
                   <Button variant="ghost" size="icon-sm" aria-label={`Edit ${place.name}`} disabled={!online || archive.isPending} onClick={() => setEditor({ id: place.id, place })}><PencilIcon className="size-4" aria-hidden /></Button>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{equipmentSummary(place)}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{equipmentSummary(place, 6)}</p>
                 {archiving === place.id ? (
                   <div className="mt-2 grid gap-2">
                     <p className="text-xs text-muted-foreground">Archive this place? Existing workouts keep their setup.</p>

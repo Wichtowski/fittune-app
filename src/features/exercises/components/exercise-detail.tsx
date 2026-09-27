@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChartCard } from "@/features/analytics/components/chart-card";
 import { TrendLineChart } from "@/features/analytics/components/line-chart";
 import { StatTile } from "@/features/analytics/components/stat-tile";
+import { requirementSummary } from "@/features/places/format";
 import { setLabels, summariseSet } from "@/features/workouts/previous";
 import { usePreferences } from "@/hooks/use-preferences";
 import { formatDay, formatDuration, formatShortDate } from "@/lib/format";
@@ -176,6 +177,8 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
           <Card className="p-5">
             <h3 className="font-semibold">How it's tracked</h3>
             <p className="mt-1 text-sm text-muted-foreground">{trackingLabels[exercise.tracking]}</p>
+            <h3 className="mt-4 font-semibold">Equipment needed</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{requirementSummary(exercise.requires)}</p>
             {exercise.instructions ? (
               <p className="mt-4 text-sm whitespace-pre-wrap">{exercise.instructions}</p>
             ) : null}

@@ -3,6 +3,7 @@ import type {
   ActivityKind,
   Difficulty,
   Equipment,
+  EquipmentItem,
   Muscle,
   SetKind,
   Tracking,
@@ -38,6 +39,48 @@ export const equipmentLabels: Record<Equipment, string> = {
   plate: "Plate",
   other: "Other",
 };
+
+export const equipmentItemLabels: Record<EquipmentItem, string> = {
+  barbell: "Barbell",
+  ez_bar: "EZ bar",
+  dumbbells: "Dumbbells",
+  kettlebells: "Kettlebells",
+  flat_bench: "Flat bench",
+  adjustable_bench: "Adjustable bench",
+  squat_rack: "Squat rack",
+  pull_up_bar: "Pull-up bar",
+  dip_station: "Dip station",
+  leg_press: "Leg press",
+  leg_extension: "Leg extension",
+  leg_curl: "Leg curl",
+  calf_raise_machine: "Calf raise machine",
+  smith_machine: "Smith machine",
+  chest_press_machine: "Chest press machine",
+  pec_deck: "Pec deck",
+  shoulder_press_machine: "Shoulder press machine",
+  assisted_pull_up_machine: "Assisted pull-up machine",
+  cable_station: "Cable station",
+  lat_pulldown: "Lat pulldown",
+  seated_row: "Seated row",
+  treadmill: "Treadmill",
+  rowing_machine: "Rowing machine",
+  stationary_bike: "Stationary bike",
+  resistance_band: "Resistance band",
+  ab_wheel: "Ab wheel",
+  jump_rope: "Jump rope",
+};
+
+export const equipmentItemGroups: { label: string; items: readonly EquipmentItem[] }[] = [
+  { label: "Free weights", items: ["barbell", "ez_bar", "dumbbells", "kettlebells"] },
+  { label: "Benches and racks", items: ["flat_bench", "adjustable_bench", "squat_rack", "pull_up_bar", "dip_station"] },
+  {
+    label: "Machines",
+    items: ["leg_press", "leg_extension", "leg_curl", "calf_raise_machine", "smith_machine", "chest_press_machine", "pec_deck", "shoulder_press_machine", "assisted_pull_up_machine"],
+  },
+  { label: "Cable", items: ["cable_station", "lat_pulldown", "seated_row"] },
+  { label: "Cardio", items: ["treadmill", "rowing_machine", "stationary_bike"] },
+  { label: "Accessories", items: ["resistance_band", "ab_wheel", "jump_rope"] },
+];
 
 export const difficultyLabels: Record<Difficulty, string> = {
   beginner: "Beginner",
