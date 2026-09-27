@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { EquipmentChecklist } from "./equipment-checklist";
 import { placeKindLabels, placePresets } from "../presets";
 import { savePlace } from "@/api/places";
 import { queryKeys } from "@/api/query-keys";
@@ -12,8 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { applyServerErrors } from "@/lib/form-errors";
-import { equipmentLabels } from "@/lib/labels";
-import { EQUIPMENT } from "@/schemas/common";
 import { PLACE_KINDS, type Place, type PlaceInput, placeInputSchema } from "@/schemas/place";
 
 export function PlaceForm({ id, place, onDone }: { id: string; place?: Place; onDone: () => void }) {
@@ -62,14 +61,7 @@ export function PlaceForm({ id, place, onDone }: { id: string; place?: Place; on
         <FormField control={form.control} name="equipment" render={({ field }) => (
           <FormItem>
             <FormLabel>Available equipment</FormLabel>
-            <div className="grid grid-cols-2 gap-2">
-              {EQUIPMENT.filter((item) => item !== "none").map((item) => (
-                <label key={item} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm has-checked:border-primary has-checked:bg-primary/10">
-                  <input type="checkbox" checked={field.value.includes(item)} onChange={(event) => field.onChange(event.target.checked ? [...field.value, item] : field.value.filter((value) => value !== item))} className="size-4 accent-primary" />
-                  {equipmentLabels[item]}
-                </label>
-              ))}
-            </div>
+            <EquipmentChecklist value={field.value} onChange={field.onChange} />
             <p className="text-xs text-muted-foreground">Bodyweight exercises are always available. Leave all equipment unchecked for a bodyweight-only place.</p>
             <FormMessage />
           </FormItem>

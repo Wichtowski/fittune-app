@@ -84,12 +84,12 @@ describe("workout draft", () => {
   });
 
   it("persists the selected setup through offline edits and finishing without changing exercises", () => {
-    const place = { id: "place", version_id: "version-1", name: "Home", kind: "home" as const, equipment: ["band" as const] };
+    const place = { id: "place", version_id: "version-1", name: "Home", kind: "home" as const, equipment: ["resistance_band" as const] };
     const draft = revise(withBench(), edits.setPlace(place));
     place.name = "Gym";
     place.equipment.length = 0;
     const restored = JSON.parse(JSON.stringify(draft)) as typeof draft;
-    expect(restored.place).toMatchObject({ name: "Home", equipment: ["band"] });
+    expect(restored.place).toMatchObject({ name: "Home", equipment: ["resistance_band"] });
     expect(needsSync(restored)).toBe(true);
     expect(toWorkoutInput(revise(restored, edits.finish())).place_version_id).toBe("version-1");
     const cleared = revise(restored, edits.setPlace(null));

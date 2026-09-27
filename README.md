@@ -79,7 +79,8 @@ persisted, then replayed when the app next starts.
 
 **Workout places.** Every new workout starts at a place (Home, Gym or a custom one), so the first workout asks the user to add one.
 The start screen preselects the place of the latest workout, and the place can be changed during a workout.
-Each place has editable equipment suggestions; bodyweight is always available, and the exercise picker can explicitly show all equipment.
+Places list specific equipment (benches, racks, bars, each machine type), and every exercise lists everything it requires.
+The exercise picker shows the exercises whose required equipment is all at the place, with an option to show everything; bodyweight exercises are always shown.
 A user can keep up to 10 places, and creating, editing and archiving them requires a connection.
 Cached places can be selected offline, and their immutable setup is saved with the workout draft and synced through the existing outbox.
 Editing or archiving a place preserves past and active workout setups until the user explicitly selects a different version.

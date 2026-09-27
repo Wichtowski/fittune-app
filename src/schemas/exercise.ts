@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   difficultySchema,
+  equipmentItemSchema,
   equipmentSchema,
   muscleSchema,
   setKindSchema,
@@ -16,6 +17,7 @@ export const exerciseSchema = z.object({
   primary_muscle: muscleSchema,
   secondary_muscles: z.array(muscleSchema),
   equipment: equipmentSchema,
+  requires: z.array(equipmentItemSchema),
   difficulty: difficultySchema,
   video_id: z.string().nullable(),
   instructions: z.string().nullable(),
@@ -33,6 +35,8 @@ export const exerciseInputSchema = z.object({
   primary_muscle: muscleSchema,
   secondary_muscles: z.array(muscleSchema),
   equipment: equipmentSchema,
+  // Everything the exercise needs; empty for bodyweight
+  requires: z.array(equipmentItemSchema),
   difficulty: difficultySchema,
   video_id: z
     .string()

@@ -1,7 +1,7 @@
-import type { Equipment, Muscle } from "@/schemas/common";
+import type { Equipment, EquipmentItem, Muscle } from "@/schemas/common";
 import type { Exercise } from "@/schemas/exercise";
 
-export type ExerciseFilter = { q?: string; muscle?: Muscle; equipment?: Equipment; customOnly?: boolean; availableEquipment?: readonly Equipment[] };
+export type ExerciseFilter = { q?: string; muscle?: Muscle; equipment?: Equipment; customOnly?: boolean; availableEquipment?: readonly EquipmentItem[] };
 
 function normalise(text: string) {
   return text
@@ -16,6 +16,11 @@ function normalise(text: string) {
  * Client-side search over the exercise library: every word must appear in the name, so
  * "db press" finds "Incline Dumbbell Press" via the "db" alias.
  */
+/** An exercise can be done where every piece of equipment it requires is available */
+export function canDoWith(exercise: Pick<Exercise, "requires">, available: readonly EquipmentItem[]) {
+  return exercise.requires.every((item) => available.includes(item));
+}
+
 export function filterExercises(exercises: Exercise[], filter: ExerciseFilter): Exercise[] {
   const words = normalise(filter.q ?? "")
     .split(" ")
@@ -23,7 +28,7 @@ export function filterExercises(exercises: Exercise[], filter: ExerciseFilter): 
     .map((word) => ALIASES[word] ?? word);
 
   return exercises.filter((exercise) => {
-    if (filter.availableEquipment && exercise.equipment !== "none" && !filter.availableEquipment.includes(exercise.equipment)) return false;
+    if (filter.availableEquipment && !canDoWith(exercise, filter.availableEquipment)) return false;
     if (filter.customOnly && !exercise.is_custom) return false;
     if (filter.equipment && exercise.equipment !== filter.equipment) return false;
     if (filter.muscle && exercise.primary_muscle !== filter.muscle && !exercise.secondary_muscles.includes(filter.muscle)) {

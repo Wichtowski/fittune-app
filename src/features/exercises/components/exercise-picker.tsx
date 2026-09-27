@@ -56,7 +56,7 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
         {place ? (
           <div className="rounded-xl border bg-muted/50 p-3 text-sm">
             <p className="font-medium">Equipment at {place.name}</p>
-            <p className="text-muted-foreground">{equipmentSummary(place)}</p>
+            <p className="text-muted-foreground">{equipmentSummary(place, 6)}</p>
             <label className="mt-2 flex min-h-9 cursor-pointer items-center gap-2"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} className="size-4 accent-primary" />Show all exercises, including other equipment</label>
           </div>
         ) : null}
