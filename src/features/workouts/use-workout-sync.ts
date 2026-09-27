@@ -1,0 +1,119 @@
+import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+
+import { type DraftWorkout, needsSync, toWorkoutInput } from "./draft";
+import { useWorkoutStore } from "./store";
+import { ApiError } from "@/api/client";
+import { queryKeys } from "@/api/query-keys";
+import { getWorkout, putWorkout } from "@/api/workouts";
+import { useSession } from "@/features/auth/session";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+
+const SYNC_MUTATION_KEY = ["workouts", "sync"] as const;
+/** Coalesces rapid edits (typing reps, ticking sets) into one request. */
+const DEBOUNCE_MS = 800;
+const MAX_BACKOFF_MS = 60_000;
+
+/** Id and revision of the next workout that needs uploading, as a primitive for stable selection. */
+function selectNextKey(state: { active: DraftWorkout | null; outbox: DraftWorkout[] }): string | null {
+  // Finished workouts first: they are complete and the user expects them in history.
+  const next = [...state.outbox, state.active].find((w): w is DraftWorkout => w !== null && needsSync(w));
+  return next ? `${next.id}:${next.revision}` : null;
+}
+
+function findWorkout(id: string): DraftWorkout | undefined {
+  const { active, outbox } = useWorkoutStore.getState();
+  return active?.id === id ? active : outbox.find((w) => w.id === id);
+}
+
+/**
+ * Background uploader for locally edited workouts. Mounted once in the app shell.
+ *
+ * The UI never waits for it: edits land in the persisted store immediately and this hook
+ * replays the latest full snapshot with `PUT /workouts/{id}`. Because writes are idempotent
+ * and revision-checked, retries after a flaky gym connection are always safe.
+ */
+export function useWorkoutSync() {
+  const queryClient = useQueryClient();
+  const online = useOnlineStatus();
+  const userId = useSession((state) => state.userId);
+  const ownerId = useWorkoutStore((state) => state.ownerId);
+  const nextKey = useWorkoutStore(selectNextKey);
+  const [attempt, setAttempt] = useState(0);
+  const retryAt = useRef(0);
+  const failures = useRef(0);
+  const inFlight = useRef(false);
+
+  const { mutateAsync } = useMutation({
+    mutationKey: SYNC_MUTATION_KEY,
+    mutationFn: (workout: DraftWorkout) => putWorkout(workout.id, toWorkoutInput(workout)),
+    retry: false,
+  });
+
+  useEffect(() => {
+    // Never upload one user's local workouts with another user's session.
+    if (!nextKey || !online || inFlight.current || !userId || ownerId !== userId) return;
+    const [id] = nextKey.split(":");
+    const delay = Math.max(DEBOUNCE_MS, retryAt.current - Date.now());
+
+    const timer = window.setTimeout(async () => {
+      const workout = id ? findWorkout(id) : undefined;
+      if (!workout || !needsSync(workout)) return;
+      const store = useWorkoutStore.getState();
+      inFlight.current = true;
+      try {
+        const saved = await mutateAsync(workout);
+        retryAt.current = 0;
+        failures.current = 0;
+        store.markSynced(workout.id, workout.revision);
+        queryClient.setQueryData(queryKeys.workouts.detail(saved.id), saved);
+        void queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all, refetchType: "active" });
+        if (saved.ended_at) {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.stats.all });
+          void queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
+          void queryClient.invalidateQueries({ queryKey: ["exercises", "history"] });
+        }
+      } catch (error) {
+        if (!(error instanceof ApiError)) {
+          store.markFailed(workout.id, workout.revision, "Unexpected error while saving");
+        } else if (error.status === 409) {
+          // Another device saved a newer revision; keep this device's version on top.
+          const server = await getWorkout(workout.id).catch(() => null);
+          if (server) store.rebase(workout.id, server.revision);
+          else store.markFailed(workout.id, workout.revision, error.message);
+        } else if (error.isRetryable) {
+          failures.current += 1;
+          retryAt.current = Date.now() + Math.min(MAX_BACKOFF_MS, 1000 * 2 ** failures.current);
+        } else if (error.status !== 401) {
+          store.markFailed(workout.id, workout.revision, error.message);
+        }
+      } finally {
+        inFlight.current = false;
+        setAttempt((n) => n + 1);
+      }
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [nextKey, online, attempt, userId, ownerId, mutateAsync, queryClient]);
+}
+
+export type SyncStatus = "synced" | "saving" | "pending" | "offline" | "error";
+
+/** Summarised upload state for the small sync indicator. */
+export function useSyncStatus(): { status: SyncStatus; error: string | null; failedId: string | null } {
+  const online = useOnlineStatus();
+  const saving = useIsMutating({ mutationKey: SYNC_MUTATION_KEY }) > 0;
+  const summary = useWorkoutStore((state) => {
+    const all = [state.active, ...state.outbox].filter((w): w is DraftWorkout => w !== null);
+    const failed = all.find((w) => w.failedRevision === w.revision);
+    const pending = all.some((w) => w.revision > w.syncedRevision);
+    return failed ? `error:${failed.id}:${failed.syncError ?? ""}` : pending ? "pending" : "synced";
+  });
+
+  if (summary.startsWith("error:")) {
+    const [, failedId = null, ...message] = summary.split(":");
+    return { status: "error", error: message.join(":") || "Could not save workout", failedId };
+  }
+  if (summary === "pending") return { status: saving ? "saving" : online ? "pending" : "offline", error: null, failedId: null };
+  return { status: "synced", error: null, failedId: null };
+}

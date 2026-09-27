@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "fittune",
+  "compatibility_date": "2026-09-01",
+  // Static SPA on Workers assets: unknown paths fall back to index.html for client routing.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
