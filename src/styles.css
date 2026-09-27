@@ -41,6 +41,11 @@
   /* Data colours validated for CVD separation and contrast on the light card surface. */
   --chart-strength: #28621a;
   --chart-endurance: #e46212;
+  /* Muscle load heat scale: red works hardest, green assists. Lightness differs too so the
+     two stay distinguishable with red-green colour blindness */
+  --muscle-load-high: oklch(0.55 0.21 27);
+  --muscle-load-low: oklch(0.84 0.15 150);
+  --anatomy-muscle: oklch(0.8 0.012 260);
   --radius: 1rem;
 }
 
@@ -73,6 +78,9 @@
   /* Stepped separately for the dark surface (not an automatic flip). */
   --chart-strength: #6da730;
   --chart-endurance: #c03900;
+  --muscle-load-high: oklch(0.6 0.22 25);
+  --muscle-load-low: oklch(0.86 0.16 150);
+  --anatomy-muscle: oklch(0.36 0.012 260);
 }
 
 @theme inline {
@@ -101,6 +109,9 @@
   --color-ring: var(--ring);
   --color-chart-strength: var(--chart-strength);
   --color-chart-endurance: var(--chart-endurance);
+  --color-muscle-load-high: var(--muscle-load-high);
+  --color-muscle-load-low: var(--muscle-load-low);
+  --color-anatomy-muscle: var(--anatomy-muscle);
 
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Barlow Condensed", "Inter Variable", ui-sans-serif, sans-serif;

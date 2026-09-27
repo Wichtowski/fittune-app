@@ -4,7 +4,7 @@ import { ClipboardPlusIcon, EllipsisIcon, RotateCcwIcon, Trash2Icon } from "luci
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { type DraftWorkout, totals, workoutFromPrevious } from "../draft";
+import { type DraftWorkout, totals, workedMuscles, workoutFromPrevious } from "../draft";
 import { setLabels, summariseSet } from "../previous";
 import { useWorkoutStore } from "../store";
 import { SyncIndicator } from "./sync-indicator";
@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatTile } from "@/features/analytics/components/stat-tile";
+import { MuscleIllustration } from "@/features/exercises/components/muscle-illustration";
+import { equipmentSummary } from "@/features/places/format";
 import { usePreferences } from "@/hooks/use-preferences";
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
@@ -40,9 +42,9 @@ import { formatVolume } from "@/lib/units";
 import type { Page } from "@/schemas/common";
 import type { Workout, WorkoutSummary } from "@/schemas/workout";
 
-type Viewable = Pick<Workout, "id" | "title" | "notes" | "started_at" | "ended_at" | "routine_id" | "exercises">;
+type Viewable = Pick<Workout, "id" | "title" | "notes" | "started_at" | "ended_at" | "routine_id" | "exercises" | "place">;
 
-export function WorkoutDetail({ workoutId }: { workoutId: string }) {
+export function WorkoutDetail({ workoutId, justCompleted = false }: { workoutId: string; justCompleted?: boolean }) {
   // A workout finished offline is shown from the device until the server has it.
   const local = useWorkoutStore((state) => state.outbox.find((w) => w.id === workoutId));
   const query = useQuery({ ...workoutQuery(workoutId), enabled: !local });
@@ -58,12 +60,16 @@ export function WorkoutDetail({ workoutId }: { workoutId: string }) {
       </div>
     );
   }
-  return <WorkoutView workout={workout} local={local} />;
+  return <WorkoutView workout={workout} local={local} justCompleted={justCompleted} />;
 }
 
-function WorkoutView({ workout, local }: { workout: Viewable; local: DraftWorkout | undefined }) {
+function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; local: DraftWorkout | undefined; justCompleted: boolean }) {
   const preferences = usePreferences();
   const summary = totals(workout);
+  const muscles = workedMuscles(workout);
+  const completedExercises = workout.exercises.filter((exercise) =>
+    exercise.sets.some((set) => set.completed && set.kind !== "warmup"),
+  ).length;
   const duration = workout.ended_at
     ? (new Date(workout.ended_at).getTime() - new Date(workout.started_at).getTime()) / 1000
     : null;
@@ -75,7 +81,28 @@ function WorkoutView({ workout, local }: { workout: Viewable; local: DraftWorkou
         title={workout.title}
         actions={<WorkoutActions workout={workout} canEdit={!local} />}
       />
+      {workout.place ? (
+        <div className="mb-4 rounded-xl border bg-muted/50 p-4">
+          <p className="font-medium">{workout.place.name}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{equipmentSummary(workout.place)}</p>
+        </div>
+      ) : null}
       {local ? <SyncIndicator className="mb-4" /> : null}
+
+      {justCompleted ? (
+        <div className="mb-4 rounded-2xl border border-primary/40 bg-primary/10 p-4">
+          <p className="font-display text-xl font-bold tracking-wide uppercase text-primary-strong">Workout complete</p>
+          <p className="text-sm text-muted-foreground">
+            {summary.completedSets} working {summary.completedSets === 1 ? "set" : "sets"} across {completedExercises}{" "}
+            {completedExercises === 1 ? "exercise" : "exercises"}.{" "}
+            {local ? "Saved on this device and waiting to sync." : "Your session is saved."}
+          </p>
+        </div>
+      ) : null}
+
+      <h2 className="mb-3 font-display text-xl font-bold tracking-wide uppercase">
+        {workout.ended_at ? "Session summary" : "Workout so far"}
+      </h2>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label="Duration" value={formatDuration(duration)} />
@@ -83,6 +110,25 @@ function WorkoutView({ workout, local }: { workout: Viewable; local: DraftWorkou
         <StatTile label="Sets" value={String(summary.completedSets)} />
         <StatTile label="Reps" value={summary.reps.toLocaleString()} />
       </div>
+
+      <section className="mt-4 rounded-2xl border bg-card p-4" aria-label="Muscles worked">
+        <h3 className="font-semibold">Muscles worked</h3>
+        {muscles.length ? (
+          <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {muscles.map(({ muscle, sets }) => (
+              <li key={muscle} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2">
+                <MuscleIllustration muscle={muscle} compact className="size-12 shrink-0" />
+                <span className="min-w-0 text-sm">
+                  <span className="block font-medium">{muscleLabels[muscle]}</span>
+                  <span className="text-muted-foreground">{sets} working {sets === 1 ? "set" : "sets"}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">No working sets completed.</p>
+        )}
+      </section>
 
       {workout.notes ? <p className="mt-4 rounded-2xl bg-muted/60 p-4 text-sm whitespace-pre-wrap">{workout.notes}</p> : null}
 

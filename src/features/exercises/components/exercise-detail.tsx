@@ -5,6 +5,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ExerciseForm } from "./exercise-form";
+import { ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos } from "./exercise-media";
+import { MuscleMap } from "./muscle-illustration";
 import { archiveExercise, exerciseHistoryQuery } from "@/api/exercises";
 import { queryKeys } from "@/api/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
@@ -45,6 +47,8 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const { weightUnit, distanceUnit } = preferences;
   const [editing, setEditing] = useState(false);
   const trend = trendSeries(history, preferences);
+  const videoSource = exerciseVideoSource(exercise.name, exercise.video_id, exercise.is_custom);
+  const hasPhotos = hasExercisePhotos(exercise.name, exercise.is_custom);
 
   return (
     <>
@@ -97,6 +101,27 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
         )}
       </div>
 
+      <Card className={`mt-6 grid items-start gap-4 p-4 ${hasPhotos || videoSource ? "md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.7fr)]" : "mx-auto w-full max-w-lg"}`}>
+        {hasPhotos || videoSource ? (
+          <div className="min-w-0">
+            <h2 className="mb-3 font-semibold">Exercise demo</h2>
+            {hasPhotos ? (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} isCustom={exercise.is_custom} className="aspect-[4/3] rounded-xl" />
+                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} isCustom={exercise.is_custom} frame={1} className="aspect-[4/3] rounded-xl" />
+                </div>
+                <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-muted-foreground hover:underline">
+                  Exercise photos: Free Exercise DB
+                </a>
+              </>
+            ) : null}
+            {videoSource ? <div className="mt-3"><ExerciseVideo key={`${videoSource.provider}-${videoSource.id}`} source={videoSource} name={exercise.name} /></div> : null}
+          </div>
+        ) : null}
+        <MuscleMap muscle={exercise.primary_muscle} secondaryMuscles={exercise.secondary_muscles} />
+      </Card>
+
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="grid content-start gap-4 lg:col-span-2">
           {trend.data.length > 1 ? (
@@ -148,18 +173,6 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
         </div>
 
         <aside className="grid content-start gap-4">
-          {exercise.video_id ? (
-            <Card className="overflow-hidden">
-              <iframe
-                className="aspect-video w-full"
-                src={`https://www.youtube-nocookie.com/embed/${exercise.video_id}`}
-                title={`${exercise.name} demo`}
-                loading="lazy"
-                allow="encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
-            </Card>
-          ) : null}
           <Card className="p-5">
             <h3 className="font-semibold">How it's tracked</h3>
             <p className="mt-1 text-sm text-muted-foreground">{trackingLabels[exercise.tracking]}</p>

@@ -4,6 +4,7 @@ import type { Bucket, Period } from "@/schemas/stats";
 /** Every server-state cache key in one place, so invalidation stays predictable. */
 export const queryKeys = {
   me: ["me"] as const,
+  places: ["places"] as const,
   exercises: {
     all: ["exercises"] as const,
     list: (filters: { q?: string; muscle?: Muscle; equipment?: Equipment } = {}) =>

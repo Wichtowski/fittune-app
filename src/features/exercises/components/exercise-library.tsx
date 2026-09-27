@@ -4,6 +4,7 @@ import { SearchIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { type ExerciseFilter, filterExercises } from "../filter";
+import { ExercisePhoto } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
 import { QueryError } from "@/components/query-error";
 import { Badge } from "@/components/ui/badge";
@@ -94,9 +95,12 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
                   params={{ exerciseId: exercise.id }}
                   className="flex h-full items-center gap-3 rounded-2xl border bg-card p-3 transition-colors hover:bg-accent/60"
                 >
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted font-display text-xl font-bold text-muted-foreground uppercase">
-                    {exercise.name.slice(0, 1)}
-                  </span>
+                  <ExercisePhoto
+                    name={exercise.name}
+                    muscle={exercise.primary_muscle}
+                    isCustom={exercise.is_custom}
+                    className="size-12 shrink-0 rounded-xl"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{exercise.name}</span>
                     <span className="block truncate text-sm text-muted-foreground">

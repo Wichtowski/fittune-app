@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { PlacePicker } from "@/features/places/components/place-picker";
 import { ExercisePicker } from "@/features/exercises/components/exercise-picker";
 import { useNow } from "@/hooks/use-now";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -67,6 +68,8 @@ export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
         <SyncIndicator className="mt-2 justify-center" />
       </header>
 
+      <PlacePicker value={workout.place} onChange={(place) => edit(edits.setPlace(place))} />
+
       <div className="mt-2 grid gap-3">
         {workout.exercises.map((exercise, index) => (
           <ExerciseCard
@@ -99,6 +102,7 @@ export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
       </div>
 
       <ExercisePicker
+        place={workout.place}
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         onPick={(exercises) =>

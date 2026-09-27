@@ -1,7 +1,7 @@
 import type { Equipment, Muscle } from "@/schemas/common";
 import type { Exercise } from "@/schemas/exercise";
 
-export type ExerciseFilter = { q?: string; muscle?: Muscle; equipment?: Equipment; customOnly?: boolean };
+export type ExerciseFilter = { q?: string; muscle?: Muscle; equipment?: Equipment; customOnly?: boolean; availableEquipment?: readonly Equipment[] };
 
 function normalise(text: string) {
   return text
@@ -23,6 +23,7 @@ export function filterExercises(exercises: Exercise[], filter: ExerciseFilter): 
     .map((word) => ALIASES[word] ?? word);
 
   return exercises.filter((exercise) => {
+    if (filter.availableEquipment && exercise.equipment !== "none" && !filter.availableEquipment.includes(exercise.equipment)) return false;
     if (filter.customOnly && !exercise.is_custom) return false;
     if (filter.equipment && exercise.equipment !== filter.equipment) return false;
     if (filter.muscle && exercise.primary_muscle !== filter.muscle && !exercise.secondary_muscles.includes(filter.muscle)) {

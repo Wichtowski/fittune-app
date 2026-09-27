@@ -23,6 +23,7 @@ export function WorkoutSummaryCard({ workout, weightUnit }: { workout: WorkoutSu
             {formatDay(workout.started_at)} · {formatTime(workout.started_at)}
           </span>
         </span>
+        {workout.place ? <span className="mt-1 block truncate text-xs text-muted-foreground">{workout.place.name}</span> : null}
         <span className="mt-0.5 block truncate text-sm text-muted-foreground">
           {workout.exercise_names.join(", ") || "No exercises"}
         </span>

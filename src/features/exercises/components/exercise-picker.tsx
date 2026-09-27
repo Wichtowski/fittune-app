@@ -3,15 +3,17 @@ import { CheckIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { filterExercises } from "../filter";
+import { ExercisePhoto } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { equipmentSummary } from "@/features/places/format";
 import { equipmentLabels, muscleLabels } from "@/lib/labels";
-import { cn } from "@/lib/utils";
 import { MUSCLES, type Muscle } from "@/schemas/common";
+import type { Place } from "@/schemas/place";
 import type { Exercise } from "@/schemas/exercise";
 
 type ExercisePickerProps = {
@@ -19,21 +21,24 @@ type ExercisePickerProps = {
   onOpenChange: (open: boolean) => void;
   onPick: (exercises: Exercise[]) => void;
   title?: string;
+  place?: Place | null;
 };
 
 /** Multi-select exercise search; works offline from the cached library. */
-export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exercises" }: ExercisePickerProps) {
+export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exercises", place }: ExercisePickerProps) {
   const { data, error, isPending, refetch } = useQuery(exercisesQuery());
+  const [showAll, setShowAll] = useState(false);
   const [q, setQ] = useState("");
   const [muscle, setMuscle] = useState<Muscle | undefined>();
   const [selected, setSelected] = useState<string[]>([]);
 
-  const results = useMemo(() => filterExercises(data ?? [], { q, muscle }), [data, q, muscle]);
+  const results = useMemo(() => filterExercises(data ?? [], { q, muscle, availableEquipment: place && !showAll ? place.equipment : undefined }), [data, q, muscle, place, showAll]);
 
   const close = (next: boolean) => {
     onOpenChange(next);
     if (!next) {
       setSelected([]);
+      setShowAll(false);
       setQ("");
       setMuscle(undefined);
     }
@@ -48,6 +53,13 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
   return (
     <ResponsiveDialog open={open} onOpenChange={close} title={title} className="md:max-w-2xl">
       <div className="flex min-h-[60dvh] flex-col gap-3 md:min-h-0">
+        {place ? (
+          <div className="rounded-xl border bg-muted/50 p-3 text-sm">
+            <p className="font-medium">Equipment at {place.name}</p>
+            <p className="text-muted-foreground">{equipmentSummary(place)}</p>
+            <label className="mt-2 flex min-h-9 cursor-pointer items-center gap-2"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} className="size-4 accent-primary" />Show all exercises, including other equipment</label>
+          </div>
+        ) : null}
         <div className="relative">
           <SearchIcon className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
@@ -98,13 +110,18 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
                       }
                       className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left transition-colors hover:bg-accent aria-pressed:bg-primary/10"
                     >
-                      <span
-                        className={cn(
-                          "flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted font-display text-lg font-bold text-muted-foreground uppercase",
-                          isSelected && "bg-primary text-primary-foreground",
-                        )}
-                      >
-                        {isSelected ? <CheckIcon className="size-5" aria-hidden /> : exercise.name.slice(0, 1)}
+                      <span className="relative size-10 shrink-0">
+                        <ExercisePhoto
+                          name={exercise.name}
+                          muscle={exercise.primary_muscle}
+                          isCustom={exercise.is_custom}
+                          className="size-10 rounded-xl"
+                        />
+                        {isSelected ? (
+                          <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-primary/85 text-primary-foreground">
+                            <CheckIcon className="size-5" aria-hidden />
+                          </span>
+                        ) : null}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{exercise.name}</span>
