@@ -1,4 +1,9 @@
 import "@testing-library/jest-dom/vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach } from "vitest";
+
+// Vitest runs without globals, so Testing Library cannot unmount between tests on its own
+afterEach(cleanup);
 
 // jsdom has no media queries; the theme hook and vaul read them. Nothing matches, like a
 // default desktop browser

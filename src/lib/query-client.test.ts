@@ -13,3 +13,12 @@ it("keeps friends' data out of the persisted offline cache", () => {
   const persisted = dehydrate(client, { shouldDehydrateQuery: shouldPersistQuery }).queries.map((q) => q.queryKey);
   expect(persisted).toEqual([queryKeys.workouts.list("completed")]);
 });
+
+it("keeps FitHealth data out of the persisted offline cache", () => {
+  const client = new QueryClient();
+  client.setQueryData(queryKeys.places, []);
+  client.setQueryData(["health", "diary", "2026-09-28"], []);
+
+  const persisted = dehydrate(client, { shouldDehydrateQuery: shouldPersistQuery }).queries.map((q) => q.queryKey);
+  expect(persisted).toEqual([queryKeys.places]);
+});
