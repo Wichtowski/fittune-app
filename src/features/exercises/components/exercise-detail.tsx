@@ -49,8 +49,8 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const { weightUnit, distanceUnit } = preferences;
   const [editing, setEditing] = useState(false);
   const trend = trendSeries(history, preferences);
-  const videoSource = exerciseVideoSource(exercise.name, exercise.video_id, exercise.is_custom);
-  const hasPhotos = hasExercisePhotos(exercise.name, exercise.is_custom);
+  const videoSource = exerciseVideoSource(exercise);
+  const hasPhotos = hasExercisePhotos(exercise.media);
 
   return (
     <>
@@ -110,8 +110,8 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
             {hasPhotos ? (
               <>
                 <div className="grid grid-cols-2 gap-2">
-                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} isCustom={exercise.is_custom} className="aspect-[4/3] rounded-xl" />
-                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} isCustom={exercise.is_custom} frame={1} className="aspect-[4/3] rounded-xl" />
+                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} className="aspect-[4/3] rounded-xl" />
+                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} frame={1} className="aspect-[4/3] rounded-xl" />
                 </div>
                 <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-muted-foreground hover:underline">
                   Exercise photos: Free Exercise DB

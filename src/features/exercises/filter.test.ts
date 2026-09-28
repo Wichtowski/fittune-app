@@ -19,6 +19,7 @@ function exercise(name: string, overrides: Partial<Exercise> = {}): Exercise {
     archived_at: null,
     created_at: "",
     updated_at: "",
+    media: [],
     ...overrides,
   };
 }

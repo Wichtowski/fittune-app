@@ -100,7 +100,7 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
                   <ExercisePhoto
                     name={exercise.name}
                     muscle={exercise.primary_muscle}
-                    isCustom={exercise.is_custom}
+                    media={exercise.media}
                     className="size-12 shrink-0 rounded-xl"
                   />
                   <span className="min-w-0 flex-1">

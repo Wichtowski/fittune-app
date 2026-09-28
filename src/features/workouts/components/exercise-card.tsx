@@ -52,7 +52,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
   const previous = useMemo(() => previousSets(history, workoutId), [history, workoutId]);
   const labels = useMemo(() => setLabels(exercise.sets.map((set) => set.kind)), [exercise.sets]);
   const exerciseId = exercise.id;
-  const videoSource = history ? exerciseVideoSource(history.exercise.name, history.exercise.video_id, history.exercise.is_custom) : null;
+  const videoSource = history ? exerciseVideoSource(history.exercise) : null;
 
   const onChange = useCallback(
     (setId: string, patch: Partial<Omit<DraftSet, "id">>) => edit(edits.updateSet(exerciseId, setId, patch)),
@@ -118,7 +118,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
         <ExercisePhoto
           name={exercise.exercise_name}
           muscle={exercise.primary_muscle}
-          isCustom={history?.exercise.is_custom ?? true}
+          media={history?.exercise.media}
           className="size-12 shrink-0 rounded-xl"
         />
         <div className="min-w-0 flex-1">
