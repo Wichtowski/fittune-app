@@ -16,4 +16,12 @@ export type AnatomyView = {
   regions: readonly AnatomyRegion[];
 };
 
+export type Engagement = "primary" | "secondary" | "inactive";
+
+export function engagement(group: Muscle | null, primary: Muscle, secondary: readonly Muscle[]): Engagement {
+  if (primary === "full_body" || group === primary) return "primary";
+  if (secondary.includes("full_body") || (group && secondary.includes(group))) return "secondary";
+  return "inactive";
+}
+
 export { anatomyViewBox, anatomyViews, focusView } from "./anatomy.generated";

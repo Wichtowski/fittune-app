@@ -33,6 +33,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        globIgnores: ["**/anatomy-viewer-*.js", "**/draco_*.js"],
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
         // API responses are cached by TanStack Query (per user), never by the service worker.

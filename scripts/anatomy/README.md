@@ -1,6 +1,7 @@
 # Anatomy pipeline
 
-Generates `src/features/exercises/anatomy.generated.ts`, the front and back body figures used by the muscle map.
+Generates `src/features/exercises/anatomy.generated.ts` and `public/anatomy/bodyparts3d-3.glb` from the same selected structures and muscle group mapping.
+The GLB is Draco compressed, limited to 3 MB, and fetched only when the exercise detail viewer opens.
 The figures are projected from real 3D anatomy, so the muscle shapes and the skeleton are anatomically correct instead of hand drawn.
 
 ```bash
@@ -9,7 +10,8 @@ make anatomy        # same as: uv run scripts/anatomy/build.py
 
 Requirements: `uv` and `blender` (5.x) on `PATH`.
 The first run downloads about 130 MB into `scripts/anatomy/.cache/` (gitignored), later runs take about a minute.
-Run it only when the mapping or the rendering changes, and commit the regenerated module.
+Run it only when the mapping or rendering changes, and commit both regenerated files.
+Use `uv run scripts/anatomy/build.py --3d-only` when iterating on the 3D export alone.
 
 ## Source data
 
@@ -29,6 +31,7 @@ Release 4.0 has no latissimus dorsi or rectus abdominis meshes, and its body was
 3. `render_ids.py` runs inside Blender and renders orthographic front and back views where every mesh has a unique flat colour, so each pixel identifies the frontmost structure
 4. A second pass hides the obliques, whose meshes include the rectus sheath, so the rectus abdominis can be revealed the way atlases draw it
 5. `build.py` smooths each structure's visible pixels into polygons, merges left and right sides, and writes SVG paths plus the view that best shows each muscle group
+6. `export_glb.py` joins structures by FitTune group, decimates each mesh, and exports the group in GLB node extras for the viewer
 
 ## Changing the mapping
 
