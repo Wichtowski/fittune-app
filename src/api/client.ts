@@ -3,6 +3,9 @@ import type { z } from "zod";
 import { reportNoResponse, reportResponse } from "./reachability";
 import { API_BASE_URL } from "@/lib/env";
 
+/** Long enough for slow gym Wi-Fi, short enough that nothing waits on a dead server forever */
+export const REQUEST_TIMEOUT_MS = 20_000;
+
 /** Error returned by fittune-api (`{ code, message, fields }`) or raised for network failures. */
 export class ApiError extends Error {
   readonly status: number;
@@ -63,18 +66,35 @@ export async function request<T extends z.ZodType | undefined = undefined>(
   const token = options.anonymous ? null : hooks.getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
+  // Linked by hand rather than with AbortSignal.any/timeout, which older iOS Safari lacks
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+  const forwardAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener("abort", forwardAbort);
+
   let response: Response;
   try {
     response = await fetch(url, {
       method: options.method ?? "GET",
       headers,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
-      signal: options.signal,
+      signal: controller.signal,
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    // A caller's abort (a cancelled query) is not a failure; our own timeout is
+    if (!timedOut && error instanceof DOMException && error.name === "AbortError") throw error;
     reportNoResponse();
-    throw new ApiError(0, "network_error", "Can't reach FitTune right now. Check your connection.");
+    throw timedOut
+      ? new ApiError(0, "timeout", "FitTune is taking too long to respond. Try again later.")
+      : new ApiError(0, "network_error", "Can't reach FitTune right now. Check your connection.");
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", forwardAbort);
   }
 
   reportResponse(response.status);

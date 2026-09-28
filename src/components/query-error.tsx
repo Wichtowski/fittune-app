@@ -2,13 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { CloudOffIcon, TriangleAlertIcon } from "lucide-react";
 
 import { ApiError } from "@/api/client";
+import { isServerUnavailable } from "@/api/reachability";
 import { Button } from "@/components/ui/button";
 import { useOfflineSyncStore } from "@/features/offline/store";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { formatAgo } from "@/lib/format";
 
 export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const offline = error instanceof ApiError && (error.isNetworkError || [502, 503, 504].includes(error.status));
+  const offline = error instanceof ApiError && (error.isNetworkError || isServerUnavailable(error.status));
   const Icon = offline ? CloudOffIcon : TriangleAlertIcon;
   const online = useOnlineStatus();
   const lastSyncedAt = useOfflineSyncStore((state) => state.lastSyncedAt);

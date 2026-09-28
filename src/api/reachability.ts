@@ -15,9 +15,17 @@ function set(next: boolean) {
   for (const listener of listeners) listener();
 }
 
+/**
+ * Gateway errors: the proxy answered but FitTune did not. 520-524 are Cloudflare's, which
+ * fronts the production API
+ */
+export function isServerUnavailable(status: number) {
+  return status === 502 || status === 503 || status === 504 || (status >= 520 && status <= 524);
+}
+
 /** Called by the API client for every request that got a response */
 export function reportResponse(status: number) {
-  set(!(status === 502 || status === 503 || status === 504));
+  set(!isServerUnavailable(status));
 }
 
 /** Called by the API client when a request got no response at all */

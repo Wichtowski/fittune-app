@@ -21,18 +21,26 @@ export function OfflineData() {
         FitTune keeps your exercises, routines, places and last {OFFLINE_WORKOUTS} workouts on this device so they work
         without a connection. It syncs automatically when you open the app online.
       </p>
-      <p aria-live="polite">
-        {syncing
-          ? "Syncing…"
-          : lastSyncedAt
-            ? `Last synced ${formatAgo(lastSyncedAt)}.`
-            : "Not synced on this device yet. Sync before you train somewhere without signal."}
-      </p>
-      {error && !syncing ? <p className="text-destructive">{error}</p> : null}
-      {!online ? <p className="text-muted-foreground">Connect to the internet to sync.</p> : !reachable ? <p className="text-muted-foreground">FitTune's servers are unavailable; try again later.</p> : null}
-      <Button variant="secondary" className="justify-self-start" disabled={!online || syncing} onClick={() => void runOfflineSync()}>
-        <RefreshCwIcon className={syncing ? "size-4 animate-spin" : "size-4"} aria-hidden /> {syncing ? "Syncing…" : "Sync now"}
-      </Button>
+      <div className="flex items-center justify-between gap-3">
+        <div className="grid min-w-0 gap-1" aria-live="polite">
+          <p>
+            {syncing
+              ? "Syncing…"
+              : lastSyncedAt
+                ? `Last synced ${formatAgo(lastSyncedAt)}.`
+                : "Not synced on this device yet. Sync before you train somewhere without signal."}
+          </p>
+          {error && !syncing && online && reachable ? <p className="text-destructive">{error}</p> : null}
+          {!online ? (
+            <p className="text-muted-foreground">Connect to the internet to sync.</p>
+          ) : !reachable ? (
+            <p className="text-muted-foreground">FitTune's servers are unavailable; try again later.</p>
+          ) : null}
+        </div>
+        <Button variant="secondary" className="shrink-0" disabled={!online || syncing} onClick={() => void runOfflineSync()}>
+          <RefreshCwIcon className={syncing ? "size-4 animate-spin" : "size-4"} aria-hidden /> {syncing ? "Syncing…" : "Sync now"}
+        </Button>
+      </div>
     </div>
   );
 }
