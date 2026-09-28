@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 
 import { refreshFriends } from "../cache";
 import { UserAvatar, UserName } from "./user-avatar";
-import { acceptFriendRequest, deleteFriendRequest, friendRequestsQuery } from "@/api/friends";
+import { account } from "@/api/account";
+import { friendRequestsQuery } from "@/api/friends";
 import { Button } from "@/components/ui/button";
 import { formatAgo } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -14,8 +15,8 @@ export function FriendRequests() {
   const query = useQuery(friendRequestsQuery());
   const queryClient = useQueryClient();
   const onSettled = () => refreshFriends(queryClient);
-  const accept = useMutation({ mutationFn: acceptFriendRequest, onSettled });
-  const remove = useMutation({ mutationFn: deleteFriendRequest, onSettled });
+  const accept = useMutation({ mutationFn: account.acceptFriendRequest, onSettled });
+  const remove = useMutation({ mutationFn: account.deleteFriendRequest, onSettled });
   const busy = accept.isPending || remove.isPending;
 
   const { incoming = [], outgoing = [] } = query.data ?? {};

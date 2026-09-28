@@ -1,37 +1,54 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { REQUEST_TIMEOUT_MS, request } from "./client";
+import { account } from "./account";
+import { configureApiClient } from "./client";
+import { fittune } from "./fittune";
+import { API_BASE_URL } from "@/lib/env";
 
-/** A fetch that never answers, like a server that accepted the connection and hung */
-function hangingFetch() {
-  return vi.fn(
-    (_url: URL, init?: RequestInit) =>
-      new Promise<Response>((_, reject) => {
-        init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
-      }),
-  );
+const onUnauthorized = vi.fn();
+
+function answer(status: number, body: unknown) {
+  return vi.fn((_url: URL, _init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(body), { status })));
 }
 
-afterEach(() => {
-  vi.useRealTimers();
-  vi.unstubAllGlobals();
+beforeEach(() => {
+  configureApiClient({ getToken: () => "token-1", onUnauthorized });
 });
 
-describe("request", () => {
-  it("gives up on a server that does not answer", async () => {
-    vi.useFakeTimers();
-    vi.stubGlobal("fetch", hangingFetch());
-    const pending = request("/me");
-    const assertion = expect(pending).rejects.toMatchObject({ status: 0, code: "timeout" });
-    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS);
-    await assertion;
+afterEach(() => {
+  vi.unstubAllGlobals();
+  onUnauthorized.mockReset();
+  configureApiClient({ getToken: () => null, onUnauthorized: () => {} });
+});
+
+describe("ApiClient", () => {
+  it("sends training calls under /train and account calls at the root", async () => {
+    const fetch = answer(200, []);
+    vi.stubGlobal("fetch", fetch);
+
+    await fittune.getRoutines();
+    await account.getBlocks();
+
+    expect(String(fetch.mock.calls[0]?.[0])).toBe(`${API_BASE_URL}/api/v1/train/routines`);
+    expect(String(fetch.mock.calls[1]?.[0])).toBe(`${API_BASE_URL}/api/v1/blocks`);
   });
 
-  it("passes a caller's abort through untouched", async () => {
-    vi.stubGlobal("fetch", hangingFetch());
-    const controller = new AbortController();
-    const pending = request("/me", { signal: controller.signal });
-    controller.abort();
-    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  it("uses the one shared session for every client", async () => {
+    const fetch = answer(200, []);
+    vi.stubGlobal("fetch", fetch);
+
+    await fittune.getPlaces();
+
+    const headers = fetch.mock.calls[0]?.[1]?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer token-1");
+  });
+
+  it("signs out on a 401 from a training call like from an account call", async () => {
+    vi.stubGlobal("fetch", answer(401, { code: "unauthorized", message: "Session expired" }));
+
+    await expect(fittune.getRoutines()).rejects.toMatchObject({ status: 401 });
+    await expect(account.getBlocks()).rejects.toMatchObject({ status: 401 });
+
+    expect(onUnauthorized).toHaveBeenCalledTimes(2);
   });
 });

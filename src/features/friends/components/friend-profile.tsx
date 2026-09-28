@@ -8,7 +8,8 @@ import { forgetFriend } from "../cache";
 import { UserAvatar } from "./user-avatar";
 import { FriendFeed } from "./friend-feed";
 import { ApiError } from "@/api/client";
-import { blockUser, friendOverviewQuery, friendQuery, friendRecordsQuery, removeFriend } from "@/api/friends";
+import { account } from "@/api/account";
+import { friendOverviewQuery, friendQuery, friendRecordsQuery } from "@/api/friends";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { QueryFallback } from "@/components/query-error";
@@ -235,12 +236,12 @@ function FriendActions({ friend }: { friend: Friend }) {
     forgetFriend(queryClient, user.id);
   };
   const remove = useMutation({
-    mutationFn: () => removeFriend(user.id),
+    mutationFn: () => account.removeFriend(user.id),
     onSuccess: () => leave(t("{name} removed from friends", { name })),
     onError: (error) => toast.error(t(error.message)),
   });
   const block = useMutation({
-    mutationFn: () => blockUser(user.id),
+    mutationFn: () => account.blockUser(user.id),
     onSuccess: () => leave(t("{name} blocked", { name })),
     onError: (error) => toast.error(t(error.message)),
   });

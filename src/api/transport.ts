@@ -1,0 +1,147 @@
+import type { z } from "zod";
+
+import { reportNoResponse, reportResponse } from "@/lib/connectivity";
+import { API_BASE_URL } from "@/lib/env";
+
+/**
+ * Raw HTTP to fittune-api. Only `ApiClient` calls `send`, feature code goes through the
+ * `account`, `fittune` and `fithealth` clients so every call names its namespace. Kept apart
+ * from `client.ts` so tests can mock `send`
+ */
+
+/** Long enough for slow gym Wi-Fi, short enough that nothing waits on a dead server forever */
+export const REQUEST_TIMEOUT_MS = 20_000;
+
+/** Error returned by fittune-api (`{ code, message, fields }`) or raised for network failures. */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly fields: Record<string, string>;
+
+  constructor(status: number, code: string, message: string, fields: Record<string, string> = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.fields = fields;
+  }
+
+  /** No response at all: offline, DNS, CORS, server down. Safe to retry later. */
+  get isNetworkError() {
+    return this.status === 0;
+  }
+
+  get isRetryable() {
+    return this.isNetworkError || this.status >= 500 || this.status === 408 || this.status === 429;
+  }
+}
+
+type ClientHooks = {
+  getToken: () => string | null;
+  onUnauthorized: () => void;
+};
+
+let hooks: ClientHooks = { getToken: () => null, onUnauthorized: () => {} };
+
+/** Wires authentication into the client without the API layer importing app state. */
+export function configureApiClient(next: ClientHooks) {
+  hooks = next;
+}
+
+export function reportUnauthorized() {
+  hooks.onUnauthorized();
+}
+
+/** The token of the signed-in session, shared by every client */
+export function authToken() {
+  return hooks.getToken();
+}
+
+/** Absolute URL of an API path, `path` already carries its namespace */
+export function apiUrl(path: string) {
+  return `${API_BASE_URL}/api/v1${path}`;
+}
+
+export type RequestOptions<T extends z.ZodType | undefined> = {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  body?: unknown;
+  query?: Record<string, string | number | undefined | null>;
+  schema?: T;
+  signal?: AbortSignal;
+  /** Skip the Authorization header (login/register). */
+  anonymous?: boolean;
+};
+
+export async function send<T extends z.ZodType | undefined = undefined>(
+  path: string,
+  options: RequestOptions<T> = {},
+): Promise<T extends z.ZodType ? z.infer<T> : void> {
+  const url = new URL(apiUrl(path));
+  for (const [key, value] of Object.entries(options.query ?? {})) {
+    if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+  }
+
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  const token = options.anonymous ? null : hooks.getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  // Linked by hand rather than with AbortSignal.any/timeout, which older iOS Safari lacks
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+  const forwardAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener("abort", forwardAbort);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    // A caller's abort (a cancelled query) is not a failure; our own timeout is
+    if (!timedOut && error instanceof DOMException && error.name === "AbortError") throw error;
+    reportNoResponse();
+    throw timedOut
+      ? new ApiError(0, "timeout", "FitTune is taking too long to respond. Try again later.")
+      : new ApiError(0, "network_error", "Can't reach FitTune right now. Check your connection.");
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", forwardAbort);
+  }
+
+  reportResponse(response.status);
+  if (response.status === 401 && token) hooks.onUnauthorized();
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      code?: string;
+      message?: string;
+      fields?: Record<string, string>;
+    } | null;
+    throw new ApiError(
+      response.status,
+      body?.code ?? "http_error",
+      body?.message ?? `Request failed (${response.status})`,
+      body?.fields ?? {},
+    );
+  }
+
+  if (response.status === 204 || !options.schema) {
+    return undefined as T extends z.ZodType ? z.infer<T> : void;
+  }
+  const json: unknown = await response.json();
+  const parsed = options.schema.safeParse(json);
+  if (!parsed.success) {
+    console.error("Unexpected API response", path, parsed.error.issues);
+    throw new ApiError(response.status, "invalid_response", "The server sent an unexpected response.");
+  }
+  return parsed.data as T extends z.ZodType ? z.infer<T> : void;
+}

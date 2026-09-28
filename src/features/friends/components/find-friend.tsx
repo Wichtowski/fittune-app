@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { refreshFriends } from "../cache";
 import { UserAvatar, UserName } from "./user-avatar";
 import { ApiError } from "@/api/client";
-import { acceptFriendRequest, deleteFriendRequest, lookupUserQuery, sendFriendRequest } from "@/api/friends";
+import { account } from "@/api/account";
+import { lookupUserQuery } from "@/api/friends";
 import { queryKeys } from "@/api/query-keys";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
@@ -72,17 +73,17 @@ function SearchResult({ result }: { result: UserWithRelationship }) {
   };
   const onError = (error: Error) => toast.error(t(error.message));
   const send = useMutation({
-    mutationFn: () => sendFriendRequest(user.username),
+    mutationFn: () => account.sendFriendRequest(user.username),
     onSuccess: (sent) => settle(sent.relationship === "friends" ? t("You are now friends") : t("Friend request sent")),
     onError,
   });
   const accept = useMutation({
-    mutationFn: () => acceptFriendRequest(user.id),
+    mutationFn: () => account.acceptFriendRequest(user.id),
     onSuccess: () => settle(t("You are now friends")),
     onError,
   });
   const cancel = useMutation({
-    mutationFn: () => deleteFriendRequest(user.id),
+    mutationFn: () => account.deleteFriendRequest(user.id),
     onSuccess: () => settle(t("Friend request cancelled")),
     onError,
   });

@@ -11,7 +11,7 @@ import { FinishWorkoutDialog } from "./finish-workout-dialog";
 import { RestTimer } from "./rest-timer";
 import { SyncIndicator } from "./sync-indicator";
 import { queryKeys } from "@/api/query-keys";
-import { deleteWorkout } from "@/api/workouts";
+import { fittune } from "@/api/fittune";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -160,7 +160,7 @@ function DiscardDialog({
   const restore = useWorkoutStore((state) => state.start);
   const queryClient = useQueryClient();
   const remove = useMutation({
-    mutationFn: deleteWorkout,
+    mutationFn: fittune.deleteWorkout,
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all }),
   });
 

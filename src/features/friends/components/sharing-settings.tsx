@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { sharingQuery, updateSharing } from "@/api/friends";
+import { account } from "@/api/account";
+import { sharingQuery } from "@/api/friends";
 import { queryKeys } from "@/api/query-keys";
 import { QueryFallback } from "@/components/query-error";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +21,7 @@ export function SharingSettings() {
   const query = useQuery(sharingQuery());
   const queryClient = useQueryClient();
   const save = useMutation({
-    mutationFn: updateSharing,
+    mutationFn: account.updateSharing,
     // Each save sends every setting, so quick toggles must reach the server in order
     scope: { id: "friend-sharing" },
     onMutate: async (next) => {

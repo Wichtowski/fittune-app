@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { createInvite } from "@/api/invites";
+import { account } from "@/api/account";
 import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -26,7 +26,7 @@ export function CreateInvite() {
     defaultValues: { note: "", expires_in_days: 7, max_uses: 1 },
   });
   const mutation = useMutation({
-    mutationFn: createInvite,
+    mutationFn: account.createInvite,
     onSuccess: (created) => {
       setCode(created.code);
       form.reset();
