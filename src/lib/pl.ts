@@ -430,7 +430,7 @@ export const pl: Record<string, string> = {
   "Distance (": "Dystans (",
   "Distance, 4 weeks": "Dystans, 4 tygodnie",
   "Done": "Gotowe",
-  "Drag to rotate. Pinch or scroll to zoom.": "Przeciągnij, aby obrócić. Uszczypnij lub przewiń, aby powiększyć.",
+  "Drag to rotate. Use two fingers to pan. Pinch or scroll to zoom.": "Przeciągnij, aby obrócić. Przesuń dwoma palcami, aby przesunąć widok. Uszczypnij lub przewiń, aby powiększyć.",
   "Duration": "Czas trwania",
   "Edit exercise": "Edytuj ćwiczenie",
   "Edit routine": "Edytuj plan",

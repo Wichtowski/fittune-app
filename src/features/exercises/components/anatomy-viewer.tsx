@@ -49,7 +49,7 @@ export default function AnatomyViewer({ muscle, secondaryMuscles }: { muscle: Mu
     scene.add(light);
     const camera = new PerspectiveCamera(35, 1, 0.1, 10000);
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enablePan = false;
+    controls.enablePan = true;
     controls.enableDamping = false;
     controls.autoRotate = false;
 
@@ -146,7 +146,7 @@ export default function AnatomyViewer({ muscle, secondaryMuscles }: { muscle: Mu
         {state === "loading" ? <p role="status" className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">{t("Loading 3D anatomy...")}</p> : null}
         {state === "error" ? <p role="alert" className="absolute inset-0 grid place-items-center p-4 text-center text-sm">{t("3D anatomy could not load. The 2D muscle map is still available.")}</p> : null}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{t("Drag to rotate. Pinch or scroll to zoom.")}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{t("Drag to rotate. Use two fingers to pan. Pinch or scroll to zoom.")}</p>
       <p className="mt-2 text-sm">{t("Primary")}: {t(muscleLabels[muscle])}{secondaryMuscles.length ? ` · ${t("Secondary")}: ${secondaryMuscles.map((item) => t(muscleLabels[item])).join(", ")}` : ""}</p>
       <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-muted-foreground underline">{t("Anatomy: BodyParts3D, © DBCLS, CC BY 4.0")}</a>
     </div>
