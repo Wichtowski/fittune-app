@@ -549,7 +549,6 @@ export const pl: Record<string, string> = {
   "Start": "Rozpocznij",
   "Start a workout": "Rozpocznij trening",
   "Start a workout or log a run - it will show up here.": "Rozpocznij trening lub zapisz bieg, a pojawi się tutaj.",
-  "Start empty workout": "Rozpocznij pusty trening",
   "Start with a template": "Zacznij od szablonu",
   "Start workout": "Rozpocznij trening",
   "Started": "Rozpoczęto",
