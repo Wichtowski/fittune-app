@@ -2,11 +2,14 @@ import { Outlet, useRouterState } from "@tanstack/react-router";
 
 import { BottomNav } from "./bottom-nav";
 import { Sidebar } from "./sidebar";
+import { ConnectionBanner } from "@/features/offline/components/connection-banner";
+import { useAutoOfflineSync } from "@/features/offline/use-offline-sync";
 import { ActiveWorkoutBar } from "@/features/workouts/components/active-workout-bar";
 import { useWorkoutSync } from "@/features/workouts/use-workout-sync";
 
 export function AppShell() {
   useWorkoutSync();
+  useAutoOfflineSync();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   // The workout screen is the bar's destination and home already shows it inline.
   const hideBar = pathname === "/workout" || pathname === "/";
@@ -16,6 +19,9 @@ export function AppShell() {
       <Sidebar />
       <main className="min-w-0 flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+7rem)] md:px-8 md:pb-12">
         <div className="mx-auto w-full max-w-6xl">
+          <div className="pt-4 md:pt-6 empty:hidden">
+            <ConnectionBanner />
+          </div>
           <Outlet />
         </div>
       </main>

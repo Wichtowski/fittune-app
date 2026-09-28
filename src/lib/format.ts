@@ -42,6 +42,15 @@ export function formatDay(iso: string, now = new Date()): string {
   return dayFormatter.format(date);
 }
 
+/** How long ago, for "last synced" style labels: "just now", "5 min ago", "3 h ago", then the day */
+export function formatAgo(iso: string, now = new Date()): string {
+  const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} h ago`;
+  return formatDay(iso, now);
+}
+
 export function formatTime(iso: string): string {
   return timeFormatter.format(new Date(iso));
 }
