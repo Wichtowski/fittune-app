@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { musclesQuery, overviewQuery, recordsQuery, timelineQuery } from "@/api/stats";
 import { EmptyState } from "@/components/empty-state";
+import { QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,7 +109,9 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
             />
           </>
         ) : (
-          Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28" />)
+          <QueryFallback query={overview} className="col-span-full">
+            {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28" />)}
+          </QueryFallback>
         )}
       </section>
 
@@ -135,7 +138,9 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
             <ToggleGroupItem value="distance">Distance</ToggleGroupItem>
           </ToggleGroup>
           {timeline.isPending ? (
-            <Skeleton className="h-[260px]" />
+            <QueryFallback query={timeline}>
+              <Skeleton className="h-[260px]" />
+            </QueryFallback>
           ) : (
             <ColumnChart
               data={chart.data}
@@ -183,7 +188,9 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
           </Button>
         </div>
         {records.isPending ? (
-          <Skeleton className="h-48" />
+          <QueryFallback query={records}>
+            <Skeleton className="h-48" />
+          </QueryFallback>
         ) : !records.data || records.data.length === 0 ? (
           <EmptyState icon={TrophyIcon} title="No records yet" description="Finish a workout and your bests show up here." />
         ) : (

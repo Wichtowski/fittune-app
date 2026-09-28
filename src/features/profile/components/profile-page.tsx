@@ -7,7 +7,7 @@ import { AccountSecurity } from "./account-security";
 import { ProfileForm } from "./profile-form";
 import { meQuery } from "@/api/auth";
 import { PageHeader } from "@/components/layout/page-header";
-import { QueryError } from "@/components/query-error";
+import { QueryFallback } from "@/components/query-error";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +33,8 @@ import { APP_VERSION } from "@/lib/env";
 import { formatDate } from "@/lib/format";
 
 export function ProfilePage() {
-  const { data: user, error, refetch } = useQuery(meQuery());
+  const me = useQuery(meQuery());
+  const user = me.data;
   const { preference, setPreference } = useTheme();
 
   return (
@@ -42,7 +43,13 @@ export function ProfilePage() {
 
       <div className="grid gap-4">
         <Section title="Profile & units">
-          {user ? <ProfileForm key={user.id} user={user} /> : error ? <QueryError error={error} onRetry={() => void refetch()} /> : <Skeleton className="h-64" />}
+          {user ? (
+            <ProfileForm key={user.id} user={user} />
+          ) : (
+            <QueryFallback query={me}>
+              <Skeleton className="h-64" />
+            </QueryFallback>
+          )}
         </Section>
 
         <Section title="Appearance">

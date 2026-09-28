@@ -1,35 +1,22 @@
+import { type FetchStatus } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { CloudOffIcon, TriangleAlertIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { ApiError } from "@/api/client";
-import { isServerUnavailable } from "@/api/reachability";
 import { Button } from "@/components/ui/button";
 import { useOfflineSyncStore } from "@/features/offline/store";
-import { useOnlineStatus } from "@/hooks/use-online-status";
+import { isServerUnavailable } from "@/lib/connectivity";
 import { formatAgo } from "@/lib/format";
 
 export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const offline = error instanceof ApiError && (error.isNetworkError || isServerUnavailable(error.status));
-  const Icon = offline ? CloudOffIcon : TriangleAlertIcon;
-  const online = useOnlineStatus();
-  const lastSyncedAt = useOfflineSyncStore((state) => state.lastSyncedAt);
+  const unreachable = error instanceof ApiError && (error.isNetworkError || isServerUnavailable(error.status));
+  if (unreachable) return <NotAvailableOffline />;
+
   return (
     <div role="alert" className="flex flex-col items-center gap-3 rounded-2xl border px-6 py-8 text-center">
-      <Icon className="size-6 text-muted-foreground" aria-hidden />
-      <p className="text-sm text-muted-foreground">
-        {offline
-          ? `This isn't saved on this device yet${online ? " and FitTune's servers can't be reached" : ""}. ${
-              lastSyncedAt ? `Last synced ${formatAgo(lastSyncedAt)}; it` : "It"
-            } will be available offline after the next sync.`
-          : error instanceof Error
-            ? error.message
-            : "Something went wrong."}
-      </p>
-      {offline ? (
-        <Link to="/profile" className="text-sm font-medium text-primary-strong underline-offset-4 hover:underline">
-          Offline data settings
-        </Link>
-      ) : null}
+      <TriangleAlertIcon className="size-6 text-muted-foreground" aria-hidden />
+      <p className="text-sm text-muted-foreground">{error instanceof Error ? error.message : "Something went wrong."}</p>
       {onRetry ? (
         <Button variant="secondary" size="sm" onClick={onRetry}>
           Try again
@@ -37,4 +24,47 @@ export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () =>
       ) : null}
     </div>
   );
+}
+
+/** Data that was never downloaded to this device, while the app cannot reach FitTune */
+export function NotAvailableOffline() {
+  const lastSyncedAt = useOfflineSyncStore((state) => state.lastSyncedAt);
+  return (
+    <div role="status" className="flex flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-8 text-center">
+      <CloudOffIcon className="size-6 text-muted-foreground" aria-hidden />
+      <p className="text-sm font-medium">Not available offline yet</p>
+      <p className="max-w-sm text-sm text-muted-foreground">
+        {lastSyncedAt ? `Last synced ${formatAgo(lastSyncedAt)}. ` : ""}It downloads to this device the next time FitTune
+        is online.
+      </p>
+      <Link to="/profile" className="text-sm font-medium text-primary-strong underline-offset-4 hover:underline">
+        Offline data settings
+      </Link>
+    </div>
+  );
+}
+
+type FallbackQuery = { error: unknown; fetchStatus: FetchStatus; refetch: () => unknown };
+
+/**
+ * What to show while a query has no data: its skeleton while it loads, why it cannot load
+ * while the app is offline (a paused query would otherwise show the skeleton forever), and
+ * the error once it failed
+ */
+export function QueryFallback({ query, className, children }: { query: FallbackQuery; className?: string; children: ReactNode }) {
+  if (query.error) {
+    return (
+      <div className={className}>
+        <QueryError error={query.error} onRetry={() => void query.refetch()} />
+      </div>
+    );
+  }
+  if (query.fetchStatus === "paused") {
+    return (
+      <div className={className}>
+        <NotAvailableOffline />
+      </div>
+    );
+  }
+  return children;
 }

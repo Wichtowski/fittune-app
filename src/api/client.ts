@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { reportNoResponse, reportResponse } from "./reachability";
+import { reportNoResponse, reportResponse } from "@/lib/connectivity";
 import { API_BASE_URL } from "@/lib/env";
 
 /** Long enough for slow gym Wi-Fi, short enough that nothing waits on a dead server forever */

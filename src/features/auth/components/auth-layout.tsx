@@ -25,6 +25,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
           <Logo className="mb-10 md:hidden" />
           <h1 className="font-display text-4xl font-bold tracking-wide uppercase">{title}</h1>
           <p className="mt-1 mb-8 text-muted-foreground">{subtitle}</p>
+          <ConnectionBanner className="mb-6" />
           {children}
         </div>
       </section>

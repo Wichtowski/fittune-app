@@ -12,7 +12,7 @@ import { queryKeys } from "@/api/query-keys";
 import { createRoutine } from "@/api/routines";
 import { deleteWorkout, workoutQuery } from "@/api/workouts";
 import { PageHeader } from "@/components/layout/page-header";
-import { QueryError } from "@/components/query-error";
+import { QueryFallback } from "@/components/query-error";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,13 +52,14 @@ export function WorkoutDetail({ workoutId, justCompleted = false }: { workoutId:
   const workout: Viewable | undefined = local ?? query.data;
 
   if (!workout) {
-    if (query.error) return <QueryError error={query.error} onRetry={() => void query.refetch()} />;
     return (
-      <div className="grid gap-3 pt-8">
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-24" />
-        <Skeleton className="h-48" />
-      </div>
+      <QueryFallback query={query}>
+        <div className="grid gap-3 pt-8">
+          <Skeleton className="h-12 w-2/3" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-48" />
+        </div>
+      </QueryFallback>
     );
   }
   return <WorkoutView workout={workout} local={local} justCompleted={justCompleted} />;

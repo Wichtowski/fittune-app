@@ -32,8 +32,10 @@ export const musclesQuery = (period: Period, tz: string) =>
       request("/stats/muscles", { schema: z.array(muscleVolumeSchema), query: { ...period, tz }, signal }),
   });
 
+export const getRecords = (signal?: AbortSignal) => request("/stats/records", { schema: z.array(exerciseRecordSchema), signal });
+
 export const recordsQuery = () =>
   queryOptions({
     queryKey: queryKeys.stats.records,
-    queryFn: ({ signal }) => request("/stats/records", { schema: z.array(exerciseRecordSchema), signal }),
+    queryFn: ({ signal }) => getRecords(signal),
   });

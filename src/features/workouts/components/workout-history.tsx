@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { WorkoutSummaryCard } from "./workout-summary-card";
 import { workoutsInfiniteQuery } from "@/api/workouts";
 import { EmptyState } from "@/components/empty-state";
-import { QueryError } from "@/components/query-error";
+import { QueryError, QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -32,11 +32,13 @@ export function WorkoutHistory() {
 
   if (query.isPending) {
     return (
-      <div className="grid gap-3">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-28" />
-        ))}
-      </div>
+      <QueryFallback query={query}>
+        <div className="grid gap-3">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-28" />
+          ))}
+        </div>
+      </QueryFallback>
     );
   }
   if (query.error && workouts.length === 0) return <QueryError error={query.error} onRetry={() => void query.refetch()} />;

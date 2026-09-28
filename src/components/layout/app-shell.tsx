@@ -19,9 +19,7 @@ export function AppShell() {
       <Sidebar />
       <main className="min-w-0 flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+7rem)] md:px-8 md:pb-12">
         <div className="mx-auto w-full max-w-6xl">
-          <div className="pt-4 md:pt-6 empty:hidden">
-            <ConnectionBanner />
-          </div>
+          <ConnectionBanner className="mt-4 md:mt-6" />
           <Outlet />
         </div>
       </main>
