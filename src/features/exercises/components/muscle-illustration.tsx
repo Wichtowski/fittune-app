@@ -1,5 +1,6 @@
 import { getLocale, t } from "@/lib/i18n";
-import { anatomyViewBox, anatomyViews, focusView, type AnatomyRegion, type ViewName } from "../anatomy";
+import { anatomyViewBox, anatomyViews, engagement, focusView, type ViewName } from "../anatomy";
+import { Button } from "@/components/ui/button";
 import { muscleLabels } from "@/lib/labels";
 import type { Muscle } from "@/schemas/common";
 
@@ -11,15 +12,7 @@ type MuscleIllustrationProps = {
   className?: string;
 };
 
-type Engagement = "primary" | "secondary" | "inactive";
-
-function engagement(region: AnatomyRegion, muscle: Muscle, secondaryMuscles: readonly Muscle[]): Engagement {
-  if (muscle === "full_body" || region.muscle === muscle) return "primary";
-  if (secondaryMuscles.includes("full_body") || (region.muscle && secondaryMuscles.includes(region.muscle))) return "secondary";
-  return "inactive";
-}
-
-const regionColors: Record<Engagement | "bone", string> = {
+const regionColors = {
   primary: "fill-muscle-load-high",
   secondary: "fill-muscle-load-low",
   inactive: "fill-anatomy-muscle",
@@ -43,7 +36,7 @@ function BodyView({ view, muscle, secondary, compact }: { view: ViewName; muscle
             </path>
           );
         }
-        const state = engagement(region, muscle, secondary);
+        const state = engagement(region.muscle, muscle, secondary);
         if (compact && state === "inactive") return null;
         return (
           <path key={region.name} d={region.d} data-muscle={region.muscle ?? undefined} data-engagement={state} className={regionColors[state]}>
@@ -93,14 +86,14 @@ export function MuscleIllustration({ muscle, secondaryMuscles = [], compact = fa
   );
 }
 
-export function MuscleMap({ muscle, secondaryMuscles = [] }: Pick<MuscleIllustrationProps, "muscle" | "secondaryMuscles">) {
+export function MuscleMap({ muscle, secondaryMuscles = [], onView3D }: Pick<MuscleIllustrationProps, "muscle" | "secondaryMuscles"> & { onView3D?: () => void }) {
   const secondary = [...new Set(secondaryMuscles)].filter((m) => m !== muscle && muscle !== "full_body");
 
   return (
     <figure aria-label={t("Muscles worked")} className="rounded-xl border bg-muted/20 p-4">
       <figcaption className="mb-3 flex items-baseline justify-between gap-2">
         <span className="font-semibold">{t("Muscles worked")}</span>
-        <span className="text-xs text-muted-foreground">{t("Front & back")}</span>
+        {onView3D ? <Button type="button" variant="secondary" size="sm" onClick={onView3D}>{t("View in 3D")}</Button> : <span className="text-xs text-muted-foreground">{t("Front & back")}</span>}
       </figcaption>
       <MuscleIllustration muscle={muscle} secondaryMuscles={secondary} className="mx-auto w-full max-w-80" />
       <dl className="mt-4 grid gap-2 border-t pt-3 text-xs">
