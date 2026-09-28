@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 
 import { onSignedIn } from "../sign-out";
-import { login } from "@/api/auth";
+import { account } from "@/api/account";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   });
 
   const mutation = useMutation({
-    mutationFn: login,
+    mutationFn: account.login,
     onSuccess: (auth) => {
       onSignedIn(auth);
       void navigate({ href: safeRedirect(redirectTo), replace: true });

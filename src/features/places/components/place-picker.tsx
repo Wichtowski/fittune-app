@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { PlaceForm } from "./place-form";
 import { equipmentSummary } from "../format";
 import { MAX_PLACES, placeKindLabels } from "../presets";
-import { archivePlace, placesQuery } from "@/api/places";
+import { fittune } from "@/api/fittune";
+import { placesQuery } from "@/api/places";
 import { queryKeys } from "@/api/query-keys";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ function PlacesDialog({ open, startAdding, onOpenChange }: { open: boolean; star
   const [editor, setEditor] = useState<{ id: string; place?: Place } | null>(() => (startAdding ? { id: newId() } : null));
   const [archiving, setArchiving] = useState<string | null>(null);
   const archive = useMutation({
-    mutationFn: archivePlace,
+    mutationFn: fittune.archivePlace,
     onSuccess: (_, id) => {
       queryClient.setQueryData<Place[]>(queryKeys.places, (current = []) => current.filter((place) => place.id !== id));
       void queryClient.invalidateQueries({ queryKey: queryKeys.places });

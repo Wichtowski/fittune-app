@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { invitesQuery, revokeInvite } from "@/api/invites";
+import { account } from "@/api/account";
+import { invitesQuery } from "@/api/invites";
 import { queryKeys } from "@/api/query-keys";
 import { QueryError } from "@/components/query-error";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ export function InviteList() {
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState<string | null>(null);
   const revoke = useMutation({
-    mutationFn: revokeInvite,
+    mutationFn: account.revokeInvite,
     onSuccess: () => {
       setConfirming(null);
       void queryClient.invalidateQueries({ queryKey: queryKeys.invites });

@@ -3,13 +3,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SharingSettings } from "./sharing-settings";
-import { updateSharing } from "@/api/friends";
+import { account } from "@/api/account";
 import { queryKeys } from "@/api/query-keys";
 
-vi.mock("@/api/friends", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/api/friends")>()),
-  updateSharing: vi.fn((sharing: unknown) => Promise.resolve(sharing)),
-}));
+const updateSharing = vi.spyOn(account, "updateSharing").mockImplementation((sharing) => Promise.resolve(sharing));
 
 afterEach(() => {
   cleanup();

@@ -2,12 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useOfflineSyncStore } from "./store";
 import { runOfflineSync, stopOfflineSync } from "./use-offline-sync";
-import { ApiError, request } from "@/api/client";
+import { ApiError } from "@/api/client";
+import { send } from "@/api/transport";
 import { queryClient } from "@/lib/query-client";
 
-vi.mock("@/api/client", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/api/client")>()),
-  request: vi.fn(),
+vi.mock("@/api/transport", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/transport")>()),
+  send: vi.fn(),
 }));
 
 afterEach(() => {
@@ -18,9 +19,9 @@ afterEach(() => {
 
 /** Every request answers after a tick, with an empty list or an empty page */
 function slowApi() {
-  const answer = (path: string): unknown => (path === "/workouts" ? { items: [], next_cursor: null } : path === "/me" ? { id: "me" } : []);
-  vi.mocked(request).mockImplementation(((path: string) =>
-    new Promise<unknown>((resolve) => setTimeout(() => resolve(answer(path)), 5))) as unknown as typeof request);
+  const answer = (path: string): unknown => (path === "/train/workouts" ? { items: [], next_cursor: null } : path === "/me" ? { id: "me" } : []);
+  vi.mocked(send).mockImplementation(((path: string) =>
+    new Promise<unknown>((resolve) => setTimeout(() => resolve(answer(path)), 5))) as unknown as typeof send);
 }
 
 describe("runOfflineSync", () => {
@@ -31,7 +32,7 @@ describe("runOfflineSync", () => {
   ])("stops syncing at once when %s", async (_, error) => {
     // Fake timers: a retry delay would leave the sync waiting, as the stuck button did
     vi.useFakeTimers();
-    vi.mocked(request).mockRejectedValue(error);
+    vi.mocked(send).mockRejectedValue(error);
     await runOfflineSync();
     const state = useOfflineSyncStore.getState();
     expect(state.status).toBe("error");

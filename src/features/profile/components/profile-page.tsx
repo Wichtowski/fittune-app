@@ -64,24 +64,25 @@ export function ProfilePage() {
           </div>
         </Section>
 
-        <Section title={t("Appearance")}>
-          <ToggleGroup
-            type="single"
-            value={preference}
-            onValueChange={(value) => value && setPreference(value as ThemePreference)}
-            aria-label={t("Theme")}
-            className="w-full sm:w-auto"
-          >
-            <ToggleGroupItem value="system">
-              <MonitorIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("System")}{" "}</ToggleGroupItem>
-            <ToggleGroupItem value="dark">
-              <MoonIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Dark")}{" "}</ToggleGroupItem>
-            <ToggleGroupItem value="light">
-              <SunIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Light")}{" "}</ToggleGroupItem>
-          </ToggleGroup>
+        <Section title={`${t("Language")} / ${t("Appearance")}`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <LanguagePicker />
+            <ToggleGroup
+              type="single"
+              value={preference}
+              onValueChange={(value) => value && setPreference(value as ThemePreference)}
+              aria-label={t("Theme")}
+              className="w-full sm:flex-1"
+            >
+              <ToggleGroupItem value="system">
+                <MonitorIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("System")}{" "}</ToggleGroupItem>
+              <ToggleGroupItem value="dark">
+                <MoonIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Dark")}{" "}</ToggleGroupItem>
+              <ToggleGroupItem value="light">
+                <SunIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Light")}{" "}</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </Section>
-
-        <Section title={t("Language")}><LanguagePicker /></Section>
 
         <Section title={t("Offline data")}>
           <OfflineData />

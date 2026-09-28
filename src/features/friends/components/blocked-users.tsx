@@ -3,7 +3,8 @@ import { toast } from "sonner";
 
 import { refreshFriends } from "../cache";
 import { UserAvatar, UserName } from "./user-avatar";
-import { blocksQuery, unblockUser } from "@/api/friends";
+import { account } from "@/api/account";
+import { blocksQuery } from "@/api/friends";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 
@@ -12,7 +13,7 @@ export function BlockedUsers() {
   const query = useQuery(blocksQuery());
   const queryClient = useQueryClient();
   const unblock = useMutation({
-    mutationFn: unblockUser,
+    mutationFn: account.unblockUser,
     onSuccess: () => toast.success(t("User unblocked")),
     onError: (error) => toast.error(t(error.message)),
     onSettled: () => refreshFriends(queryClient),

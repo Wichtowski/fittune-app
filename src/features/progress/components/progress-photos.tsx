@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ProgressPhotoImage } from "./progress-photo";
-import { deletePhoto, listPhotos, uploadPhoto } from "@/api/photos";
+import { fittune } from "@/api/fittune";
 import { Button } from "@/components/ui/button";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 
@@ -12,7 +12,7 @@ export const photoKeys = { all: ["progress-photos"] as const, workout: (id: stri
 export function WorkoutPhotos({ workoutId, justCompleted, waitingForSync }: { workoutId: string; justCompleted: boolean; waitingForSync: boolean }) {
   const online = useOnlineStatus();
   const queryClient = useQueryClient();
-  const photos = useQuery({ queryKey: photoKeys.workout(workoutId), queryFn: () => listPhotos(workoutId), enabled: !waitingForSync });
+  const photos = useQuery({ queryKey: photoKeys.workout(workoutId), queryFn: () => fittune.listPhotos(workoutId), enabled: !waitingForSync });
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadId, setUploadId] = useState(() => crypto.randomUUID());
@@ -22,7 +22,7 @@ export function WorkoutPhotos({ workoutId, justCompleted, waitingForSync }: { wo
   const library = useRef<HTMLInputElement>(null);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const upload = useMutation({
-    mutationFn: () => uploadPhoto(uploadId, file!, workoutId, setProgress),
+    mutationFn: () => fittune.uploadPhoto(uploadId, file!, workoutId, setProgress),
     onSuccess: () => {
       setFile(null);
       setPreview(null);
@@ -34,7 +34,7 @@ export function WorkoutPhotos({ workoutId, justCompleted, waitingForSync }: { wo
     onError: (error) => toast.error(error instanceof Error ? error.message : "Photo upload failed"),
   });
   const remove = useMutation({
-    mutationFn: deletePhoto,
+    mutationFn: fittune.deletePhoto,
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: photoKeys.all }); toast.success("Photo deleted"); },
     onError: () => toast.error("Couldn't delete the photo"),
   });
@@ -80,7 +80,7 @@ export function WorkoutPhotos({ workoutId, justCompleted, waitingForSync }: { wo
 }
 
 export function ProgressGallery() {
-  const photos = useInfiniteQuery({ queryKey: photoKeys.all, queryFn: ({ pageParam }) => listPhotos(undefined, pageParam), initialPageParam: 0,
+  const photos = useInfiniteQuery({ queryKey: photoKeys.all, queryFn: ({ pageParam }) => fittune.listPhotos(undefined, pageParam), initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => lastPage.length === 100 ? pages.length * 100 : undefined });
   const items = photos.data?.pages.flat() ?? [];
   const [selected, setSelected] = useState<string[]>([]);

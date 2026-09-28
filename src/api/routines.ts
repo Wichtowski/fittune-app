@@ -1,28 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
-import { z } from "zod";
 
-import { request } from "./client";
+import { fittune } from "./fittune";
 import { queryKeys } from "./query-keys";
-import { type RoutineInput, routineSchema } from "@/schemas/routine";
-
-export const getRoutines = (signal?: AbortSignal) => request("/routines", { schema: z.array(routineSchema), signal });
 
 export const routinesQuery = () =>
-  queryOptions({
-    queryKey: queryKeys.routines.list,
-    queryFn: ({ signal }) => getRoutines(signal),
-  });
+  queryOptions({ queryKey: queryKeys.routines.list, queryFn: ({ signal }) => fittune.getRoutines(signal) });
 
 export const routineQuery = (id: string) =>
-  queryOptions({
-    queryKey: queryKeys.routines.detail(id),
-    queryFn: ({ signal }) => request(`/routines/${id}`, { schema: routineSchema, signal }),
-  });
-
-export const createRoutine = (input: RoutineInput) =>
-  request("/routines", { method: "POST", body: input, schema: routineSchema });
-
-export const updateRoutine = (id: string, input: RoutineInput) =>
-  request(`/routines/${id}`, { method: "PUT", body: input, schema: routineSchema });
-
-export const deleteRoutine = (id: string) => request(`/routines/${id}`, { method: "DELETE" });
+  queryOptions({ queryKey: queryKeys.routines.detail(id), queryFn: ({ signal }) => fittune.getRoutine(id, signal) });

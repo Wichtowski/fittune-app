@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { ExerciseForm } from "./exercise-form";
 import { ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos } from "./exercise-media";
 import { MuscleMap } from "./muscle-illustration";
-import { archiveExercise, exerciseHistoryQuery } from "@/api/exercises";
+import { fittune } from "@/api/fittune";
+import { exerciseHistoryQuery } from "@/api/exercises";
 import { queryKeys } from "@/api/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
 import { QueryFallback } from "@/components/query-error";
@@ -203,7 +204,7 @@ function CustomActions({ history, onEdit }: { history: ExerciseHistory; onEdit: 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const archive = useMutation({
-    mutationFn: () => archiveExercise(history.exercise.id),
+    mutationFn: () => fittune.archiveExercise(history.exercise.id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
       toast.success(t("Exercise archived. Past workouts keep it."));

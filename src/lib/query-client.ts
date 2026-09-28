@@ -34,9 +34,12 @@ export const queryPersister = createSyncStoragePersister({
 export const PERSIST_MAX_AGE = 7 * DAY;
 
 /**
- * Friends' progress stays in memory only: a friend who stops sharing, unfriends or blocks must
- * not stay readable from this device's storage
+ * Kept in memory only:
+ * - friends' progress, so a friend who stops sharing, unfriends or blocks does not stay
+ *   readable from this device's storage
+ * - FitHealth data, FitHealth is online only and must never show a stale diary
  */
 export function shouldPersistQuery(query: Query) {
-  return defaultShouldDehydrateQuery(query) && query.queryKey[0] !== "friends";
+  const scope = query.queryKey[0];
+  return defaultShouldDehydrateQuery(query) && scope !== "friends" && scope !== "health";
 }

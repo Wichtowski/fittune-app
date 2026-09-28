@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RoutineList } from "@/features/routines/components/routine-list";
 
 export const Route = createFileRoute("/_app/routines/")({
+  staticData: { app: "train" },
   loader: ({ context }) => void context.queryClient.prefetchQuery(routinesQuery()),
   component: RoutinesPage,
 });
