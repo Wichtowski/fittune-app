@@ -90,6 +90,14 @@ Changing places never removes exercises already in the workout.
 get an "Update" toast; the app never reloads itself in the middle of a workout. API responses
 are cached per user by TanStack Query, never by the service worker.
 
+**Progress photos.** After finishing a workout, the completion screen offers a skippable camera
+or photo-library step. The workout is already saved before any photo upload. Photos can also be
+added or deleted later on workout detail; the Progress page has a private gallery and two-photo
+comparison. Uploads require a connection and a synced workout. A failed upload can be retried
+while the page stays open, or the image can be selected again later. The API decodes and
+re-encodes images to remove metadata and stores them privately in RustFS. Deploy the API's
+progress-photo migration and RustFS service before deploying this app version.
+
 **Offline data.** Opening the app online (at most every 15 minutes, and whenever the connection returns) downloads the profile, exercises, routines, places, records, the last 20 workouts and the history of their exercises into the persisted cache (`features/offline/sync.ts`).
 Profile → Offline data shows when that last happened and has a "Sync now" button.
 The app is offline when the device is, when the user turns on offline mode in Profile, or when the API stops answering (no response, or a 502-504 or Cloudflare 520-524 while online); `lib/connectivity.ts` feeds that into TanStack Query's online state, so queries, queued mutations and workout uploads pause together instead of retrying against a dead server.

@@ -35,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatTile } from "@/features/analytics/components/stat-tile";
 import { MuscleIllustration } from "@/features/exercises/components/muscle-illustration";
 import { equipmentSummary } from "@/features/places/format";
+import { WorkoutPhotos } from "@/features/progress/components/progress-photos";
 import { usePreferences } from "@/hooks/use-preferences";
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
@@ -132,6 +133,8 @@ function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; loc
       </section>
 
       {workout.notes ? <p className="mt-4 rounded-2xl bg-muted/60 p-4 text-sm whitespace-pre-wrap">{workout.notes}</p> : null}
+
+      {workout.ended_at ? <WorkoutPhotos workoutId={workout.id} justCompleted={justCompleted} waitingForSync={!!local} /> : null}
 
       <div className="mt-6 grid gap-3">
         {workout.exercises.map((exercise) => {
