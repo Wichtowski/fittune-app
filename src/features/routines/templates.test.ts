@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import { fillTemplateWeights, formFromTemplate, routineTemplates, templateCategories } from "./templates";
+import { pl } from "@/lib/pl";
 import type { ExerciseHistory } from "@/schemas/exercise";
 import { routineFormSchema } from "@/schemas/routine";
 
 describe("routine templates", () => {
   it("covers each category with distinct, usable sessions", () => {
-    expect(routineTemplates.length).toBeGreaterThanOrEqual(50);
+    expect(routineTemplates.length).toBeGreaterThanOrEqual(70);
+    const cardio = routineTemplates.filter((template) => template.category === "Cardio");
+    expect(cardio.length).toBeGreaterThanOrEqual(19);
+    for (const template of cardio) expect(pl[template.notes ?? ""]).toBeTruthy();
     expect(new Set(routineTemplates.map((template) => template.name)).size).toBe(routineTemplates.length);
     for (const category of templateCategories) expect(routineTemplates.some((template) => template.category === category)).toBe(true);
     for (const template of routineTemplates) {
-      expect(template.exercises.length).toBeGreaterThanOrEqual(3);
+      expect(template.exercises.length).toBeGreaterThanOrEqual(template.category === "Cardio" ? 1 : 3);
       expect(new Set(template.exercises.map(([name]) => name)).size).toBe(template.exercises.length);
       for (const [, sets, target, rest] of template.exercises) {
         expect(sets).toBeGreaterThan(0);
@@ -34,6 +38,16 @@ describe("routine templates", () => {
     expect(form?.exercises[0]?.sets[0]).toMatchObject({ reps: 8, weight: "", duration_seconds: "" });
     expect(form?.exercises[1]?.sets[0]).toMatchObject({ reps: "", duration_seconds: 45 });
     expect(form?.exercises[2]?.sets[0]).toMatchObject({ reps: "", duration_seconds: 300 });
+  });
+
+  it("loads cardio intervals with duration, recovery, and effort notes", () => {
+    const template = routineTemplates.find((entry) => entry.name === "Treadmill · Short Intervals")!;
+    const form = formFromTemplate(template, [{ id: "00000000-0000-4000-8000-000000000003", name: "Treadmill Run", tracking: "distance_duration" }]);
+    expect(routineFormSchema.safeParse(form).success).toBe(true);
+    expect(form?.exercises[0]?.sets).toHaveLength(8);
+    expect(form?.exercises[0]?.sets[0]).toMatchObject({ duration_seconds: 60, distance: "", reps: "" });
+    expect(form?.exercises[0]?.rest_seconds).toBe(90);
+    expect(form?.notes).toContain("90-second recoveries");
   });
 
   it("uses the latest normal weights in order without changing prescribed reps", () => {

@@ -4,17 +4,18 @@ import type { WeightUnit } from "@/schemas/common";
 import type { Exercise, ExerciseHistory } from "@/schemas/exercise";
 import type { RoutineFormInput } from "@/schemas/routine";
 
-export const templateCategories = ["Full body", "Push / Pull / Legs", "Upper / Lower", "Targeted muscles", "Home workouts", "Conditioning"] as const;
+export const templateCategories = ["Full body", "Push / Pull / Legs", "Upper / Lower", "Targeted muscles", "Home workouts", "Cardio", "Conditioning"] as const;
 export type TemplateCategory = (typeof templateCategories)[number];
 
 type Prescription = readonly [exercise: string, sets: number, repsOrSeconds: number, restSeconds?: number];
-export type RoutineTemplate = { name: string; category: TemplateCategory; exercises: readonly Prescription[] };
+export type RoutineTemplate = { name: string; category: TemplateCategory; exercises: readonly Prescription[]; notes?: string };
 
 const fb: TemplateCategory = "Full body";
 const ppl: TemplateCategory = "Push / Pull / Legs";
 const ul: TemplateCategory = "Upper / Lower";
 const focus: TemplateCategory = "Targeted muscles";
 const home: TemplateCategory = "Home workouts";
+const cardio: TemplateCategory = "Cardio";
 const conditioning: TemplateCategory = "Conditioning";
 
 export const routineTemplates: readonly RoutineTemplate[] = [
@@ -71,6 +72,29 @@ export const routineTemplates: readonly RoutineTemplate[] = [
   { name: "Home · Dumbbell Lower A", category: home, exercises: [["Bulgarian Split Squat", 4, 10], ["Walking Lunge", 3, 12], ["Plank", 3, 45, 60]] },
   { name: "Home · Dumbbell Lower B", category: home, exercises: [["Walking Lunge", 4, 12], ["Bulgarian Split Squat", 3, 12], ["Burpee", 3, 10], ["Plank", 3, 60, 60]] },
 
+  { name: "Treadmill · First 20 Minutes", category: cardio, exercises: [["Treadmill Run", 1, 1200]], notes: "Keep an easy pace and alternate running with walking as needed." },
+  { name: "Treadmill · Easy Run", category: cardio, exercises: [["Treadmill Run", 1, 1800]], notes: "Stay at a conversational pace throughout." },
+  { name: "Treadmill · Long Run", category: cardio, exercises: [["Treadmill Run", 1, 2700]], notes: "Keep the effort comfortable and steady." },
+  { name: "Treadmill · Tempo Blocks", category: cardio, exercises: [["Treadmill Run", 3, 480, 120]], notes: "Run each 8-minute block at a controlled, comfortably hard pace. Recover easily between blocks." },
+  { name: "Treadmill · Short Intervals", category: cardio, exercises: [["Treadmill Run", 8, 60, 90]], notes: "Run each work minute briskly. Walk or jog during the 90-second recoveries." },
+  { name: "Treadmill · Long Intervals", category: cardio, exercises: [["Treadmill Run", 5, 180, 120]], notes: "Hold a challenging but repeatable pace for each 3-minute block. Recover easily between blocks." },
+
+  { name: "Bike · Easy Spin", category: cardio, exercises: [["Stationary Bike", 1, 1200]], notes: "Pedal at an easy, conversational effort." },
+  { name: "Bike · Endurance Ride", category: cardio, exercises: [["Stationary Bike", 1, 3600]], notes: "Keep a steady effort that you can sustain for the full ride." },
+  { name: "Bike · Tempo Blocks", category: cardio, exercises: [["Stationary Bike", 3, 600, 120]], notes: "Ride each 10-minute block at a controlled, comfortably hard effort. Spin easily between blocks." },
+  { name: "Bike · Sprint Intervals", category: cardio, exercises: [["Stationary Bike", 10, 30, 90]], notes: "Pedal hard for 30 seconds, then spin easily for 90 seconds." },
+  { name: "Bike · Cadence Intervals", category: cardio, exercises: [["Stationary Bike", 6, 120, 60]], notes: "Pedal smoothly at a faster cadence for each 2-minute block. Recover easily between blocks." },
+
+  { name: "Row · Technique", category: cardio, exercises: [["Rowing Machine", 1, 900]], notes: "Row at an easy pace and focus on a smooth stroke." },
+  { name: "Row · Steady State", category: cardio, exercises: [["Rowing Machine", 1, 1800]], notes: "Keep a steady, conversational effort." },
+  { name: "Row · Two-Minute Intervals", category: cardio, exercises: [["Rowing Machine", 6, 120, 120]], notes: "Row each 2-minute block at a repeatable hard effort. Row gently or rest between blocks." },
+  { name: "Row · Power Sprints", category: cardio, exercises: [["Rowing Machine", 8, 30, 90]], notes: "Row hard for 30 seconds, then recover for 90 seconds." },
+
+  { name: "Rope · Starter Intervals", category: cardio, exercises: [["Jump Rope", 6, 30, 60]], notes: "Jump for 30 seconds, then rest for 60 seconds." },
+  { name: "Rope · Steady Rounds", category: cardio, exercises: [["Jump Rope", 5, 120, 45]], notes: "Keep a relaxed rhythm through each 2-minute round." },
+  { name: "Rope · Speed Intervals", category: cardio, exercises: [["Jump Rope", 10, 20, 40]], notes: "Jump quickly for 20 seconds, then rest for 40 seconds." },
+  { name: "Cardio · Mixed Machines", category: cardio, exercises: [["Treadmill Run", 1, 600], ["Stationary Bike", 1, 600], ["Rowing Machine", 1, 600]], notes: "Spend 10 easy minutes on each machine." },
+
   { name: "Conditioning · Row & Core", category: conditioning, exercises: [["Rowing Machine", 3, 300, 60], ["Plank", 3, 45, 60], ["Cable Crunch", 3, 15]] },
   { name: "Conditioning · Bike & Legs", category: conditioning, exercises: [["Stationary Bike", 3, 300, 60], ["Walking Lunge", 3, 12], ["Standing Calf Raise", 3, 15]] },
   { name: "Conditioning · Run & Core", category: conditioning, exercises: [["Treadmill Run", 3, 300, 60], ["Hanging Leg Raise", 3, 10], ["Plank", 3, 45, 60]] },
@@ -96,7 +120,7 @@ export function formFromTemplate(template: RoutineTemplate, catalog: Pick<Exerci
     };
   });
   if (exercises.some((exercise) => exercise === null)) return null;
-  return { name: template.name, notes: "", exercises: exercises.filter((exercise) => exercise !== null) };
+  return { name: template.name, notes: template.notes ?? "", exercises: exercises.filter((exercise) => exercise !== null) };
 }
 
 export function fillTemplateWeights(form: RoutineFormInput, histories: Map<string, ExerciseHistory>, unit: WeightUnit): RoutineFormInput {

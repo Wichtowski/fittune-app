@@ -4,6 +4,7 @@ import { useState } from "react";
 import { fillTemplateWeights, formFromTemplate, routineTemplates, templateCategories, type RoutineTemplate, type TemplateCategory } from "../templates";
 import { exerciseHistoryQuery, exercisesQuery } from "@/api/exercises";
 import { queryKeys } from "@/api/query-keys";
+import { formatDurationInput } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -51,7 +52,7 @@ export function TemplatePicker({ onPick }: { onPick: (values: RoutineFormInput) 
         else failed = true;
       }
     }));
-    onPick(fillTemplateWeights(values, histories, weightUnit));
+    onPick(fillTemplateWeights({ ...values, notes: t(values.notes) }, histories, weightUnit));
     setSelected(template.name);
     setMissing(false);
     setHistoryError(failed);
@@ -86,7 +87,12 @@ export function TemplatePicker({ onPick }: { onPick: (values: RoutineFormInput) 
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(template.category)}</p>
               <h3 className="mt-1 font-semibold">{t(template.name)}</h3>
-              <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{template.exercises.map(([name]) => name).join(" · ")}</p>
+              <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+                {template.exercises.map(([name, sets, target, rest]) => template.category === "Cardio"
+                  ? `${name}: ${sets} × ${formatDurationInput(target)}${sets > 1 && rest ? ` · ${t("Rest")} ${formatDurationInput(rest)}` : ""}`
+                  : name).join(" · ")}
+              </p>
+              {template.notes ? <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{t(template.notes)}</p> : null}
             </div>
             <Button type="button" size="sm" variant={selected === template.name ? "secondary" : "outline"} disabled={!catalog || loading !== null} onClick={() => void pick(template)}>
               {loading === template.name ? t("Loading…") : selected === template.name ? t("Selected") : t("Use plan")}
