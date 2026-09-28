@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -105,12 +106,12 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
 
   const columns =
     exercise.tracking === "weight_reps"
-      ? [preferences.weightUnit, "Reps"]
+      ? [preferences.weightUnit, t("Reps")]
       : exercise.tracking === "reps"
-        ? ["", "Reps"]
+        ? ["", t("Reps")]
         : exercise.tracking === "duration"
-          ? ["", "Time"]
-          : [preferences.distanceUnit, "Time"];
+          ? ["", t("Time")]
+          : [preferences.distanceUnit, t("Time")];
 
   return (
     <section className="rounded-2xl border bg-card p-3 md:p-4" aria-label={exercise.exercise_name}>
@@ -129,21 +130,21 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
           >
             {exercise.exercise_name}
           </Link>
-          <p className="text-sm text-muted-foreground">{muscleLabels[exercise.primary_muscle]}</p>
+          <p className="text-sm text-muted-foreground">{t(muscleLabels[exercise.primary_muscle])}</p>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
               <TimerIcon className="size-4" aria-hidden />
-              {exercise.rest_seconds ? formatDuration(exercise.rest_seconds) : "Off"}
+              {exercise.rest_seconds ? formatDuration(exercise.rest_seconds) : t("Off")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Rest timer</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("Rest timer")}</DropdownMenuLabel>
             {REST_OPTIONS.map((seconds) => (
               <DropdownMenuItem key={seconds} onSelect={() => edit(edits.setRest(exerciseId, seconds || null))}>
-                {seconds === 0 ? "Off" : formatDuration(seconds)}
+                {seconds === 0 ? t("Off") : formatDuration(seconds)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -151,31 +152,27 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" aria-label={`${exercise.exercise_name} options`}>
+            <Button variant="ghost" size="icon-sm" aria-label={t("{name} options", { name: exercise.exercise_name })}>
               <EllipsisVerticalIcon aria-hidden />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem disabled={index === 0} onSelect={() => edit(edits.moveExercise(exerciseId, -1))}>
-              <ArrowUpIcon aria-hidden /> Move up
-            </DropdownMenuItem>
+              <ArrowUpIcon aria-hidden />{" "}{t("Move up")}{" "}</DropdownMenuItem>
             <DropdownMenuItem disabled={index === count - 1} onSelect={() => edit(edits.moveExercise(exerciseId, 1))}>
-              <ArrowDownIcon aria-hidden /> Move down
-            </DropdownMenuItem>
+              <ArrowDownIcon aria-hidden />{" "}{t("Move down")}{" "}</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setShowNotes(true)}>
-              <NotebookPenIcon aria-hidden /> Add note
-            </DropdownMenuItem>
+              <NotebookPenIcon aria-hidden />{" "}{t("Add note")}{" "}</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={() => edit(edits.removeExercise(exerciseId))}>
-              <Trash2Icon aria-hidden /> Remove exercise
-            </DropdownMenuItem>
+              <Trash2Icon aria-hidden />{" "}{t("Remove exercise")}{" "}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
 
       <details className="mb-3 rounded-xl border bg-muted/20">
         <summary className="cursor-pointer rounded-xl px-3 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">
-          {videoSource ? "Muscles & demo" : "Muscles worked"}
+          {videoSource ? t("Muscles & demo") : t("Muscles worked")}
         </summary>
         <div className={`grid items-start gap-3 p-3 pt-0 ${videoSource ? "sm:grid-cols-2" : ""}`}>
           <MuscleMap muscle={exercise.primary_muscle} secondaryMuscles={history?.exercise.secondary_muscles} />
@@ -187,18 +184,18 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
         <Textarea
           defaultValue={exercise.notes ?? ""}
           onBlur={(event) => edit(edits.setExerciseNotes(exerciseId, event.target.value))}
-          placeholder="Notes: seat height, grip, how it felt…"
+          placeholder={t("Notes: seat height, grip, how it felt…")}
           className="mb-2 min-h-16 text-sm"
-          aria-label="Exercise notes"
+          aria-label={t("Exercise notes")}
         />
       ) : null}
 
       <div className={`${SET_GRID} px-1.5 pb-1 text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase`}>
-        <span className="text-center">Set</span>
-        <span>Previous</span>
+        <span className="text-center">{t("Set")}</span>
+        <span>{t("Previous")}</span>
         <span className="text-center">{columns[0]}</span>
         <span className="text-center">{columns[1]}</span>
-        <span className="sr-only">Done</span>
+        <span className="sr-only">{t("Done")}</span>
       </div>
 
       <div className="grid gap-1">
@@ -224,8 +221,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
       </div>
 
       <Button variant="secondary" className="mt-2 w-full" onClick={() => edit(edits.addSet(exerciseId))}>
-        <PlusIcon aria-hidden /> Add set
-      </Button>
+        <PlusIcon aria-hidden />{" "}{t("Add set")}{" "}</Button>
     </section>
   );
 });

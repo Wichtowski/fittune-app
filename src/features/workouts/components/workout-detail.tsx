@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { type InfiniteData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ClipboardPlusIcon, EllipsisIcon, RotateCcwIcon, Trash2Icon } from "lucide-react";
@@ -93,42 +94,41 @@ function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; loc
 
       {justCompleted ? (
         <div className="mb-4 rounded-2xl border border-primary/40 bg-primary/10 p-4">
-          <p className="font-display text-xl font-bold tracking-wide uppercase text-primary-strong">Workout complete</p>
+          <p className="font-display text-xl font-bold tracking-wide uppercase text-primary-strong">{t("Workout complete")}</p>
           <p className="text-sm text-muted-foreground">
-            {summary.completedSets} working {summary.completedSets === 1 ? "set" : "sets"} across {completedExercises}{" "}
-            {completedExercises === 1 ? "exercise" : "exercises"}.{" "}
-            {local ? "Saved on this device and waiting to sync." : "Your session is saved."}
+            {t("Completed sets: {sets}. Exercises: {exercises}.", { sets: summary.completedSets, exercises: completedExercises })}{" "}
+            {local ? t("Saved on this device and waiting to sync.") : t("Your session is saved.")}
           </p>
         </div>
       ) : null}
 
       <h2 className="mb-3 font-display text-xl font-bold tracking-wide uppercase">
-        {workout.ended_at ? "Session summary" : "Workout so far"}
+        {workout.ended_at ? t("Session summary") : t("Workout so far")}
       </h2>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label="Duration" value={formatDuration(duration)} />
-        <StatTile label="Volume" value={formatVolume(summary.volumeKg, preferences.weightUnit)} />
-        <StatTile label="Sets" value={String(summary.completedSets)} />
-        <StatTile label="Reps" value={summary.reps.toLocaleString()} />
+        <StatTile label={t("Duration")} value={formatDuration(duration)} />
+        <StatTile label={t("Volume")} value={formatVolume(summary.volumeKg, preferences.weightUnit)} />
+        <StatTile label={t("Sets")} value={String(summary.completedSets)} />
+        <StatTile label={t("Reps")} value={summary.reps.toLocaleString()} />
       </div>
 
-      <section className="mt-4 rounded-2xl border bg-card p-4" aria-label="Muscles worked">
-        <h3 className="font-semibold">Muscles worked</h3>
+      <section className="mt-4 rounded-2xl border bg-card p-4" aria-label={t("Muscles worked")}>
+        <h3 className="font-semibold">{t("Muscles worked")}</h3>
         {muscles.length ? (
           <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {muscles.map(({ muscle, sets }) => (
               <li key={muscle} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2">
                 <MuscleIllustration muscle={muscle} compact className="size-12 shrink-0" />
                 <span className="min-w-0 text-sm">
-                  <span className="block font-medium">{muscleLabels[muscle]}</span>
-                  <span className="text-muted-foreground">{sets} working {sets === 1 ? "set" : "sets"}</span>
+                  <span className="block font-medium">{t(muscleLabels[muscle])}</span>
+                  <span className="text-muted-foreground">{t("Working sets: {count}", { count: sets })}</span>
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">No working sets completed.</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("No working sets completed.")}</p>
         )}
       </section>
 
@@ -149,7 +149,7 @@ function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; loc
                 >
                   {exercise.exercise_name}
                 </Link>
-                <span className="shrink-0 text-sm text-muted-foreground">{muscleLabels[exercise.primary_muscle]}</span>
+                <span className="shrink-0 text-sm text-muted-foreground">{t(muscleLabels[exercise.primary_muscle])}</span>
               </div>
               {exercise.notes ? <p className="mb-2 text-sm text-muted-foreground">{exercise.notes}</p> : null}
               <ol className="grid gap-1">
@@ -159,9 +159,9 @@ function WorkoutView({ workout, local, justCompleted }: { workout: Viewable; loc
                     className={`flex items-center gap-3 rounded-lg px-2 py-1.5 tabular ${set.completed ? "" : "opacity-50"}`}
                   >
                     <span className="w-6 text-center font-display font-bold text-muted-foreground">{labels[i]}</span>
-                    <span className="font-medium">{summariseSet(set, exercise.tracking, preferences) ?? "—"}</span>
+                    <span className="font-medium">{summariseSet(set, exercise.tracking, preferences) ?? "-"}</span>
                     {set.rpe ? <span className="text-sm text-muted-foreground">RPE {set.rpe}</span> : null}
-                    {!set.completed ? <span className="ml-auto text-xs text-muted-foreground">not done</span> : null}
+                    {!set.completed ? <span className="ml-auto text-xs text-muted-foreground">{t("not done")}</span> : null}
                   </li>
                 ))}
               </ol>
@@ -195,11 +195,11 @@ function WorkoutActions({ workout, canEdit }: { workout: Viewable; canEdit: bool
     },
     onError: (_error, _vars, context) => {
       context?.snapshot.forEach(([key, data]) => queryClient.setQueryData(key, data));
-      toast.error("Couldn't delete the workout.");
+      toast.error(t("Couldn't delete the workout."));
     },
     onSuccess: () => {
       void navigate({ to: "/workouts", replace: true });
-      toast.success("Workout deleted");
+      toast.success(t("Workout deleted"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all });
@@ -227,15 +227,15 @@ function WorkoutActions({ workout, canEdit }: { workout: Viewable; canEdit: bool
       }),
     onSuccess: (routine) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
-      toast.success("Saved as routine");
+      toast.success(t("Saved as routine"));
       void navigate({ to: "/routines/$routineId", params: { routineId: routine.id } });
     },
-    onError: () => toast.error("Couldn't save the routine."),
+    onError: () => toast.error(t("Couldn't save the routine.")),
   });
 
   const repeat = () => {
     if (hasActive) {
-      toast.error("Finish or discard your current workout first.");
+      toast.error(t("Finish or discard your current workout first."));
       return;
     }
     start(workoutFromPrevious({ ...workout, revision: 0, created_at: "", updated_at: "" }));
@@ -245,38 +245,32 @@ function WorkoutActions({ workout, canEdit }: { workout: Viewable; canEdit: bool
   return (
     <>
       <Button size="sm" onClick={repeat} className="hidden sm:inline-flex">
-        <RotateCcwIcon className="size-4" aria-hidden /> Repeat
-      </Button>
+        <RotateCcwIcon className="size-4" aria-hidden />{" "}{t("Repeat")}{" "}</Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="secondary" size="icon-sm" aria-label="Workout actions">
+          <Button variant="secondary" size="icon-sm" aria-label={t("Workout actions")}>
             <EllipsisIcon aria-hidden />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={repeat}>
-            <RotateCcwIcon aria-hidden /> Repeat workout
-          </DropdownMenuItem>
+            <RotateCcwIcon aria-hidden />{" "}{t("Repeat workout")}{" "}</DropdownMenuItem>
           <DropdownMenuItem disabled={!canEdit || saveAsRoutine.isPending} onSelect={() => saveAsRoutine.mutate()}>
-            <ClipboardPlusIcon aria-hidden /> Save as routine
-          </DropdownMenuItem>
+            <ClipboardPlusIcon aria-hidden />{" "}{t("Save as routine")}{" "}</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" disabled={!canEdit || remove.isPending} onSelect={() => setConfirmDelete(true)}>
-            <Trash2Icon aria-hidden /> Delete workout
-          </DropdownMenuItem>
+            <Trash2Icon aria-hidden />{" "}{t("Delete workout")}{" "}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this workout?</AlertDialogTitle>
-            <AlertDialogDescription>It will be removed from your history and stats. This can't be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("Delete this workout?")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("It will be removed from your history and stats. This can't be undone.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => remove.mutate()}>
-              Delete
-            </AlertDialogAction>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => remove.mutate()}>{t("Delete")}{" "}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

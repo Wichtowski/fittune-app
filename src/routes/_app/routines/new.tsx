@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_app/routines/new")({
 function NewRoutinePage() {
   return (
     <>
-      <PageHeader title="New routine" eyebrow="Plan" />
+      <PageHeader title={t("New routine")} eyebrow={t("Plan")} />
       <RoutineEditor />
     </>
   );

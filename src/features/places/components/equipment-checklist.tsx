@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useId } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,9 @@ export function EquipmentChecklist({ value, onChange }: EquipmentChecklistProps)
         return (
           <div key={group.label} role="group" aria-labelledby={`${id}-${index}`} className="grid gap-2">
             <div className="flex items-center justify-between gap-2">
-              <span id={`${id}-${index}`} className="text-sm font-medium">{group.label}</span>
-              <Button type="button" variant="ghost" size="sm" aria-label={`${all ? "Clear" : "Select all"} ${group.label.toLowerCase()}`} onClick={toggleGroup}>
-                {all ? "Clear" : "Select all"}
+              <span id={`${id}-${index}`} className="text-sm font-medium">{t(group.label)}</span>
+              <Button type="button" variant="ghost" size="sm" aria-label={`${all ? t("Clear") : t("Select all")} ${t(group.label).toLowerCase()}`} onClick={toggleGroup}>
+                {all ? t("Clear") : t("Select all")}
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -53,7 +54,7 @@ export function EquipmentChecklist({ value, onChange }: EquipmentChecklistProps)
                     onChange={(event) => toggle(item, event.target.checked)}
                     className="size-4 accent-primary"
                   />
-                  {equipmentItemLabels[item]}
+                  {t(equipmentItemLabels[item])}
                 </label>
               ))}
             </div>

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { RefreshCwIcon } from "lucide-react";
 
 import { useOfflineSyncStore } from "../store";
@@ -23,10 +24,9 @@ export function OfflineData() {
     <div className="grid gap-4 text-sm">
       <label className="flex cursor-pointer items-start justify-between gap-3">
         <span className="grid gap-1">
-          <span className="font-medium">Offline mode</span>
+          <span className="font-medium">{t("Offline mode")}</span>
           <span className="text-muted-foreground">
-            Use FitTune without the network, for example with a weak signal at the gym. Workouts are saved on this device
-            and sync when you turn it off. It also turns on by itself while FitTune's servers are unavailable.
+            {t("Use FitTune without the network, for example with a weak signal at the gym. Workouts are saved on this device and sync when you turn it off. It also turns on by itself while FitTune's servers are unavailable.")}
           </span>
         </span>
         <input
@@ -39,26 +39,25 @@ export function OfflineData() {
       </label>
 
       <p className="text-muted-foreground">
-        FitTune keeps your exercises, routines, places and last {OFFLINE_WORKOUTS} workouts on this device so they work
-        without a connection. It syncs automatically whenever it is online.
+        {t("FitTune keeps your exercises, routines, places and last {count} workouts on this device so they work without a connection. It syncs automatically whenever it is online.", { count: OFFLINE_WORKOUTS })}
       </p>
       <div className="flex items-center justify-between gap-3">
         <div className="grid min-w-0 gap-1" aria-live="polite">
           <p>
             {syncing
-              ? "Syncing…"
+              ? t("Syncing…")
               : lastSyncedAt
-                ? `Last synced ${formatAgo(lastSyncedAt)}.`
-                : "Not synced on this device yet. Sync before you train somewhere without signal."}
+                ? t("Last synced {when}.", { when: formatAgo(lastSyncedAt) })
+                : t("Not synced on this device yet. Sync before you train somewhere without signal.")}
           </p>
           {reason ? (
-            <p className="text-muted-foreground">{cannotSync[reason]}</p>
+            <p className="text-muted-foreground">{t(cannotSync[reason])}</p>
           ) : error && !syncing ? (
             <p className="text-destructive">{error}</p>
           ) : null}
         </div>
         <Button variant="secondary" className="shrink-0" disabled={reason !== null || syncing} onClick={() => void runOfflineSync()}>
-          <RefreshCwIcon className={syncing ? "size-4 animate-spin" : "size-4"} aria-hidden /> {syncing ? "Syncing…" : "Sync now"}
+          <RefreshCwIcon className={syncing ? "size-4 animate-spin" : "size-4"} aria-hidden /> {syncing ? t("Syncing…") : t("Sync now")}
         </Button>
       </div>
     </div>

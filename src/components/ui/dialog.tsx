@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
@@ -26,7 +27,7 @@ function DialogContent({
         {children}
         <DialogPrimitive.Close className="absolute top-4 right-4 rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
           <XIcon className="size-5" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{t("Close")}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

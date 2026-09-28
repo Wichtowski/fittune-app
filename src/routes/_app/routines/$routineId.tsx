@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -18,7 +19,7 @@ function EditRoutinePage() {
 
   return (
     <>
-      <PageHeader title={data?.name ?? "Routine"} eyebrow="Edit routine" />
+      <PageHeader title={data?.name ?? t("Routine")} eyebrow={t("Edit routine")} />
       {data ? (
         <RoutineEditor key={data.id} routine={data} />
       ) : error ? (
