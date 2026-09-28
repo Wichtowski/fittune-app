@@ -19,7 +19,7 @@ function LoginPage() {
     <AuthLayout title="Welcome back" subtitle="Sign in to continue your training.">
       <LoginForm redirectTo={redirectTo} />
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        New to FitTune?{" "}
+        Got an invite?{" "}
         <Link to="/register" className="font-semibold text-primary-strong underline-offset-4 hover:underline">
           Create an account
         </Link>

@@ -5,6 +5,7 @@ import type { Bucket, Period } from "@/schemas/stats";
 export const queryKeys = {
   me: ["me"] as const,
   places: ["places"] as const,
+  invites: ["invites"] as const,
   exercises: {
     all: ["exercises"] as const,
     list: (filters: { q?: string; muscle?: Muscle; equipment?: Equipment } = {}) =>

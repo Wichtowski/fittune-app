@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { applyServerErrors } from "@/lib/form-errors";
 import { type RegisterForm as RegisterValues, registerFormSchema } from "@/schemas/user";
 
-export function RegisterForm() {
+export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
   const navigate = useNavigate();
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerFormSchema),
-    defaultValues: { username: "", email: "", password: "", confirm_password: "", display_name: "" },
+    defaultValues: { username: "", email: "", password: "", confirm_password: "", display_name: "", invite_code: inviteCode },
     mode: "onTouched",
   });
 
@@ -26,6 +26,7 @@ export function RegisterForm() {
         email: values.email,
         password: values.password,
         display_name: values.display_name || null,
+        invite_code: values.invite_code,
       }),
     onSuccess: (auth) => {
       onSignedIn(auth);
@@ -37,6 +38,20 @@ export function RegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="grid gap-5" noValidate>
+        <FormField
+          control={form.control}
+          name="invite_code"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Invite code</FormLabel>
+              <FormControl>
+                <Input autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="xxxx-xxxx-xxxx-xxxx" {...field} />
+              </FormControl>
+              <FormDescription>FitTune is invite only. Ask an admin for a code.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="display_name"
