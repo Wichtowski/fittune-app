@@ -2,6 +2,7 @@ import type * as React from "react";
 
 import { Logo } from "@/components/layout/logo";
 import { AuthBackground } from "@/features/auth/components/auth-background";
+import { ConnectionBanner } from "@/features/offline/components/connection-banner";
 
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
