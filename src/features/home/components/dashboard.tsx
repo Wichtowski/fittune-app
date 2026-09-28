@@ -169,7 +169,7 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-xl font-bold tracking-wide uppercase">{t("Recent")}</h2>
@@ -191,7 +191,7 @@ export function Dashboard() {
               description={t("Start a workout or log a run - it will show up here.")}
             />
           ) : (
-            <ul className="grid gap-3">
+            <ul className="grid grid-cols-1 gap-3">
               {feed.map((entry) => (
                 <li key={`${entry.type}-${entry.item.id}`}>
                   {entry.type === "workout" ? (
