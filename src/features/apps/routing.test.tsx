@@ -1,10 +1,12 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryHistory, createRouter, RouterProvider } from "@tanstack/react-router";
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { useLastApp } from "./store";
 import { useSession } from "@/features/auth/session";
+import { useConnectivity } from "@/lib/connectivity";
+import { LocaleProvider } from "@/lib/i18n";
 import { storage } from "@/lib/storage";
 import { routeTree } from "@/routeTree.gen";
 
@@ -26,6 +28,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   useSession.setState({ token: null, userId: null });
+  useConnectivity.setState({ deviceOnline: true, manualOffline: false, apiDown: false });
 });
 
 it("sends a signed-out visitor to login even with a remembered app", async () => {
@@ -59,4 +62,24 @@ it("shows the launcher when storage holds an app this build does not know", asyn
   render(<RouterProvider router={makeRouter("/")} />);
   expect(await screen.findByRole("link", { name: /FitHealth/ })).toBeInTheDocument();
   storage.removeItem("fittune.last-app");
+});
+
+it("keeps FitTune's offline banner on a shared page reached from FitHealth", async () => {
+  useLastApp.setState({ lastApp: "health" });
+  useConnectivity.setState({ deviceOnline: false });
+  const queryClient = new QueryClient();
+  const router = createRouter({
+    routeTree,
+    context: { queryClient },
+    history: createMemoryHistory({ initialEntries: ["/profile"] }),
+  });
+  render(
+    <QueryClientProvider client={queryClient}>
+      <LocaleProvider>
+        <RouterProvider router={router} />
+      </LocaleProvider>
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText("You're offline.")).toBeInTheDocument();
+  expect(screen.queryByText("FitHealth needs a connection")).not.toBeInTheDocument();
 });

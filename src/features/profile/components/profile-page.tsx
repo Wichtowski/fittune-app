@@ -65,7 +65,13 @@ export function ProfilePage() {
         </Section>
 
         <Section title={t("Appearance")}>
-          <ToggleGroup
+
+        </Section>
+
+        <Section title={`${t("Language")} / ${t("Appearance")}`}>
+          <>
+            <LanguagePicker />
+            <ToggleGroup
             type="single"
             value={preference}
             onValueChange={(value) => value && setPreference(value as ThemePreference)}
@@ -79,9 +85,8 @@ export function ProfilePage() {
             <ToggleGroupItem value="light">
               <SunIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Light")}{" "}</ToggleGroupItem>
           </ToggleGroup>
+          </>
         </Section>
-
-        <Section title={t("Language")}><LanguagePicker /></Section>
 
         <Section title={t("Offline data")}>
           <OfflineData />
