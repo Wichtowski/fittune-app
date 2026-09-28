@@ -6,7 +6,7 @@ Issue: #27, part of the FitHealth epic #26
 
 FitHealth is a Fitatu-style nutrition app that lives inside `fittune-app` next to FitTune (training).
 Both apps share one account, one backend and one PWA install, but each has its own navigation and purpose.
-This sub-project only makes room for FitHealth: the switcher, the remembered last-used app, a first-run launcher and an empty FitHealth section.
+This sub-project only makes room for FitHealth: the switcher, the remembered last-used app, a first-run launcher, an empty FitHealth section, and API clients and endpoints split by app.
 The food diary (#28), barcode scan (#29) and label OCR (#30) fill that section later.
 
 Success means:
@@ -27,6 +27,9 @@ Success means:
 - On mobile the switcher is an app-mark button in `PageHeader` that opens a bottom sheet, on desktop it is a segmented control in the sidebar
 - No combined dashboard
 - The PWA `start_url` stays `/`, the installed app keeps the FitTune name and icon
+- The API is namespaced by app: shared account endpoints, `/api/v1/train/*` and `/api/v1/health/*`
+- The app talks to it through three client instances, `account`, `fittune` and `fithealth`, built on one abstract `ApiClient`
+- Backward compatibility is not kept, the app is not in use yet, so `fittune-app` and `fittune-api` deploy together
 
 ## App model
 
@@ -107,6 +110,40 @@ Link updates:
 - Tapping a tile navigates to that app's home, which records `lastApp`
 - All copy goes through `t()` with Polish strings added to `src/lib/pl.ts`
 
+## Clients and API namespaces
+
+### API (`fittune-api`)
+
+| Namespace | Modules | Why |
+| --- | --- | --- |
+| `/api/v1/auth/*`, `/api/v1/me*`, `/api/v1/users*`, `/api/v1/admin/invites*`, `/api/v1/friends*`, `/api/v1/blocks*` | `auth`, `users`, `invites`, `friends` | Account and social, shared by both apps. Friend feeds and stats show training data today but belong to the social graph, not to one app |
+| `/api/v1/train/*` | `exercises`, `exercises::media`, `routines`, `places`, `workouts`, `photos`, `activities`, `stats` | FitTune |
+| `/api/v1/health/*` | none yet | FitHealth, filled from #28 |
+
+- New `src/train/mod.rs` composes the FitTune router from the existing modules, which stay where they are
+- New `src/health/mod.rs` returns an empty router for now
+- `src/app.rs` nests them with `.nest("/train", train::router())` and `.nest("/health", health::router())`, the shared modules keep their `merge`
+- `src/exercises/media.rs` builds file URLs as `/api/v1/train/exercise-media/{id}/file`
+- The server health check stays at `/health` outside `/api/v1`, so Docker healthchecks and deployments do not change
+- Integration tests in `tests/api/`, the fixture seeder `src/fixtures/seed.rs`, `docs/API.md` and `README.md` move to the new paths
+- Unknown routes under `/train` and `/health` keep returning the existing JSON `NotFound` error
+
+### App (`fittune-app`)
+
+- `src/api/client.ts` exports an abstract `ApiClient` that owns transport only:
+  - constructor takes the namespace base path (`""`, `"/train"`, `"/health"`)
+  - `protected request()` with the current behaviour: URL building, bearer token, timeout, abort forwarding, `ApiError`, connectivity reporting, zod parsing
+  - `protected url(path)` for the raw `fetch` and XHR calls that cannot go through `request()` (photo upload and photo file download)
+- Authentication hooks (`getToken`, `onUnauthorized`) stay module-level and are configured once through `configureApiClient`, so all instances share one session
+- `ApiError` and `REQUEST_TIMEOUT_MS` stay exported from `client.ts`
+- Three concrete clients, one file each, each exported as a single instance:
+  - `src/api/account.ts`: `AccountClient`, base `""`, with auth, `/me`, users, admin invites, friends and blocks
+  - `src/api/fittune.ts`: `FitTuneClient`, base `"/train"`, with exercises, exercise media, routines, places, workouts, photos, activities and stats
+  - `src/api/fithealth.ts`: `FitHealthClient`, base `"/health"`, with no methods yet
+- The module-level `request()` goes away, every caller uses a client method, so no code can reach an endpoint without choosing its namespace
+- Query and mutation options (`meQuery`, `photoKeys` and similar) stay in their current modules and call the client instances, only the fetching functions move
+- The current endpoint files (`auth.ts`, `workouts.ts`, `photos.ts` and the others) are folded into the three client files, a client file that grows past easy reading is split by resource into a folder with the class composed from them
+
 ## Online only
 
 - The `/health` layout renders an `OnlineOnly` gate around its `Outlet`
@@ -122,7 +159,6 @@ Link updates:
 
 ## Out of scope
 
-- Any backend change
 - FitHealth features: diary, products, scan, OCR
 - Syncing the remembered app to the user account
 - A combined training and nutrition dashboard
@@ -142,6 +178,10 @@ Unit and component tests with Vitest and Testing Library, next to the code like 
 - The switcher sheet navigates to the picked app's home
 - `BottomNav` renders the active app's items
 - `shouldPersistQuery` rejects `"health"` keys
+- `ApiClient`: each instance prefixes its namespace, all instances send the shared token and report `401` through the shared hook (extends `src/api/client.test.ts`)
+
+API checks in `fittune-api`: the existing integration tests on the new paths, plus one test that the old flat path (for example `/api/v1/workouts`) returns `404` and one that `/api/v1/health/anything` returns the JSON `NotFound` error.
+Run `cargo fmt --check`, `cargo clippy` and `cargo test` as the repository's CI does.
 
 Checks: `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build`.
 
@@ -151,3 +191,11 @@ Manual verification in the real app with Playwright at a phone and a desktop vie
 - Switching both ways from every top-level screen
 - Reloading `/` lands in the last-used app
 - FitHealth offline (device and manual offline mode) shows the gate, FitTune keeps working as today
+- FitTune screens load against the local API on the new paths: dashboard, workout logging, progress photos upload and display, exercise media
+
+## Delivery
+
+Two PRs, merged and deployed together because the API change breaks the old app:
+
+1. `fittune-api`: namespaced routes, tests and docs
+2. `fittune-app`: clients, shell, launcher, FitHealth skeleton
