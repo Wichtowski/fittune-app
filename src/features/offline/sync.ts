@@ -21,8 +21,10 @@ export type SyncResult = { failed: number };
  * makes sure the common ones are there before the user goes offline
  */
 export async function syncForOffline(queryClient: QueryClient): Promise<SyncResult> {
-  // Always refetch, a sync that returns cached data would not be a sync
-  const fresh = { staleTime: 0 } as const;
+  // Always refetch, since a sync that returns cached data would not be a sync. Fail fast
+  // instead of retrying or pausing while offline: the next sync tries again, and the button
+  // must never hang on a dead server
+  const fresh = { staleTime: 0, retry: false, networkMode: "always" } as const;
 
   // Core data first and in order: if the first request fails the API is unreachable
   await queryClient.fetchQuery({ ...meQuery(), ...fresh });
