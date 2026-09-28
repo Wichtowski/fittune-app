@@ -9,6 +9,7 @@ import { configureApiClient } from "@/api/client";
 import { registerMutationDefaults } from "@/api/mutation-defaults";
 import { getToken } from "@/features/auth/session";
 import { clearLocalSession } from "@/features/auth/sign-out";
+import { startConnectivity } from "@/lib/connectivity";
 import { PERSIST_MAX_AGE, queryClient, queryPersister } from "@/lib/query-client";
 import { routeTree } from "./routeTree.gen";
 
@@ -28,6 +29,8 @@ declare module "@tanstack/react-router" {
 }
 
 registerMutationDefaults(queryClient);
+// Before rendering, so the first queries already know whether to use the network
+startConnectivity();
 
 configureApiClient({
   getToken,

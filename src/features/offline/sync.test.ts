@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { syncForOffline } from "./sync";
 import { ApiError, request } from "@/api/client";
+import { meQuery } from "@/api/auth";
 import { exerciseHistoryQuery } from "@/api/exercises";
 import { workoutQuery } from "@/api/workouts";
 
@@ -43,6 +44,14 @@ describe("syncForOffline", () => {
     expect(client.getQueryData(workoutQuery("w2").queryKey)).toMatchObject({ id: "w2" });
     expect(client.getQueryData(exerciseHistoryQuery("bench").queryKey)).toEqual([]);
     expect(result.failed).toBe(1);
+  });
+
+  it("does not wait behind a screen's fetch that is stuck retrying or paused", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    // A screen's fetch of the same query that never settles, like a paused retry
+    void client.prefetchQuery({ queryKey: meQuery().queryKey, queryFn: () => new Promise(() => {}) });
+    await expect(syncForOffline(client)).resolves.toEqual({ failed: 1 });
+    expect(client.getQueryData(meQuery().queryKey)).toEqual({ id: "me" });
   });
 
   it("stops at once when the API cannot be reached", async () => {

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { routinesQuery } from "@/api/routines";
 import { EmptyState } from "@/components/empty-state";
-import { QueryError } from "@/components/query-error";
+import { QueryError, QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { workoutFromRoutine } from "@/features/workouts/draft";
@@ -14,18 +14,20 @@ import { formatDay } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
 
 export function RoutineList() {
-  const { data, error, isPending, refetch } = useQuery(routinesQuery());
+  const { data, error, isPending, fetchStatus, refetch } = useQuery(routinesQuery());
   const start = useWorkoutStore((state) => state.start);
   const hasActive = useWorkoutStore((state) => state.active !== null);
   const navigate = useNavigate();
 
   if (isPending) {
     return (
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 3 }, (_, i) => (
-          <Skeleton key={i} className="h-44" />
-        ))}
-      </div>
+      <QueryFallback query={{ error, fetchStatus, refetch }}>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={i} className="h-44" />
+          ))}
+        </div>
+      </QueryFallback>
     );
   }
   if (error && !data) return <QueryError error={error} onRetry={() => void refetch()} />;

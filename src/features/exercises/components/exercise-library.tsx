@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { type ExerciseFilter, filterExercises } from "../filter";
 import { ExercisePhoto } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
-import { QueryError } from "@/components/query-error";
+import { QueryError, QueryFallback } from "@/components/query-error";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,7 +20,7 @@ type ExerciseLibraryProps = {
 };
 
 export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps) {
-  const { data, error, isPending, refetch } = useQuery(exercisesQuery());
+  const { data, error, isPending, fetchStatus, refetch } = useQuery(exercisesQuery());
   const results = useMemo(() => filterExercises(data ?? [], filter), [data, filter]);
 
   return (
@@ -77,11 +77,13 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
 
       {error && !data ? <QueryError error={error} onRetry={() => void refetch()} /> : null}
       {isPending ? (
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 9 }, (_, i) => (
-            <Skeleton key={i} className="h-20" />
-          ))}
-        </div>
+        <QueryFallback query={{ error, fetchStatus, refetch }}>
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 9 }, (_, i) => (
+              <Skeleton key={i} className="h-20" />
+            ))}
+          </div>
+        </QueryFallback>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">

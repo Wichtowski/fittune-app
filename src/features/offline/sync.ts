@@ -1,4 +1,4 @@
-import type { QueryClient } from "@tanstack/react-query";
+import type { QueryClient, QueryKey } from "@tanstack/react-query";
 
 import { meQuery } from "@/api/auth";
 import { exerciseHistoryQuery, exercisesQuery } from "@/api/exercises";
@@ -21,31 +21,44 @@ export type SyncResult = { failed: number };
  * makes sure the common ones are there before the user goes offline
  */
 export async function syncForOffline(queryClient: QueryClient): Promise<SyncResult> {
-  // Always refetch, since a sync that returns cached data would not be a sync. Fail fast
-  // instead of retrying or pausing while offline: the next sync tries again, and the button
-  // must never hang on a dead server
-  const fresh = { staleTime: 0, retry: false, networkMode: "always" } as const;
+  const own = ownFetch(queryClient);
 
   // Core data first and in order: if the first request fails the API is unreachable
-  await queryClient.fetchQuery({ ...meQuery(), ...fresh });
+  await own(meQuery(), (o) => queryClient.fetchQuery(o));
   await Promise.all([
-    queryClient.fetchQuery({ ...exercisesQuery(), ...fresh }),
-    queryClient.fetchQuery({ ...routinesQuery(), ...fresh }),
-    queryClient.fetchQuery({ ...placesQuery(), ...fresh }),
-    queryClient.fetchQuery({ ...recordsQuery(), ...fresh }),
+    own(exercisesQuery(), (o) => queryClient.fetchQuery(o)),
+    own(routinesQuery(), (o) => queryClient.fetchQuery(o)),
+    own(placesQuery(), (o) => queryClient.fetchQuery(o)),
+    own(recordsQuery(), (o) => queryClient.fetchQuery(o)),
   ]);
-  const history = await queryClient.fetchInfiniteQuery({ ...workoutsInfiniteQuery("completed"), ...fresh });
-  await queryClient.fetchInfiniteQuery({ ...workoutsInfiniteQuery("in_progress"), ...fresh });
+  const history = await own(workoutsInfiniteQuery("completed"), (o) => queryClient.fetchInfiniteQuery(o));
+  await own(workoutsInfiniteQuery("in_progress"), (o) => queryClient.fetchInfiniteQuery(o));
 
   const workoutIds = history.pages.flatMap((page) => page.items).slice(0, OFFLINE_WORKOUTS).map((w) => w.id);
-  const workouts = await settle(workoutIds, (id) => queryClient.fetchQuery({ ...workoutQuery(id), ...fresh }));
+  const workouts = await settle(workoutIds, (id) => own(workoutQuery(id), (o) => queryClient.fetchQuery(o)));
 
   const exerciseIds = [...new Set(workouts.ok.flatMap((workout) => workout.exercises.map((e) => e.exercise_id)))];
   const histories = await settle(exerciseIds.slice(0, MAX_EXERCISE_HISTORIES), (id) =>
-    queryClient.fetchQuery({ ...exerciseHistoryQuery(id), ...fresh }),
+    own(exerciseHistoryQuery(id), (o) => queryClient.fetchQuery(o)),
   );
 
   return { failed: workouts.failed + histories.failed };
+}
+
+/** Always refetch, never retry, never pause: the next sync tries again */
+const OWN_FETCH = { staleTime: 0, retry: false, networkMode: "always" } as const;
+
+/**
+ * Runs a fetch for the sync on its own terms. A screen may already be loading the same query
+ * with retries that wait, and pause while the window is in the background; fetching normally
+ * would join that fetch and wait with it, which kept "Sync now" spinning. So such a fetch is
+ * cancelled first and the sync starts its own
+ */
+function ownFetch(queryClient: QueryClient) {
+  return async <O extends { queryKey: QueryKey }, R>(options: O, run: (options: O & typeof OWN_FETCH) => Promise<R>) => {
+    await queryClient.cancelQueries({ queryKey: options.queryKey, exact: true });
+    return run({ ...options, ...OWN_FETCH });
+  };
 }
 
 /** Runs `task` for every item with limited concurrency, collecting results and failures */

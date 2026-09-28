@@ -8,6 +8,7 @@ import { meQuery } from "@/api/auth";
 import { musclesQuery, overviewQuery, recordsQuery, timelineQuery } from "@/api/stats";
 import { workoutsInfiniteQuery } from "@/api/workouts";
 import { EmptyState } from "@/components/empty-state";
+import { QueryFallback } from "@/components/query-error";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -110,7 +111,9 @@ export function Dashboard() {
             />
           </>
         ) : (
-          Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28" />)
+          <QueryFallback query={overview} className="col-span-full">
+            {Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28" />)}
+          </QueryFallback>
         )}
       </section>
 
@@ -135,7 +138,9 @@ export function Dashboard() {
           }}
         >
           {timeline.isPending ? (
-            <Skeleton className="h-[220px]" />
+            <QueryFallback query={timeline}>
+              <Skeleton className="h-[220px]" />
+            </QueryFallback>
           ) : (
             <ColumnChart
               data={volumeData}
@@ -174,10 +179,12 @@ export function Dashboard() {
             </Button>
           </div>
           {workouts.isPending || activities.isPending ? (
-            <div className="grid gap-3">
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-            </div>
+            <QueryFallback query={workouts.isPending ? workouts : activities}>
+              <div className="grid gap-3">
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+              </div>
+            </QueryFallback>
           ) : feed.length === 0 ? (
             <EmptyState
               icon={ActivityIcon}

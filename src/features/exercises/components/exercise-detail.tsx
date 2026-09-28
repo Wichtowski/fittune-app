@@ -10,7 +10,7 @@ import { MuscleMap } from "./muscle-illustration";
 import { archiveExercise, exerciseHistoryQuery } from "@/api/exercises";
 import { queryKeys } from "@/api/query-keys";
 import { PageHeader } from "@/components/layout/page-header";
-import { QueryError } from "@/components/query-error";
+import { QueryFallback } from "@/components/query-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,14 +29,15 @@ import type { ExerciseHistory } from "@/schemas/exercise";
 
 export function ExerciseDetail({ exerciseId }: { exerciseId: string }) {
   const query = useQuery(exerciseHistoryQuery(exerciseId));
-  if (query.error && !query.data) return <QueryError error={query.error} onRetry={() => void query.refetch()} />;
   if (!query.data) {
     return (
-      <div className="grid gap-3 pt-8">
-        <Skeleton className="h-12 w-1/2" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-64" />
-      </div>
+      <QueryFallback query={query}>
+        <div className="grid gap-3 pt-8">
+          <Skeleton className="h-12 w-1/2" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-64" />
+        </div>
+      </QueryFallback>
     );
   }
   return <ExerciseView history={query.data} />;

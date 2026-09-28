@@ -1,6 +1,7 @@
 import { useSession } from "./session";
 import { logout } from "@/api/auth";
 import { queryKeys } from "@/api/query-keys";
+import { useConnectivity } from "@/lib/connectivity";
 import { QUERY_CACHE_KEY, queryClient } from "@/lib/query-client";
 import { storage } from "@/lib/storage";
 import { useOfflineSyncStore } from "@/features/offline/store";
@@ -20,6 +21,8 @@ export function clearLocalSession({ discardWorkouts = false } = {}) {
   queryClient.clear();
   storage.removeItem(QUERY_CACHE_KEY);
   useOfflineSyncStore.getState().reset();
+  // Offline mode would keep the next sign-in waiting for a network it is told not to use
+  useConnectivity.getState().setManualOffline(false);
 }
 
 /** Explicit sign-out: revokes the token and removes all of this user's local data. */
