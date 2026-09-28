@@ -8,6 +8,7 @@ import { type Control, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { emptySetTarget, newExerciseEntry, toRoutineForm, toRoutineInput } from "../mapping";
+import { TemplatePicker } from "./template-picker";
 import { queryKeys } from "@/api/query-keys";
 import { createRoutine, deleteRoutine, updateRoutine } from "@/api/routines";
 import {
@@ -73,7 +74,8 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((values) => save.mutate(values))} className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]" noValidate>
+      {!routine ? <TemplatePicker onPick={(values) => form.reset(values)} /> : null}
+      <form id="routine-form" onSubmit={form.handleSubmit((values) => save.mutate(values))} className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]" noValidate>
         <div className="grid content-start gap-5 lg:sticky lg:top-8">
           <FormField
             control={form.control}

@@ -78,7 +78,7 @@ export function StartWorkout() {
         ) : null}
 
         <Button size="lg" className="h-16 text-lg" disabled={!place} onClick={() => place && start(createWorkout({ place }))}>
-          <PlayIcon className="fill-current" aria-hidden />{" "}{t("Start empty workout")}{" "}</Button>
+          <PlayIcon className="fill-current" aria-hidden />{" "}{t("Start workout")}{" "}</Button>
 
         {lastWorkout ? (
           <Button size="lg" variant="secondary" disabled={!place} onClick={() => void repeatLast()}>

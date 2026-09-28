@@ -40,7 +40,7 @@ export function RoutineList() {
         description={t("Pick exercises and target sets once, then start the session in one tap at the gym.")}
         action={
           <Button asChild size="sm">
-            <Link to="/routines/new">{t("Create routine")}</Link>
+            <Link to="/routines/new">{t("Browse plans")}</Link>
           </Button>
         }
       />
