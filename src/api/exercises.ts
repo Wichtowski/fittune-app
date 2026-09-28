@@ -5,11 +5,16 @@ import { request } from "./client";
 import { queryKeys } from "./query-keys";
 import { exerciseHistorySchema, type ExerciseInput, exerciseSchema } from "@/schemas/exercise";
 
+export const getExercises = (signal?: AbortSignal) => request("/exercises", { schema: z.array(exerciseSchema), signal });
+
+export const getExerciseHistory = (id: string, signal?: AbortSignal) =>
+  request(`/exercises/${id}/history`, { schema: exerciseHistorySchema, query: { sessions: 50 }, signal });
+
 /** The full visible library. Filtering happens client-side: it is small and must work offline. */
 export const exercisesQuery = () =>
   queryOptions({
     queryKey: queryKeys.exercises.list(),
-    queryFn: ({ signal }) => request("/exercises", { schema: z.array(exerciseSchema), signal }),
+    queryFn: ({ signal }) => getExercises(signal),
     staleTime: 30 * 60_000,
   });
 
@@ -22,8 +27,7 @@ export const exerciseQuery = (id: string) =>
 export const exerciseHistoryQuery = (id: string) =>
   queryOptions({
     queryKey: queryKeys.exercises.history(id),
-    queryFn: ({ signal }) =>
-      request(`/exercises/${id}/history`, { schema: exerciseHistorySchema, query: { sessions: 50 }, signal }),
+    queryFn: ({ signal }) => getExerciseHistory(id, signal),
   });
 
 export const createExercise = (input: ExerciseInput) =>

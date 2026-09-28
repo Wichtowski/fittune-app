@@ -5,10 +5,12 @@ import { request } from "./client";
 import { queryKeys } from "./query-keys";
 import { type RoutineInput, routineSchema } from "@/schemas/routine";
 
+export const getRoutines = (signal?: AbortSignal) => request("/routines", { schema: z.array(routineSchema), signal });
+
 export const routinesQuery = () =>
   queryOptions({
     queryKey: queryKeys.routines.list,
-    queryFn: ({ signal }) => request("/routines", { schema: z.array(routineSchema), signal }),
+    queryFn: ({ signal }) => getRoutines(signal),
   });
 
 export const routineQuery = (id: string) =>
