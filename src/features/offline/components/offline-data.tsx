@@ -3,23 +3,44 @@ import { RefreshCwIcon } from "lucide-react";
 import { useOfflineSyncStore } from "../store";
 import { OFFLINE_WORKOUTS } from "../sync";
 import { runOfflineSync } from "../use-offline-sync";
-import { useApiReachable } from "@/api/reachability";
 import { Button } from "@/components/ui/button";
-import { useOnlineStatus } from "@/hooks/use-online-status";
+import { type OfflineReason, useOffline } from "@/lib/connectivity";
 import { formatAgo } from "@/lib/format";
 
-/** Profile section: what is available offline, when it was last downloaded, and a manual sync */
+const cannotSync: Record<OfflineReason, string> = {
+  device: "Connect to the internet to sync.",
+  manual: "Turn off offline mode to sync.",
+  server: "FitTune's servers are unavailable; try again later.",
+};
+
+/** Profile section: offline mode, when data was last downloaded, and a manual sync */
 export function OfflineData() {
   const { status, lastSyncedAt, error } = useOfflineSyncStore();
-  const online = useOnlineStatus();
-  const reachable = useApiReachable();
+  const { reason, manualOffline, setManualOffline } = useOffline();
   const syncing = status === "syncing";
 
   return (
-    <div className="grid gap-3 text-sm">
+    <div className="grid gap-4 text-sm">
+      <label className="flex cursor-pointer items-start justify-between gap-3">
+        <span className="grid gap-1">
+          <span className="font-medium">Offline mode</span>
+          <span className="text-muted-foreground">
+            Use FitTune without the network, for example with a weak signal at the gym. Workouts are saved on this device
+            and sync when you turn it off. It also turns on by itself while FitTune's servers are unavailable.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={manualOffline}
+          onChange={(event) => setManualOffline(event.target.checked)}
+          className="mt-1 size-5 shrink-0 accent-primary"
+        />
+      </label>
+
       <p className="text-muted-foreground">
         FitTune keeps your exercises, routines, places and last {OFFLINE_WORKOUTS} workouts on this device so they work
-        without a connection. It syncs automatically when you open the app online.
+        without a connection. It syncs automatically whenever it is online.
       </p>
       <div className="flex items-center justify-between gap-3">
         <div className="grid min-w-0 gap-1" aria-live="polite">
@@ -30,14 +51,13 @@ export function OfflineData() {
                 ? `Last synced ${formatAgo(lastSyncedAt)}.`
                 : "Not synced on this device yet. Sync before you train somewhere without signal."}
           </p>
-          {error && !syncing && online && reachable ? <p className="text-destructive">{error}</p> : null}
-          {!online ? (
-            <p className="text-muted-foreground">Connect to the internet to sync.</p>
-          ) : !reachable ? (
-            <p className="text-muted-foreground">FitTune's servers are unavailable; try again later.</p>
+          {reason ? (
+            <p className="text-muted-foreground">{cannotSync[reason]}</p>
+          ) : error && !syncing ? (
+            <p className="text-destructive">{error}</p>
           ) : null}
         </div>
-        <Button variant="secondary" className="shrink-0" disabled={!online || syncing} onClick={() => void runOfflineSync()}>
+        <Button variant="secondary" className="shrink-0" disabled={reason !== null || syncing} onClick={() => void runOfflineSync()}>
           <RefreshCwIcon className={syncing ? "size-4 animate-spin" : "size-4"} aria-hidden /> {syncing ? "Syncing…" : "Sync now"}
         </Button>
       </div>

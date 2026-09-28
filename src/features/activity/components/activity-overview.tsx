@@ -6,7 +6,7 @@ import { ActivityCard } from "./activity-card";
 import { activitiesInfiniteQuery } from "@/api/activities";
 import { overviewQuery, timelineQuery } from "@/api/stats";
 import { EmptyState } from "@/components/empty-state";
-import { QueryError } from "@/components/query-error";
+import { QueryError, QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartCard } from "@/features/analytics/components/chart-card";
@@ -48,10 +48,12 @@ export function ActivityOverview({ onSelect }: { onSelect: (activity: Activity) 
         </div>
 
         {list.isPending ? (
-          <div className="grid gap-3">
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-          </div>
+          <QueryFallback query={list}>
+            <div className="grid gap-3">
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+            </div>
+          </QueryFallback>
         ) : list.error && activities.length === 0 ? (
           <QueryError error={list.error} onRetry={() => void list.refetch()} />
         ) : activities.length === 0 ? (

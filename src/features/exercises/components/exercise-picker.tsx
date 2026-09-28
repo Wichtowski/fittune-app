@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { filterExercises } from "../filter";
 import { ExercisePhoto } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
-import { QueryError } from "@/components/query-error";
+import { QueryError, QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -26,7 +26,7 @@ type ExercisePickerProps = {
 
 /** Multi-select exercise search; works offline from the cached library. */
 export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exercises", place }: ExercisePickerProps) {
-  const { data, error, isPending, refetch } = useQuery(exercisesQuery());
+  const { data, error, isPending, fetchStatus, refetch } = useQuery(exercisesQuery());
   const [showAll, setShowAll] = useState(false);
   const [q, setQ] = useState("");
   const [muscle, setMuscle] = useState<Muscle | undefined>();
@@ -89,11 +89,13 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
         <div className="-mx-2 flex-1 overflow-y-auto md:max-h-[50dvh]">
           {error && !data ? <QueryError error={error} onRetry={() => void refetch()} /> : null}
           {isPending ? (
-            <div className="grid gap-2 px-2">
-              {Array.from({ length: 6 }, (_, i) => (
-                <Skeleton key={i} className="h-14" />
-              ))}
-            </div>
+            <QueryFallback query={{ error, fetchStatus, refetch }}>
+              <div className="grid gap-2 px-2">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <Skeleton key={i} className="h-14" />
+                ))}
+              </div>
+            </QueryFallback>
           ) : (
             <ul className="grid gap-0.5">
               {results.map((exercise) => {

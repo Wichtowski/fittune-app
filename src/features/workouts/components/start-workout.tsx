@@ -10,6 +10,7 @@ import { placesQuery } from "@/api/places";
 import { routinesQuery } from "@/api/routines";
 import { workoutQuery, workoutsInfiniteQuery } from "@/api/workouts";
 import { EmptyState } from "@/components/empty-state";
+import { QueryFallback } from "@/components/query-error";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -97,10 +98,12 @@ export function StartWorkout() {
         </div>
 
         {routines.isPending ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-          </div>
+          <QueryFallback query={routines}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </div>
+          </QueryFallback>
         ) : routines.data && routines.data.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {routines.data.map((routine) => (

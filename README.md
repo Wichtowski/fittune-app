@@ -92,7 +92,9 @@ are cached per user by TanStack Query, never by the service worker.
 
 **Offline data.** Opening the app online (at most every 15 minutes, and whenever the connection returns) downloads the profile, exercises, routines, places, records, the last 20 workouts and the history of their exercises into the persisted cache (`features/offline/sync.ts`).
 Profile → Offline data shows when that last happened and has a "Sync now" button.
-A banner tells users when they are offline or when the API is unreachable (no response, or a 502/503/504 while online), and that logging keeps working either way.
+The app is offline when the device is, when the user turns on offline mode in Profile, or when the API stops answering (no response, or a 502-504 or Cloudflare 520-524 while online); `lib/connectivity.ts` feeds that into TanStack Query's online state, so queries, queued mutations and workout uploads pause together instead of retrying against a dead server.
+While the API is down the app probes `GET /health` with growing gaps and goes back online by itself.
+A banner explains which of the three it is and that logging keeps working, and screens without offline data say so instead of showing skeletons (`QueryFallback`).
 Bump `CACHE_SCHEMA_VERSION` in `main.tsx` whenever a cached response shape changes; old caches are then dropped instead of breaking screens.
 
 **Responsive by composition.** On phones, a bottom tab bar with a central Workout button, bottom
