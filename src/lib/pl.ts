@@ -714,4 +714,6 @@ export const pl: Record<string, string> = {
   "Offline mode is on, so FitHealth can't reach our servers. FitTune keeps working offline.": "Tryb offline jest włączony, więc FitHealth nie może połączyć się z serwerami. FitTune działa offline.",
   "FitHealth's servers are unavailable right now": "Serwery FitHealth są teraz niedostępne",
   "Try again in a moment. FitTune keeps working offline in the meantime.": "Spróbuj ponownie za chwilę. W tym czasie FitTune działa offline.",
+  "Nutrition": "Odżywianie",
+  "Switch app": "Zmień aplikację",
 };

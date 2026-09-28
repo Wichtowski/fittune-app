@@ -1,11 +1,13 @@
 import { t } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 
-import { mobileNav } from "./nav-items";
+import { apps } from "@/features/apps/apps";
+import { useActiveApp } from "@/features/apps/use-active-app";
 import { useWorkoutStore } from "@/features/workouts/store";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
+  const items = apps[useActiveApp()].mobileNav;
   const hasActive = useWorkoutStore((state) => state.active !== null);
 
   return (
@@ -13,8 +15,11 @@ export function BottomNav() {
       aria-label={t("Primary")}
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-safe backdrop-blur-xl md:hidden"
     >
-      <ul className="mx-auto grid max-w-lg grid-cols-5">
-        {mobileNav.map(({ to, label, icon: Icon, exact }) => {
+      <ul
+        className="mx-auto grid max-w-lg"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
+        {items.map(({ to, label, icon: Icon, exact }) => {
           const isWorkout = to === "/workout";
           return (
             <li key={to}>
