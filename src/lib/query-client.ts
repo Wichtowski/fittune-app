@@ -1,5 +1,5 @@
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { QueryClient } from "@tanstack/react-query";
+import { defaultShouldDehydrateQuery, type Query, QueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "@/api/client";
 import { storage } from "@/lib/storage";
@@ -32,3 +32,11 @@ export const queryPersister = createSyncStoragePersister({
 });
 
 export const PERSIST_MAX_AGE = 7 * DAY;
+
+/**
+ * Friends' progress stays in memory only: a friend who stops sharing, unfriends or blocks must
+ * not stay readable from this device's storage
+ */
+export function shouldPersistQuery(query: Query) {
+  return defaultShouldDehydrateQuery(query) && query.queryKey[0] !== "friends";
+}

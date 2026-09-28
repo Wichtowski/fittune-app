@@ -19,6 +19,8 @@ import { Route as AppProgressRouteImport } from './routes/_app/progress'
 import { Route as AppWorkoutRouteImport } from './routes/_app/workout'
 import { Route as AppExercisesIndexRouteImport } from './routes/_app/exercises/index'
 import { Route as AppExercisesExerciseIdRouteImport } from './routes/_app/exercises/$exerciseId'
+import { Route as AppFriendsIndexRouteImport } from './routes/_app/friends/index'
+import { Route as AppFriendsUserIdRouteImport } from './routes/_app/friends/$userId'
 import { Route as AppRoutinesIndexRouteImport } from './routes/_app/routines/index'
 import { Route as AppRoutinesRoutineIdRouteImport } from './routes/_app/routines/$routineId'
 import { Route as AppRoutinesNewRouteImport } from './routes/_app/routines/new'
@@ -74,6 +76,16 @@ const AppExercisesExerciseIdRoute = AppExercisesExerciseIdRouteImport.update({
   path: '/exercises/$exerciseId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFriendsIndexRoute = AppFriendsIndexRouteImport.update({
+  id: '/friends/',
+  path: '/friends/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFriendsUserIdRoute = AppFriendsUserIdRouteImport.update({
+  id: '/friends/$userId',
+  path: '/friends/$userId',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRoutinesIndexRoute = AppRoutinesIndexRouteImport.update({
   id: '/routines/',
   path: '/routines/',
@@ -109,10 +121,12 @@ export interface FileRoutesByFullPath {
   '/progress': typeof AppProgressRoute
   '/workout': typeof AppWorkoutRoute
   '/exercises/$exerciseId': typeof AppExercisesExerciseIdRoute
+  '/friends/$userId': typeof AppFriendsUserIdRoute
   '/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/routines/new': typeof AppRoutinesNewRoute
   '/workouts/$workoutId': typeof AppWorkoutsWorkoutIdRoute
   '/exercises/': typeof AppExercisesIndexRoute
+  '/friends/': typeof AppFriendsIndexRoute
   '/routines/': typeof AppRoutinesIndexRoute
   '/workouts/': typeof AppWorkoutsIndexRoute
 }
@@ -125,10 +139,12 @@ export interface FileRoutesByTo {
   '/workout': typeof AppWorkoutRoute
   '/': typeof AppIndexRoute
   '/exercises/$exerciseId': typeof AppExercisesExerciseIdRoute
+  '/friends/$userId': typeof AppFriendsUserIdRoute
   '/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/routines/new': typeof AppRoutinesNewRoute
   '/workouts/$workoutId': typeof AppWorkoutsWorkoutIdRoute
   '/exercises': typeof AppExercisesIndexRoute
+  '/friends': typeof AppFriendsIndexRoute
   '/routines': typeof AppRoutinesIndexRoute
   '/workouts': typeof AppWorkoutsIndexRoute
 }
@@ -143,10 +159,12 @@ export interface FileRoutesById {
   '/_app/workout': typeof AppWorkoutRoute
   '/_app/': typeof AppIndexRoute
   '/_app/exercises/$exerciseId': typeof AppExercisesExerciseIdRoute
+  '/_app/friends/$userId': typeof AppFriendsUserIdRoute
   '/_app/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/_app/routines/new': typeof AppRoutinesNewRoute
   '/_app/workouts/$workoutId': typeof AppWorkoutsWorkoutIdRoute
   '/_app/exercises/': typeof AppExercisesIndexRoute
+  '/_app/friends/': typeof AppFriendsIndexRoute
   '/_app/routines/': typeof AppRoutinesIndexRoute
   '/_app/workouts/': typeof AppWorkoutsIndexRoute
 }
@@ -161,10 +179,12 @@ export interface FileRouteTypes {
     | '/progress'
     | '/workout'
     | '/exercises/$exerciseId'
+    | '/friends/$userId'
     | '/routines/$routineId'
     | '/routines/new'
     | '/workouts/$workoutId'
     | '/exercises/'
+    | '/friends/'
     | '/routines/'
     | '/workouts/'
   fileRoutesByTo: FileRoutesByTo
@@ -177,10 +197,12 @@ export interface FileRouteTypes {
     | '/workout'
     | '/'
     | '/exercises/$exerciseId'
+    | '/friends/$userId'
     | '/routines/$routineId'
     | '/routines/new'
     | '/workouts/$workoutId'
     | '/exercises'
+    | '/friends'
     | '/routines'
     | '/workouts'
   id:
@@ -194,10 +216,12 @@ export interface FileRouteTypes {
     | '/_app/workout'
     | '/_app/'
     | '/_app/exercises/$exerciseId'
+    | '/_app/friends/$userId'
     | '/_app/routines/$routineId'
     | '/_app/routines/new'
     | '/_app/workouts/$workoutId'
     | '/_app/exercises/'
+    | '/_app/friends/'
     | '/_app/routines/'
     | '/_app/workouts/'
   fileRoutesById: FileRoutesById
@@ -280,6 +304,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppExercisesExerciseIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/friends/': {
+      id: '/_app/friends/'
+      path: '/friends'
+      fullPath: '/friends/'
+      preLoaderRoute: typeof AppFriendsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/friends/$userId': {
+      id: '/_app/friends/$userId'
+      path: '/friends/$userId'
+      fullPath: '/friends/$userId'
+      preLoaderRoute: typeof AppFriendsUserIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/routines/': {
       id: '/_app/routines/'
       path: '/routines'
@@ -325,10 +363,12 @@ interface AppRouteChildren {
   AppWorkoutRoute: typeof AppWorkoutRoute
   AppIndexRoute: typeof AppIndexRoute
   AppExercisesExerciseIdRoute: typeof AppExercisesExerciseIdRoute
+  AppFriendsUserIdRoute: typeof AppFriendsUserIdRoute
   AppRoutinesRoutineIdRoute: typeof AppRoutinesRoutineIdRoute
   AppRoutinesNewRoute: typeof AppRoutinesNewRoute
   AppWorkoutsWorkoutIdRoute: typeof AppWorkoutsWorkoutIdRoute
   AppExercisesIndexRoute: typeof AppExercisesIndexRoute
+  AppFriendsIndexRoute: typeof AppFriendsIndexRoute
   AppRoutinesIndexRoute: typeof AppRoutinesIndexRoute
   AppWorkoutsIndexRoute: typeof AppWorkoutsIndexRoute
 }
@@ -340,10 +380,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppWorkoutRoute: AppWorkoutRoute,
   AppIndexRoute: AppIndexRoute,
   AppExercisesExerciseIdRoute: AppExercisesExerciseIdRoute,
+  AppFriendsUserIdRoute: AppFriendsUserIdRoute,
   AppRoutinesRoutineIdRoute: AppRoutinesRoutineIdRoute,
   AppRoutinesNewRoute: AppRoutinesNewRoute,
   AppWorkoutsWorkoutIdRoute: AppWorkoutsWorkoutIdRoute,
   AppExercisesIndexRoute: AppExercisesIndexRoute,
+  AppFriendsIndexRoute: AppFriendsIndexRoute,
   AppRoutinesIndexRoute: AppRoutinesIndexRoute,
   AppWorkoutsIndexRoute: AppWorkoutsIndexRoute,
 }

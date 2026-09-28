@@ -1,12 +1,13 @@
 import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
-import { LogOutIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ChevronRightIcon, LogOutIcon, MonitorIcon, MoonIcon, SunIcon, UsersIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { AccountSecurity } from "./account-security";
 import { ProfileForm } from "./profile-form";
 import { meQuery } from "@/api/auth";
+import { friendRequestsQuery } from "@/api/friends";
 import { PageHeader } from "@/components/layout/page-header";
 import { LanguagePicker } from "@/components/language-picker";
 import { QueryFallback } from "@/components/query-error";
@@ -20,11 +21,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { signOut } from "@/features/auth/sign-out";
+import { SharingSettings } from "@/features/friends/components/sharing-settings";
 import { CreateInvite } from "@/features/invites/components/create-invite";
 import { InviteList } from "@/features/invites/components/invite-list";
 import { OfflineData } from "@/features/offline/components/offline-data";
@@ -52,6 +55,13 @@ export function ProfilePage() {
               <Skeleton className="h-64" />
             </QueryFallback>
           )}
+        </Section>
+
+        <Section id="sharing" title={t("Friends & sharing")}>
+          <div className="grid gap-4">
+            <FriendsLink />
+            <SharingSettings />
+          </div>
         </Section>
 
         <Section title={t("Appearance")}>
@@ -101,12 +111,26 @@ export function ProfilePage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
   return (
-    <Card className="p-5">
+    <Card id={id} className="scroll-mt-24 p-5">
       <h2 className="mb-4 font-display text-xl font-bold tracking-wide uppercase">{title}</h2>
       {children}
     </Card>
+  );
+}
+
+/** The way to Friends on phones, where the bottom navigation has no room for it */
+function FriendsLink() {
+  const requests = useQuery(friendRequestsQuery());
+  const waiting = requests.data?.incoming.length ?? 0;
+  return (
+    <Link to="/friends" className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-accent/60">
+      <UsersIcon className="size-5 text-muted-foreground" aria-hidden />
+      <span className="flex-1 font-medium">{t("Friends")}</span>
+      {waiting ? <Badge>{t("Requests: {count}", { count: waiting })}</Badge> : null}
+      <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
+    </Link>
   );
 }
 
