@@ -28,6 +28,46 @@ bun run dev                  # http://localhost:5173 (run fittune-api on :4733)
 | `bun run preview` | Serve the production build |
 | `bun run lint` / `bun run typecheck` / `bun run test` | ESLint, `tsc -b`, Vitest |
 
+### Local fixtures
+
+Sample accounts and months of history come from the API's `seed-dev` command, so every screen has something to show from the first start.
+The fixtures live in the API's dedicated `fittune_dev` database and go through the real endpoints; the app has no fake backend or mock flows.
+The API README ("Development fixtures") has the details and the guards that keep them out of production.
+
+First run, with `fittune-api` checked out next to this repo:
+
+```bash
+cd ../fittune-api
+cp .env.example .env    # sets FITTUNE_ENV=development and FITTUNE_FIXTURES_DATABASE_URL
+make up && make seed    # Postgres + RustFS, then create, migrate and seed fittune_dev
+make run-fixtures       # API on :4733 against fittune_dev
+cd ../fittune-app && bun run dev
+```
+
+`make fixtures` in this repo runs `make seed` in `../fittune-api` (set `FITTUNE_API_DIR` for another location).
+
+Sign in with any of these; the dev-only password is `FitTune#Dev1`:
+
+| Account | Try |
+|---------|-----|
+| `demo@fittune.test` | Dashboard, Progress (charts, muscle map, records), Workouts history with pages, exercise details such as Barbell Bench Press, routines and places |
+| `casual@fittune.test` | Pounds and miles, and continuing a workout started on another device |
+| `newbie@fittune.test` | First-run experience: no places, routines or history |
+| `admin@fittune.test` | Profile → Invites with active, used, expired and revoked invites |
+
+**Workout in progress.** The API holds an unfinished "Full Body A" for `casual`, as if it were started on a phone.
+Like any server-side workout it does not restore itself into this browser: open the Workout tab and tap "Continue “Full Body A”".
+That copies it into the local draft, and from then on the usual local-first flow applies (edits save locally, then sync with `PUT /workouts/{id}`).
+The card only shows on the start screen, so finish or discard a workout already in progress in this browser first.
+Rerunning `make seed` leaves the workout alone once the app has saved a newer revision of it.
+
+**Reseeding and switching accounts.**
+
+- `make seed` again refreshes the same records in place (dates move up to today). Account ids stay the same, so a signed-in session and cached data keep working; Profile → Offline data → Sync now refreshes the cache straight away.
+- `make seed-reset` recreates only the fixture accounts; `make reset` recreates the whole fixture database. Both give the accounts new ids, so the old token stops working and the app signs out on its next request. Local workouts still waiting to sync belong to the old id and are dropped when you sign in again.
+- Switch accounts with Profile → Sign out, which also clears the cached data and any local workout. Signing in as a different user on a device that still has another user's local workout discards that workout too.
+- For a completely clean browser, clear the site data for `localhost:5173` (DevTools → Application → Storage). That removes the session, the persisted query cache, the local workout draft and outbox (`fittune.*` keys) and the service worker.
+
 ## Layout
 
 ```text
