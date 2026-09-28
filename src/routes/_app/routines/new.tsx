@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { RoutineEditor } from "@/features/routines/components/routine-editor";
 
 export const Route = createFileRoute("/_app/routines/new")({
+  staticData: { app: "train" },
   component: NewRoutinePage,
 });
 

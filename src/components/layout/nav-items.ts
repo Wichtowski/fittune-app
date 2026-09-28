@@ -17,7 +17,7 @@ export type NavItem = { to: keyof FileRoutesByTo; label: string; icon: LucideIco
 
 /** Phone: five thumb-reachable destinations focused on doing the training. */
 export const mobileNav: NavItem[] = [
-  { to: "/", label: "Home", icon: HouseIcon, exact: true },
+  { to: "/train", label: "Home", icon: HouseIcon, exact: true },
   { to: "/activity", label: "Activity", icon: ActivityIcon },
   { to: "/workout", label: "Workout", icon: DumbbellIcon },
   { to: "/progress", label: "Progress", icon: ChartNoAxesColumnIcon },
@@ -29,7 +29,7 @@ export const desktopNav: { heading: string; items: NavItem[] }[] = [
   {
     heading: "Train",
     items: [
-      { to: "/", label: "Dashboard", icon: HouseIcon, exact: true },
+      { to: "/train", label: "Dashboard", icon: HouseIcon, exact: true },
       { to: "/workout", label: "Workout", icon: DumbbellIcon },
       { to: "/activity", label: "Activity", icon: ActivityIcon },
     ],

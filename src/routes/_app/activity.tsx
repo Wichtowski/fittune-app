@@ -12,6 +12,7 @@ import { ActivityOverview } from "@/features/activity/components/activity-overvi
 import type { Activity } from "@/schemas/activity";
 
 export const Route = createFileRoute("/_app/activity")({
+  staticData: { app: "train" },
   validateSearch: z.object({ log: z.boolean().optional() }),
   component: ActivityPage,
 });

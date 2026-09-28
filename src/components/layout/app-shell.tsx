@@ -12,7 +12,7 @@ export function AppShell() {
   useAutoOfflineSync();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   // The workout screen is the bar's destination and home already shows it inline.
-  const hideBar = pathname === "/workout" || pathname === "/";
+  const hideBar = pathname === "/workout" || pathname === "/train";
 
   return (
     <div className="flex min-h-dvh">

@@ -705,4 +705,8 @@ export const pl: Record<string, string> = {
   "Your friends": "Twoi znajomi",
   "{name} blocked": "Zablokowano: {name}",
   "{name} removed from friends": "Usunięto ze znajomych: {name}",
+  "Where to today?": "Dokąd dzisiaj?",
+  "Training: workouts, routines, progress": "Trening: treningi, plany, postępy",
+  "Nutrition: food diary and product scanning": "Odżywianie: dziennik posiłków i skanowanie produktów",
+  "Your food diary arrives here soon.": "Wkrótce pojawi się tu dziennik posiłków.",
 };
