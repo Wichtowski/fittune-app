@@ -83,7 +83,8 @@ Link updates:
 ### Switcher
 
 - Desktop: the sidebar logo row becomes a two-option segmented control, `FitTune | FitHealth`, one click to switch
-- Mobile: `PageHeader` renders a small app-mark button on top-level screens, meaning when no `back` element is passed
+- Mobile: `PageHeader` renders a small app-mark button on top-level screens, meaning screens that are a destination in the active app's navigation (`isNavDestination` in `apps.ts`)
+- Detail pages put their back link in `eyebrow` rather than `back`, so "no `back` prop" is not a usable signal for top-level screens
 - Tapping it opens a `vaul` bottom sheet listing both apps with the current one checked, picking one navigates to its home
 - Detail screens show no switcher, the user goes back first
 
@@ -130,9 +131,12 @@ Link updates:
 
 ### App (`fittune-app`)
 
-- `src/api/client.ts` exports an abstract `ApiClient` that owns transport only:
+- `src/api/transport.ts` holds the current request behaviour as `send(path, options)`: URL building, bearer token, timeout, abort forwarding, `ApiError`, connectivity reporting, zod parsing
+  - It lives in its own module so tests can mock `send` the way they mock `request` today, a mock cannot intercept calls inside the same module
+  - Only `ApiClient` calls it
+- `src/api/client.ts` exports an abstract `ApiClient`:
   - constructor takes the namespace base path (`""`, `"/train"`, `"/health"`)
-  - `protected request()` with the current behaviour: URL building, bearer token, timeout, abort forwarding, `ApiError`, connectivity reporting, zod parsing
+  - `protected request()` prefixes the namespace and calls `send`
   - `protected url(path)` for the raw `fetch` and XHR calls that cannot go through `request()` (photo upload and photo file download)
 - Authentication hooks (`getToken`, `onUnauthorized`) stay module-level and are configured once through `configureApiClient`, so all instances share one session
 - `ApiError` and `REQUEST_TIMEOUT_MS` stay exported from `client.ts`
@@ -152,7 +156,8 @@ Link updates:
   - `manual`: the same, plus the existing "Turn it off in Profile" link
   - `server`: FitHealth's servers are unavailable right now
 - The page renders again on its own once the connectivity store reports online, including after the existing API health probe succeeds
-- `ConnectionBanner` is not rendered while the active app is FitHealth, its copy about workouts saved on the device does not apply there
+- `ConnectionBanner` is not rendered on pages that belong to FitHealth (the matched route declares `app: "health"`), its copy about workouts saved on the device does not apply there
+- Shared pages such as `/profile` keep the banner even when FitHealth was the last app, they have no gate of their own
 - `shouldPersistQuery` in `src/lib/query-client.ts` also excludes query keys starting with `"health"`, so FitHealth data never lands in the offline cache
 - The service worker still serves the app shell, so `/health` opens offline and shows the gate instead of a browser error
 - `src/features/offline/sync.ts` keeps downloading FitTune data only
