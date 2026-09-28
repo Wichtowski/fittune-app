@@ -1,11 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { account } from "./account";
-import { configureApiClient } from "./client";
+import { ApiClient, configureApiClient } from "./client";
 import { fittune } from "./fittune";
 import { API_BASE_URL } from "@/lib/env";
 
 const onUnauthorized = vi.fn();
+
+class HealthTestClient extends ApiClient {
+  constructor() {
+    super("/health");
+  }
+
+  getDiary() {
+    return this.request("/diary");
+  }
+}
+
+const health = new HealthTestClient();
 
 function answer(status: number, body: unknown) {
   return vi.fn((_url: URL, _init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(body), { status })));
@@ -22,6 +34,17 @@ afterEach(() => {
 });
 
 describe("ApiClient", () => {
+  it("namespaces health calls and signs out through the shared session on a 401", async () => {
+    const fetch = answer(401, { code: "unauthorized", message: "Session expired" });
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(health.getDiary()).rejects.toMatchObject({ status: 401 });
+
+    expect(String(fetch.mock.calls[0]?.[0])).toBe(`${API_BASE_URL}/api/v1/health/diary`);
+    expect(fetch.mock.calls[0]?.[1]?.headers).toMatchObject({ Authorization: "Bearer token-1" });
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+  });
+
   it("sends training calls under /train and account calls at the root", async () => {
     const fetch = answer(200, []);
     vi.stubGlobal("fetch", fetch);

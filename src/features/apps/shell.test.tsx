@@ -1,4 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
+import { useLayoutEffect } from "react";
 import { beforeEach, expect, it } from "vitest";
 
 import { useLastApp } from "./store";
@@ -19,6 +20,20 @@ beforeEach(() => {
 it("remembers the app of the page being used", async () => {
   renderInRouter(Remember, { path: "/health", app: "health" });
   await waitFor(() => expect(useLastApp.getState().lastApp).toBe("health"));
+});
+
+it("applies the app accent before paint", async () => {
+  const accents: (string | undefined)[] = [];
+  function ReadAccent() {
+    useRememberApp();
+    useLayoutEffect(() => {
+      accents.push(document.documentElement.dataset.app);
+    }, []);
+    return null;
+  }
+
+  renderInRouter(ReadAccent, { path: "/health", app: "health" });
+  await waitFor(() => expect(accents).toEqual(["health"]));
 });
 
 it("leaves the remembered app alone on shared pages", async () => {

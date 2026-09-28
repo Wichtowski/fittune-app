@@ -83,6 +83,22 @@
   --anatomy-muscle: oklch(0.36 0.012 260);
 }
 
+/* Restore FitTune's accent on tiles nested inside FitHealth */
+[data-app="train"] {
+  --primary: oklch(0.87 0.2 126);
+  --primary-foreground: oklch(0.22 0.05 130);
+  --primary-strong: oklch(0.52 0.14 132);
+  --ring: oklch(0.6 0.16 130);
+}
+
+.dark[data-app="train"],
+.dark [data-app="train"] {
+  --primary: oklch(0.9 0.2 126);
+  --primary-foreground: oklch(0.2 0.05 130);
+  --primary-strong: oklch(0.9 0.2 126);
+  --ring: oklch(0.9 0.2 126 / 60%);
+}
+
 /* FitHealth: the same product in teal. Only the primary and ring tokens change, so every button,
    active nav item and focus ring follows. `[data-app]` sits on <html> inside the shell and on
    launcher tiles */

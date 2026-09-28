@@ -169,7 +169,11 @@ The Barbell Curl demo opens its original Vimeo page; the video is not copied int
 
 ## Deployment
 
-Deploy the API's workout places migration and `/api/v1/places` endpoints before this client version.
+This client requires the matching `fittune-api` namespace changes from `feat/fithealth-namespaces` for FitHealth shell #27 (epic #26).
+Training endpoints live under `/api/v1/train/*`, including `/api/v1/train/places`, while `/api/v1/health` is reserved for FitHealth.
+Account and social endpoints stay flat under `/api/v1`; the server health check stays at `/health`.
+Merge and deploy together, API first: old flat training endpoints are no longer supported.
+Deploy the API's workout places migration before this client version.
 Existing workouts and cached drafts without a place remain valid.
 
 The static build is served from the shared VPS by the platform-edge Caddy on

@@ -29,6 +29,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   useSession.setState({ token: null, userId: null });
   useConnectivity.setState({ deviceOnline: true, manualOffline: false, apiDown: false });
+  storage.removeItem("fittune.last-app");
 });
 
 it("sends a signed-out visitor to login even with a remembered app", async () => {
@@ -61,7 +62,6 @@ it("shows the launcher when storage holds an app this build does not know", asyn
   expect(useLastApp.getState().lastApp).toBeNull();
   render(<RouterProvider router={makeRouter("/")} />);
   expect(await screen.findByRole("link", { name: /FitHealth/ })).toBeInTheDocument();
-  storage.removeItem("fittune.last-app");
 });
 
 it("keeps FitTune's offline banner on a shared page reached from FitHealth", async () => {

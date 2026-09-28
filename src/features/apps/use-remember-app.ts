@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 import { useLastApp } from "./store";
 import { useActiveApp, useRouteApp } from "./use-active-app";
@@ -16,7 +16,7 @@ export function useRememberApp() {
     if (routeApp) setLastApp(routeApp);
   }, [routeApp, setLastApp]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.app = activeApp;
     return () => {
       delete document.documentElement.dataset.app;
