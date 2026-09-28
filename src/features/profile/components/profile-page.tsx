@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { signOut } from "@/features/auth/sign-out";
+import { OfflineData } from "@/features/offline/components/offline-data";
 import { SyncIndicator } from "@/features/workouts/components/sync-indicator";
 import { usePendingWorkouts } from "@/features/workouts/store";
 import { type ThemePreference, useTheme } from "@/hooks/use-theme";
@@ -60,6 +61,10 @@ export function ProfilePage() {
               <SunIcon className="mr-1.5 size-4" aria-hidden /> Light
             </ToggleGroupItem>
           </ToggleGroup>
+        </Section>
+
+        <Section title="Offline data">
+          <OfflineData />
         </Section>
 
         <Section title="Security">

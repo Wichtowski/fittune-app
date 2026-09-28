@@ -1,5 +1,6 @@
 import type { z } from "zod";
 
+import { reportNoResponse, reportResponse } from "./reachability";
 import { API_BASE_URL } from "@/lib/env";
 
 /** Error returned by fittune-api (`{ code, message, fields }`) or raised for network failures. */
@@ -72,9 +73,11 @@ export async function request<T extends z.ZodType | undefined = undefined>(
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
+    reportNoResponse();
     throw new ApiError(0, "network_error", "Can't reach FitTune right now. Check your connection.");
   }
 
+  reportResponse(response.status);
   if (response.status === 401 && token) hooks.onUnauthorized();
 
   if (!response.ok) {
