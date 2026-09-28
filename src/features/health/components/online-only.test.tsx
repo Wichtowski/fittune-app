@@ -36,8 +36,6 @@ it("links to the offline mode switch when it is on", async () => {
   renderInRouter(page);
   expect(await screen.findByRole("link", { name: "Turn it off in Profile" })).toHaveAttribute("href", "/profile");
 });
-  expect(await screen.findByText("gate")).toBeInTheDocument();
-});
 
 it.each([
   ["the device is offline", { deviceOnline: false }],
