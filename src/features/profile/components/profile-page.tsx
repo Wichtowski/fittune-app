@@ -23,6 +23,8 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { signOut } from "@/features/auth/sign-out";
+import { CreateInvite } from "@/features/invites/components/create-invite";
+import { InviteList } from "@/features/invites/components/invite-list";
 import { OfflineData } from "@/features/offline/components/offline-data";
 import { SyncIndicator } from "@/features/workouts/components/sync-indicator";
 import { usePendingWorkouts } from "@/features/workouts/store";
@@ -77,6 +79,16 @@ export function ProfilePage() {
         <Section title="Security">
           <AccountSecurity />
         </Section>
+
+        {user?.role === "admin" ? (
+          <Section title="Invites">
+            <p className="mb-4 text-sm text-muted-foreground">FitTune is invite only. Create a code for each person you want to let in.</p>
+            <div className="grid gap-6">
+              <CreateInvite />
+              <InviteList />
+            </div>
+          </Section>
+        ) : null}
 
         <Card className="grid gap-2 p-5 text-sm text-muted-foreground">
           <SyncIndicator />
