@@ -1,35 +1,61 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { formFromTemplate, routineTemplates, templateCategories, type RoutineTemplate, type TemplateCategory } from "../templates";
-import { exercisesQuery } from "@/api/exercises";
+import { fillTemplateWeights, formFromTemplate, routineTemplates, templateCategories, type RoutineTemplate, type TemplateCategory } from "../templates";
+import { exerciseHistoryQuery, exercisesQuery } from "@/api/exercises";
+import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePreferences } from "@/hooks/use-preferences";
 import { t } from "@/lib/i18n";
+import type { ExerciseHistory } from "@/schemas/exercise";
 import type { RoutineFormInput } from "@/schemas/routine";
 
 export function TemplatePicker({ onPick }: { onPick: (values: RoutineFormInput) => void }) {
+  const queryClient = useQueryClient();
+  const { weightUnit } = usePreferences();
   const { data: catalog, error, refetch } = useQuery(exercisesQuery());
   const [category, setCategory] = useState<TemplateCategory | "All">("All");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState(false);
   const query = search.trim().toLowerCase();
   const shown = routineTemplates.filter((template) =>
     (category === "All" || template.category === category) &&
     (!query || `${template.name} ${t(template.category)} ${template.exercises.map(([name]) => name).join(" ")}`.toLowerCase().includes(query)),
   );
 
-  const pick = (template: RoutineTemplate) => {
+  const pick = async (template: RoutineTemplate) => {
     if (!catalog) return;
     const values = formFromTemplate(template, catalog);
     if (!values) {
       setMissing(true);
       return;
     }
-    onPick(values);
+    setLoading(template.name);
+    const histories = new Map<string, ExerciseHistory>();
+    let failed = false;
+    await Promise.all(values.exercises.filter((exercise) => exercise.tracking === "weight_reps").map(async (exercise) => {
+      const id = exercise.exercise_id;
+      const cached = queryClient.getQueryData<ExerciseHistory>(queryKeys.exercises.history(id));
+      if (!navigator.onLine) {
+        if (cached) histories.set(id, cached);
+        return;
+      }
+      try {
+        histories.set(id, await queryClient.fetchQuery({ ...exerciseHistoryQuery(id), staleTime: 10 * 60_000, retry: false }));
+      } catch {
+        if (cached) histories.set(id, cached);
+        else failed = true;
+      }
+    }));
+    onPick(fillTemplateWeights(values, histories, weightUnit));
     setSelected(template.name);
     setMissing(false);
+    setHistoryError(failed);
+    setLoading(null);
     document.getElementById("routine-form")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -37,7 +63,7 @@ export function TemplatePicker({ onPick }: { onPick: (values: RoutineFormInput) 
     <section className="mb-8" aria-labelledby="templates-heading">
       <div className="mb-4">
         <h2 id="templates-heading" className="font-display text-2xl font-bold uppercase">{t("Predefined plans")}</h2>
-        <p className="text-sm text-muted-foreground">{t("Choose a session, then adjust its exercises and targets before saving.")}</p>
+        <p className="text-sm text-muted-foreground">{t("Choose a session, then adjust its exercises and targets before saving.")} {t("Weights use your latest completed working sets when available.")}</p>
       </div>
       <Input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("Search plans or exercises")} aria-label={t("Search plans or exercises")} className="mb-3" />
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("Filter plans")}>
@@ -51,6 +77,7 @@ export function TemplatePicker({ onPick }: { onPick: (values: RoutineFormInput) 
         <p className="mb-3 text-sm text-destructive">{t("Couldn't load exercises.")} <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>{t("Retry")}</Button></p>
       ) : null}
       {missing ? <p className="mb-3 text-sm text-destructive">{t("Some exercises in this plan are unavailable. Choose another plan or create your own.")}</p> : null}
+      {historyError ? <p className="mb-3 text-sm text-destructive">{t("Some exercise history could not be loaded. Review blank weights before saving.")}</p> : null}
       {selected ? <p className="mb-3 text-sm text-muted-foreground" role="status">{t("Loaded {name}. Review it below before saving.", { name: t(selected) })}</p> : null}
       {shown.length === 0 ? <p className="text-sm text-muted-foreground">{t("No plans match your search.")}</p> : null}
       <ul className="grid max-h-[32rem] gap-3 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
@@ -61,8 +88,8 @@ export function TemplatePicker({ onPick }: { onPick: (values: RoutineFormInput) 
               <h3 className="mt-1 font-semibold">{t(template.name)}</h3>
               <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{template.exercises.map(([name]) => name).join(" · ")}</p>
             </div>
-            <Button type="button" size="sm" variant={selected === template.name ? "secondary" : "outline"} disabled={!catalog} onClick={() => pick(template)}>
-              {selected === template.name ? t("Selected") : t("Use plan")}
+            <Button type="button" size="sm" variant={selected === template.name ? "secondary" : "outline"} disabled={!catalog || loading !== null} onClick={() => void pick(template)}>
+              {loading === template.name ? t("Loading…") : selected === template.name ? t("Selected") : t("Use plan")}
             </Button>
           </li>
         ))}

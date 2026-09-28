@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { formFromTemplate, routineTemplates, templateCategories } from "./templates";
+import { fillTemplateWeights, formFromTemplate, routineTemplates, templateCategories } from "./templates";
+import type { ExerciseHistory } from "@/schemas/exercise";
 import { routineFormSchema } from "@/schemas/routine";
 
 describe("routine templates", () => {
@@ -33,5 +34,37 @@ describe("routine templates", () => {
     expect(form?.exercises[0]?.sets[0]).toMatchObject({ reps: 8, weight: "", duration_seconds: "" });
     expect(form?.exercises[1]?.sets[0]).toMatchObject({ reps: "", duration_seconds: 45 });
     expect(form?.exercises[2]?.sets[0]).toMatchObject({ reps: "", duration_seconds: 300 });
+  });
+
+  it("uses the latest normal weights in order without changing prescribed reps", () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const form = formFromTemplate(
+      { name: "Press", category: "Full body", exercises: [["Press", 4, 8]] },
+      [{ id, name: "Press", tracking: "weight_reps" }],
+    )!;
+    const history = { sessions: [
+      { sets: [{ kind: "warmup", weight_kg: 40 }, { kind: "normal", weight_kg: 100 }, { kind: "normal", weight_kg: 102.5 }, { kind: "drop", weight_kg: 80 }] },
+      { sets: [{ kind: "normal", weight_kg: 95 }] },
+    ] } as ExerciseHistory;
+    const histories = new Map([[id, history]]);
+    const kg = fillTemplateWeights(form, histories, "kg");
+    expect(kg.exercises[0]?.sets.map((set) => set.weight)).toEqual([100, 102.5, 102.5, 102.5]);
+    expect(kg.exercises[0]?.sets.map((set) => set.reps)).toEqual([8, 8, 8, 8]);
+    expect(fillTemplateWeights(form, histories, "lb").exercises[0]?.sets[0]?.weight).toBe(220.46);
+    expect(form.exercises[0]?.sets[0]?.weight).toBe("");
+  });
+
+  it("leaves weight blank without history and skips sessions without normal weights", () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    const form = formFromTemplate(
+      { name: "Press", category: "Full body", exercises: [["Press", 2, 6]] },
+      [{ id, name: "Press", tracking: "weight_reps" }],
+    )!;
+    expect(fillTemplateWeights(form, new Map(), "kg").exercises[0]?.sets[0]?.weight).toBe("");
+    const history = { sessions: [
+      { sets: [{ kind: "warmup", weight_kg: 40 }, { kind: "normal", weight_kg: null }] },
+      { sets: [{ kind: "normal", weight_kg: 90 }] },
+    ] } as ExerciseHistory;
+    expect(fillTemplateWeights(form, new Map([[id, history]]), "kg").exercises[0]?.sets.map((set) => set.weight)).toEqual([90, 90]);
   });
 });

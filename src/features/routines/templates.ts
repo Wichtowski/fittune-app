@@ -1,5 +1,7 @@
 import { newExerciseEntry } from "./mapping";
-import type { Exercise } from "@/schemas/exercise";
+import { kgTo, trimNumber } from "@/lib/units";
+import type { WeightUnit } from "@/schemas/common";
+import type { Exercise, ExerciseHistory } from "@/schemas/exercise";
 import type { RoutineFormInput } from "@/schemas/routine";
 
 export const templateCategories = ["Full body", "Push / Pull / Legs", "Upper / Lower", "Targeted muscles", "Home workouts", "Conditioning"] as const;
@@ -95,4 +97,25 @@ export function formFromTemplate(template: RoutineTemplate, catalog: Pick<Exerci
   });
   if (exercises.some((exercise) => exercise === null)) return null;
   return { name: template.name, notes: "", exercises: exercises.filter((exercise) => exercise !== null) };
+}
+
+export function fillTemplateWeights(form: RoutineFormInput, histories: Map<string, ExerciseHistory>, unit: WeightUnit): RoutineFormInput {
+  return {
+    ...form,
+    exercises: form.exercises.map((exercise) => {
+      if (exercise.tracking !== "weight_reps") return exercise;
+      const session = histories.get(exercise.exercise_id)?.sessions.find((candidate) =>
+        candidate.sets.some((set) => set.kind === "normal" && set.weight_kg !== null),
+      );
+      const weights = session?.sets.flatMap((set) => set.kind === "normal" && set.weight_kg !== null ? [set.weight_kg] : []);
+      if (!weights?.length) return exercise;
+      return {
+        ...exercise,
+        sets: exercise.sets.map((set, index) => {
+          const weight = weights[Math.min(index, weights.length - 1)];
+          return { ...set, weight: weight === undefined ? "" : Number(trimNumber(kgTo(unit, weight), 2)) };
+        }),
+      };
+    }),
+  };
 }
