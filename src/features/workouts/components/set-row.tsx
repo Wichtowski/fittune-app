@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { CheckIcon, Trash2Icon } from "lucide-react";
 import { memo } from "react";
 
@@ -64,12 +65,12 @@ export const SetRow = memo(function SetRow({
             "flex h-11 items-center justify-center rounded-lg font-display text-lg font-bold hover:bg-accent",
             kindTone,
           )}
-          aria-label={`Set ${label} options`}
+          aria-label={t("Set {label} options", { label })}
         >
           {label}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Set type</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("Set type")}</DropdownMenuLabel>
           {SET_KINDS.map((kind) => (
             <DropdownMenuItem key={kind} onSelect={() => onKind(set.id, kind)}>
               <span className="w-4 font-display font-bold">{setKindLabels[kind].short || "1"}</span>
@@ -79,8 +80,7 @@ export const SetRow = memo(function SetRow({
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onSelect={() => onRemove(set.id)}>
-            <Trash2Icon aria-hidden /> Delete set
-          </DropdownMenuItem>
+            <Trash2Icon aria-hidden />{" "}{t("Delete set")}{" "}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -89,15 +89,15 @@ export const SetRow = memo(function SetRow({
         disabled={!previous}
         onClick={() => onUsePrevious(set.id)}
         className="h-11 truncate rounded-lg px-1 text-left text-sm text-muted-foreground tabular enabled:hover:bg-accent disabled:opacity-40"
-        aria-label={previous ? `Use previous: ${previous}` : "No previous set"}
+        aria-label={previous ? t("Use previous: {value}", { value: previous }) : t("No previous set")}
       >
-        {previous ?? "—"}
+        {previous ?? "-"}
       </button>
 
       {tracking === "weight_reps" ? (
         <>
           <NumberField
-            aria-label={`Weight (${weightUnit})`}
+            aria-label={t("Weight ({unit})", { unit: weightUnit })}
             decimals
             max={2500}
             placeholder={weightUnit}
@@ -105,9 +105,9 @@ export const SetRow = memo(function SetRow({
             onValueChange={(v) => onChange(set.id, { weight_kg: v == null ? null : toKg(weightUnit, v) })}
           />
           <NumberField
-            aria-label="Reps"
+            aria-label={t("Reps")}
             max={1000}
-            placeholder="reps"
+            placeholder={t("reps")}
             value={set.reps}
             onValueChange={(v) => onChange(set.id, { reps: v })}
           />
@@ -116,9 +116,9 @@ export const SetRow = memo(function SetRow({
         <>
           <span aria-hidden />
           <NumberField
-            aria-label="Reps"
+            aria-label={t("Reps")}
             max={1000}
-            placeholder="reps"
+            placeholder={t("reps")}
             value={set.reps}
             onValueChange={(v) => onChange(set.id, { reps: v })}
           />
@@ -127,7 +127,7 @@ export const SetRow = memo(function SetRow({
         <>
           <span aria-hidden />
           <DurationField
-            aria-label="Duration"
+            aria-label={t("Duration")}
             value={set.duration_seconds}
             onValueChange={(v) => onChange(set.id, { duration_seconds: v })}
           />
@@ -135,7 +135,7 @@ export const SetRow = memo(function SetRow({
       ) : (
         <>
           <NumberField
-            aria-label={`Distance (${distanceUnit})`}
+            aria-label={t("Distance ({unit})", { unit: distanceUnit })}
             decimals
             max={1000}
             placeholder={distanceUnit}
@@ -143,7 +143,7 @@ export const SetRow = memo(function SetRow({
             onValueChange={(v) => onChange(set.id, { distance_m: v == null ? null : toMetres(distanceUnit, v) })}
           />
           <DurationField
-            aria-label="Duration"
+            aria-label={t("Duration")}
             value={set.duration_seconds}
             onValueChange={(v) => onChange(set.id, { duration_seconds: v })}
           />

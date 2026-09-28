@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { CloudOffIcon, PlaneIcon, ServerCrashIcon } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 import { type OfflineReason, useOffline } from "@/lib/connectivity";
 
@@ -31,12 +32,12 @@ export function ConnectionBanner({ className = "" }: { className?: string }) {
     <div role="status" className={`flex items-start gap-3 rounded-2xl border border-endurance/40 bg-endurance/10 p-3 text-sm ${className}`}>
       <Icon className="mt-0.5 size-5 shrink-0 text-endurance-strong" aria-hidden />
       <p>
-        <span className="font-medium">{title}</span> {body}
+        <span className="font-medium">{t(title)}</span> {t(body)}
         {reason === "manual" ? (
           <>
             {" "}
             <Link to="/profile" className="font-medium text-primary-strong underline-offset-4 hover:underline">
-              Turn it off in Profile
+              {t("Turn it off in Profile")}
             </Link>
           </>
         ) : null}

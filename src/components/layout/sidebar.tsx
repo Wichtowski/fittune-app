@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PlayIcon } from "lucide-react";
@@ -25,16 +26,15 @@ export function Sidebar() {
       ) : (
         <Button asChild size="lg" className="w-full">
           <Link to="/workout">
-            <PlayIcon className="fill-current" aria-hidden /> Start workout
-          </Link>
+            <PlayIcon className="fill-current" aria-hidden />{" "}{t("Start workout")}{" "}</Link>
         </Button>
       )}
 
-      <nav aria-label="Primary" className="flex flex-1 flex-col gap-5 overflow-y-auto">
+      <nav aria-label={t("Primary")} className="flex flex-1 flex-col gap-5 overflow-y-auto">
         {desktopNav.map((group) => (
           <div key={group.heading} className="flex flex-col gap-1">
             <p className="px-3 text-xs font-semibold tracking-wider text-muted-foreground/70 uppercase">
-              {group.heading}
+              {t(group.heading)}
             </p>
             {group.items.map(({ to, label, icon: Icon, exact }) => (
               <Link
@@ -44,7 +44,7 @@ export function Sidebar() {
                 className="flex h-11 items-center gap-3 rounded-xl px-3 text-[0.9375rem] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[status=active]:bg-primary/12 data-[status=active]:text-foreground [&[data-status=active]_svg]:text-primary-strong"
               >
                 <Icon className="size-5" aria-hidden />
-                {label}
+                {t(label)}
               </Link>
             ))}
           </div>
@@ -61,8 +61,8 @@ export function Sidebar() {
             {(me?.display_name ?? me?.username ?? "?").slice(0, 1)}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold">{me?.display_name ?? me?.username ?? "Profile"}</span>
-            <span className="block truncate text-xs text-muted-foreground">Profile & settings</span>
+            <span className="block truncate text-sm font-semibold">{me?.display_name ?? me?.username ?? t("Profile")}</span>
+            <span className="block truncate text-xs text-muted-foreground">{t("Profile & settings")}</span>
           </span>
         </Link>
       </div>

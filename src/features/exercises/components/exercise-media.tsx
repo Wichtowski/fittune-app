@@ -1,99 +1,53 @@
+import { t } from "@/lib/i18n";
 import { PlayIcon } from "lucide-react";
 import { useState } from "react";
 
 import { MuscleIllustration } from "./muscle-illustration";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/env";
 import type { Muscle } from "@/schemas/common";
-
-// Exercise photos are from the public domain Free Exercise DB, pinned to one revision
-const photoBase = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/a859101d633a01c4a1a920d6a8ce41dabba0705f/exercises";
-const catalogPhotos: Record<string, string> = {
-  "Barbell Bench Press": "Barbell_Bench_Press_-_Medium_Grip",
-  "Incline Dumbbell Press": "Incline_Dumbbell_Press",
-  "Dumbbell Fly": "Dumbbell_Flyes",
-  "Cable Crossover": "Cable_Crossover",
-  "Chest Dip": "Dips_-_Chest_Version",
-  "Push-Up": "Pushups",
-  "Barbell Back Squat": "Barbell_Full_Squat",
-  "Front Squat": "Front_Barbell_Squat",
-  "Leg Press": "Leg_Press",
-  "Leg Extension": "Leg_Extensions",
-  "Conventional Deadlift": "Barbell_Deadlift",
-  "Romanian Deadlift": "Romanian_Deadlift",
-  "Lying Leg Curl": "Lying_Leg_Curls",
-  "Hip Thrust": "Barbell_Hip_Thrust",
-  "Standing Calf Raise": "Standing_Calf_Raises",
-  "Pull-Up": "Pullups",
-  "Chin-Up": "Chin-Up",
-  "Lat Pulldown": "Wide-Grip_Lat_Pulldown",
-  "One-Arm Dumbbell Row": "One-Arm_Dumbbell_Row",
-  "Barbell Row": "Bent_Over_Barbell_Row",
-  "Seated Cable Row": "Seated_Cable_Rows",
-  "Barbell Shrug": "Barbell_Shrug",
-  "Overhead Press": "Barbell_Shoulder_Press",
-  "Seated Dumbbell Shoulder Press": "Seated_Dumbbell_Press",
-  "Lateral Raise": "Side_Lateral_Raise",
-  "Rear Delt Fly": "Seated_Bent-Over_Rear_Delt_Raise",
-  "Face Pull": "Face_Pull",
-  "Barbell Curl": "Barbell_Curl",
-  "Hammer Curl": "Hammer_Curls",
-  "Incline Dumbbell Curl": "Incline_Dumbbell_Curl",
-  "Triceps Pushdown": "Triceps_Pushdown",
-  "Skull Crusher": "Lying_Triceps_Press",
-  "Overhead Triceps Extension": "Standing_Dumbbell_Triceps_Extension",
-  "Close-Grip Bench Press": "Close-Grip_Barbell_Bench_Press",
-  "Wrist Curl": "Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
-  "Plank": "Plank",
-  "Hanging Leg Raise": "Hanging_Leg_Raise",
-  "Cable Crunch": "Cable_Crunch",
-  "Ab Wheel Rollout": "Ab_Roller",
-  "Treadmill Run": "Running_Treadmill",
-  "Rowing Machine": "Rowing_Stationary",
-  "Stationary Bike": "Bicycling_Stationary",
-  "Jump Rope": "Rope_Jumping",
-};
+import type { Exercise, ExerciseMedia } from "@/schemas/exercise";
 
 type ExerciseVideoSource = { provider: "youtube" | "vimeo"; id: string };
 
-const catalogVideos: Record<string, ExerciseVideoSource> = {
-  "Barbell Bench Press": { provider: "youtube", id: "hWbUlkb5Ms4" },
-  "Barbell Back Squat": { provider: "youtube", id: "8060FZiT5TA" },
-  "Conventional Deadlift": { provider: "youtube", id: "ZaTM37cfiDs" },
-  "Pull-Up": { provider: "youtube", id: "aNUSgyWRJYA" },
-  "Barbell Curl": { provider: "vimeo", id: "278191577" },
-};
-
-export function exerciseVideoSource(name: string, videoId: string | null, isCustom: boolean): ExerciseVideoSource | null {
-  return videoId ? { provider: "youtube", id: videoId } : isCustom ? null : catalogVideos[name] ?? null;
+/** The first video in `media`, or the YouTube `video_id` of an API that predates `media` */
+export function exerciseVideoSource(exercise: Pick<Exercise, "media" | "video_id">): ExerciseVideoSource | null {
+  const video = exercise.media.find((item) => item.kind === "video");
+  if (video) return { provider: video.provider, id: video.external_id };
+  return exercise.video_id ? { provider: "youtube", id: exercise.video_id } : null;
 }
 
-export function hasExercisePhotos(name: string, isCustom: boolean): boolean {
-  return !isCustom && name in catalogPhotos;
+export function hasExercisePhotos(media: readonly ExerciseMedia[]): boolean {
+  return media.some((item) => item.kind === "photo");
+}
+
+function photoUrl(media: readonly ExerciseMedia[], frame: 0 | 1): string | null {
+  const photo = media.find((item) => item.kind === "photo" && item.position === frame);
+  return photo?.kind === "photo" ? `${API_BASE_URL}${photo.url}` : null;
 }
 
 export function ExercisePhoto({
   name,
   muscle,
-  isCustom,
+  media = [],
   frame = 0,
   className = "",
 }: {
   name: string;
   muscle: Muscle;
-  isCustom: boolean;
+  media?: readonly ExerciseMedia[];
   frame?: 0 | 1;
   className?: string;
 }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const photo = isCustom ? undefined : catalogPhotos[name];
-  const src = photo ? `${photoBase}/${photo}/${frame}.jpg` : null;
+  const src = photoUrl(media, frame);
 
   return (
     <span className={`relative flex items-center justify-center overflow-hidden bg-muted/50 ${className}`}>
       {src && failedSrc !== src ? (
         <img
           src={src}
-          alt={`${name} ${frame === 0 ? "start" : "finish"} position`}
+          alt={t("{name} {phase} position", { name, phase: frame === 0 ? t("start") : t("finish") })}
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
@@ -111,8 +65,7 @@ export function ExerciseVideo({ source, name }: { source: ExerciseVideoSource; n
     return (
       <Button variant="secondary" asChild>
         <a href={`https://vimeo.com/${source.id}`} target="_blank" rel="noopener noreferrer">
-          <PlayIcon aria-hidden /> Watch demo on Vimeo
-        </a>
+          <PlayIcon aria-hidden />{" "}{t("Watch demo on Vimeo")}{" "}</a>
       </Button>
     );
   }
@@ -122,16 +75,15 @@ export function ExerciseVideo({ source, name }: { source: ExerciseVideoSource; n
       <iframe
         className="aspect-video w-full rounded-xl"
         src={`https://www.youtube-nocookie.com/embed/${source.id}?autoplay=1`}
-        title={`${name} exercise demo`}
+        title={t("{name} exercise demo", { name })}
         loading="lazy"
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
       />
-      <a href={`https://www.youtube.com/watch?v=${source.id}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-muted-foreground hover:underline">Open on YouTube</a>
+      <a href={`https://www.youtube.com/watch?v=${source.id}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-muted-foreground hover:underline">{t("Open on YouTube")}</a>
     </div>
   ) : (
     <Button variant="secondary" onClick={() => setPlaying(true)}>
-      <PlayIcon aria-hidden /> Watch demo
-    </Button>
+      <PlayIcon aria-hidden />{" "}{t("Watch demo")}{" "}</Button>
   );
 }

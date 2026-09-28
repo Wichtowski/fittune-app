@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { ArrowDownRightIcon, ArrowUpRightIcon } from "lucide-react";
 
 import { percentChange } from "@/lib/format";
@@ -15,6 +16,7 @@ type StatTileProps = {
 
 /** Headline number with an optional signed change against the previous period. */
 export function StatTile({ label, value, current, previous, comparedTo, className }: StatTileProps) {
+  const period = comparedTo ? t(comparedTo) : "";
   const change = current !== undefined && previous !== undefined ? percentChange(current, previous) : null;
   const up = change !== null && change > 0;
   const flat = change !== null && Math.abs(change) < 0.5;
@@ -26,9 +28,9 @@ export function StatTile({ label, value, current, previous, comparedTo, classNam
       {comparedTo ? (
         <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
           {change === null ? (
-            <span>No data {comparedTo}</span>
+            <span>{t("No data")}{" "}{period}</span>
           ) : flat ? (
-            <span>Same as {comparedTo}</span>
+            <span>{t("Same as")}{" "}{period}</span>
           ) : (
             <>
               {up ? (
@@ -40,7 +42,7 @@ export function StatTile({ label, value, current, previous, comparedTo, classNam
                 {up ? "+" : ""}
                 {Math.round(change)}%
               </span>
-              <span>vs {comparedTo}</span>
+              <span>{t("vs")}{" "}{period}</span>
             </>
           )}
         </p>

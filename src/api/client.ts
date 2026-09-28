@@ -42,6 +42,10 @@ export function configureApiClient(next: ClientHooks) {
   hooks = next;
 }
 
+export function reportUnauthorized() {
+  hooks.onUnauthorized();
+}
+
 type RequestOptions<T extends z.ZodType | undefined> = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;

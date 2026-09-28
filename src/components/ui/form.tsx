@@ -12,6 +12,7 @@ import {
 
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 const Form = FormProvider;
 
@@ -86,7 +87,7 @@ function FormMessage({ className, children, ...props }: React.ComponentProps<"p"
   if (!body) return null;
   return (
     <p id={formMessageId} role="alert" className={cn("text-sm text-destructive", className)} {...props}>
-      {body}
+      {typeof body === "string" ? t(body) : body}
     </p>
   );
 }

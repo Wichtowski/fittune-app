@@ -5,6 +5,7 @@ import { mutationKeys, type SaveActivityVariables } from "@/api/mutation-default
 import { queryKeys } from "@/api/query-keys";
 import type { Activity } from "@/schemas/activity";
 import type { Page } from "@/schemas/common";
+import { t } from "@/lib/i18n";
 
 type ActivityPages = InfiniteData<Page<Activity>>;
 
@@ -48,7 +49,7 @@ export function useSaveActivity() {
     },
     onError: (_error, _vars, context) => {
       context?.rollback();
-      toast.error("Couldn't save the activity.");
+      toast.error(t("Couldn't save the activity."));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
@@ -66,7 +67,7 @@ export function useDeleteActivity() {
     onMutate: async (id: string) => ({ rollback: await updateLists((items) => items.filter((a) => a.id !== id)) }),
     onError: (_error, _id, context) => {
       context?.rollback();
-      toast.error("Couldn't delete the activity.");
+      toast.error(t("Couldn't delete the activity."));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });

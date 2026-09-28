@@ -10,6 +10,13 @@ import {
   trackingSchema,
 } from "./common";
 
+export const exerciseMediaSchema = z.discriminatedUnion("kind", [
+  // Stored by the API; `url` is relative to the API origin
+  z.object({ id: z.guid(), kind: z.literal("photo"), provider: z.literal("fittune"), position: z.number().int(), url: z.string().startsWith("/") }),
+  z.object({ id: z.guid(), kind: z.literal("video"), provider: z.enum(["youtube", "vimeo"]), position: z.number().int(), external_id: z.string() }),
+]);
+export type ExerciseMedia = z.infer<typeof exerciseMediaSchema>;
+
 export const exerciseSchema = z.object({
   id: z.guid(),
   name: z.string(),
@@ -25,6 +32,8 @@ export const exerciseSchema = z.object({
   archived_at: timestampSchema.nullable(),
   created_at: timestampSchema,
   updated_at: timestampSchema,
+  // Photos, then videos, each by position; absent from APIs that predate it
+  media: z.array(exerciseMediaSchema).default([]),
 });
 export type Exercise = z.infer<typeof exerciseSchema>;
 

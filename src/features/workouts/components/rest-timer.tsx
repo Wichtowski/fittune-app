@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { MinusIcon, PlusIcon, TimerIcon, XIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -22,7 +23,7 @@ export function RestTimer() {
     if (!rest || remaining > 0 || notified.current === rest.endsAt) return;
     notified.current = rest.endsAt;
     navigator.vibrate?.([200, 100, 200]);
-    toast("Rest over — next set!", { icon: <TimerIcon className="size-4" aria-hidden />, duration: 3000 });
+    toast(t("Rest over - next set!"), { icon: <TimerIcon className="size-4" aria-hidden />, duration: 3000 });
     clearRest();
   }, [rest, remaining, clearRest]);
 
@@ -32,22 +33,22 @@ export function RestTimer() {
   return (
     <div
       role="timer"
-      aria-label={`Rest ${formatClock(remaining)} remaining`}
+      aria-label={t("Rest remaining: {time}", { time: formatClock(remaining) })}
       className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-40 overflow-hidden rounded-2xl border border-primary/30 bg-card/95 shadow-2xl backdrop-blur-xl md:inset-x-auto md:right-8 md:bottom-8 md:w-96"
     >
       <div className="absolute inset-y-0 left-0 bg-primary/15 transition-[width] duration-300" style={{ width: `${progress * 100}%` }} />
       <div className="relative flex items-center gap-2 p-2 pl-4">
         <div className="flex-1">
-          <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Rest</p>
+          <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{t("Rest")}</p>
           <p className="font-display text-3xl leading-none font-bold tabular">{formatClock(remaining)}</p>
         </div>
-        <Button variant="secondary" size="icon" onClick={() => adjustRest(-15)} aria-label="15 seconds less">
+        <Button variant="secondary" size="icon" onClick={() => adjustRest(-15)} aria-label={t("15 seconds less")}>
           <MinusIcon aria-hidden />
         </Button>
-        <Button variant="secondary" size="icon" onClick={() => adjustRest(15)} aria-label="15 seconds more">
+        <Button variant="secondary" size="icon" onClick={() => adjustRest(15)} aria-label={t("15 seconds more")}>
           <PlusIcon aria-hidden />
         </Button>
-        <Button variant="default" size="icon" onClick={clearRest} aria-label="Skip rest">
+        <Button variant="default" size="icon" onClick={clearRest} aria-label={t("Skip rest")}>
           <XIcon aria-hidden />
         </Button>
       </div>

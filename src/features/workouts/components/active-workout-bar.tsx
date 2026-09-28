@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 import { ChevronRightIcon, TimerIcon } from "lucide-react";
 
@@ -33,8 +34,7 @@ export function ActiveWorkoutBar({ className }: { className?: string }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{active.title}</p>
         <p className="text-xs text-muted-foreground tabular">
-          {formatClock(elapsed)} · {completedSets}/{totalSets} sets
-        </p>
+          {formatClock(elapsed)} · {t("Sets: {done}/{total}", { done: completedSets, total: totalSets })}</p>
       </div>
       {restLeft > 0 ? (
         <span className="flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 font-display text-lg leading-none font-bold text-primary-foreground tabular">

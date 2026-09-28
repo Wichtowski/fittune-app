@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -29,17 +30,17 @@ function ExercisesPage() {
   return (
     <>
       <PageHeader
-        title="Exercises"
-        eyebrow="Library & custom movements"
+        title={t("Exercises")}
+        eyebrow={t("Library & custom movements")}
         actions={
           <Button onClick={() => setCreating(true)}>
-            <PlusIcon aria-hidden /> <span className="hidden sm:inline">Custom exercise</span>
-            <span className="sm:hidden">New</span>
+            <PlusIcon aria-hidden /> <span className="hidden sm:inline">{t("Custom exercise")}</span>
+            <span className="sm:hidden">{t("New")}</span>
           </Button>
         }
       />
       <ExerciseLibrary filter={search} onFilterChange={(filter) => void navigate({ search: filter, replace: true })} />
-      <ResponsiveDialog open={creating} onOpenChange={setCreating} title="New custom exercise">
+      <ResponsiveDialog open={creating} onOpenChange={setCreating} title={t("New custom exercise")}>
         <ExerciseForm
           onDone={(exercise) => {
             setCreating(false);

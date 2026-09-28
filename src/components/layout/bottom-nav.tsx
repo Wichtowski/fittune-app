@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 
 import { mobileNav } from "./nav-items";
@@ -9,7 +10,7 @@ export function BottomNav() {
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t("Primary")}
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/90 pb-safe backdrop-blur-xl md:hidden"
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5">
@@ -34,7 +35,7 @@ export function BottomNav() {
                 ) : (
                   <Icon className="size-6 transition-transform group-active:scale-90" aria-hidden />
                 )}
-                <span>{isWorkout && hasActive ? "Resume" : label}</span>
+                <span>{isWorkout && hasActive ? t("Resume") : t(label)}</span>
               </Link>
             </li>
           );

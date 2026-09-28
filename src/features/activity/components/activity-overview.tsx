@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ActivityIcon } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
@@ -36,13 +37,11 @@ export function ActivityOverview({ onSelect }: { onSelect: (activity: Activity) 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div className="order-2 min-w-0 lg:order-1">
-        <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0" role="group" aria-label="Filter by type">
-          <FilterChip active={kind === undefined} onClick={() => setKind(undefined)}>
-            All
-          </FilterChip>
+        <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0" role="group" aria-label={t("Filter by type")}>
+          <FilterChip active={kind === undefined} onClick={() => setKind(undefined)}>{t("All")}{" "}</FilterChip>
           {ACTIVITY_KINDS.map((k) => (
             <FilterChip key={k} active={kind === k} onClick={() => setKind(kind === k ? undefined : k)}>
-              {activityLabels[k]}
+              {t(activityLabels[k])}
             </FilterChip>
           ))}
         </div>
@@ -57,7 +56,7 @@ export function ActivityOverview({ onSelect }: { onSelect: (activity: Activity) 
         ) : list.error && activities.length === 0 ? (
           <QueryError error={list.error} onRetry={() => void list.refetch()} />
         ) : activities.length === 0 ? (
-          <EmptyState icon={ActivityIcon} title="No activities" description="Runs, rides, walks and swims you log appear here." />
+          <EmptyState icon={ActivityIcon} title={t("No activities")} description={t("Runs, rides, walks and swims you log appear here.")} />
         ) : (
           <ul className="grid gap-3">
             {activities.map((activity) => (
@@ -69,7 +68,7 @@ export function ActivityOverview({ onSelect }: { onSelect: (activity: Activity) 
         )}
         {list.hasNextPage ? (
           <Button variant="secondary" className="mt-4 w-full" onClick={() => void list.fetchNextPage()}>
-            {list.isFetchingNextPage ? "Loading…" : "Load more"}
+            {list.isFetchingNextPage ? t("Loading…") : t("Load more")}
           </Button>
         ) : null}
       </div>
@@ -77,14 +76,14 @@ export function ActivityOverview({ onSelect }: { onSelect: (activity: Activity) 
       <aside className="order-1 grid content-start gap-3 lg:order-2">
         <div className="grid grid-cols-2 gap-3">
           <StatTile
-            label="Distance, 4 weeks"
+            label={t("Distance, 4 weeks")}
             value={overview.data ? formatDistance(overview.data.current.activity_distance_m, distanceUnit, 1) : "–"}
             current={overview.data?.current.activity_distance_m}
             previous={overview.data?.previous.activity_distance_m}
             comparedTo="prior 4 weeks"
           />
           <StatTile
-            label="Time, 4 weeks"
+            label={t("Time, 4 weeks")}
             value={overview.data ? formatDuration(overview.data.current.activity_seconds) : "–"}
             current={overview.data?.current.activity_seconds}
             previous={overview.data?.previous.activity_seconds}
@@ -93,18 +92,18 @@ export function ActivityOverview({ onSelect }: { onSelect: (activity: Activity) 
         </div>
         <ChartCard
           className="hidden md:flex"
-          title="Weekly distance"
-          description={`Last 12 weeks · ${distanceUnit}`}
+          title={t("Weekly distance")}
+          description={`${t("Last 12 weeks")} · ${distanceUnit}`}
           refreshing={timeline.isFetching && !timeline.isPending}
           table={{
-            columns: ["Week of", `Distance (${distanceUnit})`],
-            rows: distance.map((d) => [d.tooltipTitle?.replace("Week of ", "") ?? d.label, d.value]),
+            columns: [t("Week of"), `${t("Distance")} (${distanceUnit})`],
+            rows: distance.map((d) => [d.label, d.value]),
           }}
         >
           <ColumnChart
             data={distance}
             series="endurance"
-            seriesLabel="Distance"
+            seriesLabel={t("Distance")}
             formatValue={(v) => `${v} ${distanceUnit}`}
             height={200}
           />

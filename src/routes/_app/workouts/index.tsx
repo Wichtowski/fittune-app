@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { workoutsInfiniteQuery } from "@/api/workouts";
@@ -14,11 +15,11 @@ function HistoryPage() {
   return (
     <>
       <PageHeader
-        title="History"
-        eyebrow="Every session you've logged"
+        title={t("History")}
+        eyebrow={t("Every session you've logged")}
         actions={
           <Button asChild variant="secondary" size="sm">
-            <Link to="/routines">Routines</Link>
+            <Link to="/routines">{t("Routines")}</Link>
           </Button>
         }
       />

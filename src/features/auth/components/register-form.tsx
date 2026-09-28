@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -43,11 +44,11 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           name="invite_code"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Invite code</FormLabel>
+              <FormLabel>{t("Invite code")}</FormLabel>
               <FormControl>
                 <Input autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="xxxx-xxxx-xxxx-xxxx" {...field} />
               </FormControl>
-              <FormDescription>FitTune is invite only. Ask an admin for a code.</FormDescription>
+              <FormDescription>{t("FitTune is invite only. Ask an admin for a code.")}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -57,7 +58,7 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           name="display_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name (optional)</FormLabel>
+              <FormLabel>{t("Name (optional)")}</FormLabel>
               <FormControl>
                 <Input autoComplete="name" {...field} />
               </FormControl>
@@ -70,7 +71,7 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t("Username")}</FormLabel>
               <FormControl>
                 <Input autoComplete="username" autoCapitalize="none" autoCorrect="off" {...field} />
               </FormControl>
@@ -83,7 +84,7 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t("Email")}</FormLabel>
               <FormControl>
                 <Input type="email" autoComplete="email" inputMode="email" {...field} />
               </FormControl>
@@ -96,11 +97,11 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t("Password")}</FormLabel>
               <FormControl>
                 <Input type="password" autoComplete="new-password" {...field} />
               </FormControl>
-              <FormDescription>8+ characters with an uppercase letter and a symbol.</FormDescription>
+              <FormDescription>{t("8+ characters with an uppercase letter and a symbol.")}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -110,7 +111,7 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           name="confirm_password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm password</FormLabel>
+              <FormLabel>{t("Confirm password")}</FormLabel>
               <FormControl>
                 <Input type="password" autoComplete="new-password" {...field} />
               </FormControl>
@@ -119,7 +120,7 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
           )}
         />
         <Button type="submit" size="lg" disabled={mutation.isPending} className="mt-2">
-          {mutation.isPending ? "Creating account…" : "Create account"}
+          {mutation.isPending ? t("Creating account…") : t("Create account")}
         </Button>
       </form>
     </Form>
