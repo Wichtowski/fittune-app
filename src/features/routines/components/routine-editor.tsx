@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -54,7 +55,7 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.routines.detail(saved.id), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.routines.list });
-      toast.success(routine ? "Routine saved" : "Routine created");
+      toast.success(routine ? t("Routine saved") : t("Routine created"));
       void navigate({ to: "/routines" });
     },
     onError: (error) => applyServerErrors(error, form.setError),
@@ -64,10 +65,10 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
     mutationFn: () => deleteRoutine(routine?.id ?? ""),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
-      toast.success("Routine deleted");
+      toast.success(t("Routine deleted"));
       void navigate({ to: "/routines", replace: true });
     },
-    onError: () => toast.error("Couldn't delete the routine."),
+    onError: () => toast.error(t("Couldn't delete the routine.")),
   });
 
   return (
@@ -79,9 +80,9 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>{t("Name")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Upper body A" {...field} />
+                  <Input placeholder={t("e.g. Upper body A")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -92,9 +93,9 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Notes</FormLabel>
+                <FormLabel>{t("Notes")}</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Goal, progression scheme…" {...field} />
+                  <Textarea placeholder={t("Goal, progression scheme…")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,7 +103,7 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
           />
           <div className="hidden gap-2 lg:grid">
             <Button type="submit" size="lg" disabled={save.isPending}>
-              {save.isPending ? "Saving…" : "Save routine"}
+              {save.isPending ? t("Saving…") : t("Save routine")}
             </Button>
             {routine ? <DeleteRoutine onConfirm={() => remove.mutate()} /> : null}
           </div>
@@ -128,11 +129,10 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
             />
           ))}
           <Button type="button" variant="secondary" size="lg" onClick={() => setPickerOpen(true)}>
-            <PlusIcon aria-hidden /> Add exercises
-          </Button>
+            <PlusIcon aria-hidden />{" "}{t("Add exercises")}{" "}</Button>
           <div className="grid gap-2 lg:hidden">
             <Button type="submit" size="lg" disabled={save.isPending}>
-              {save.isPending ? "Saving…" : "Save routine"}
+              {save.isPending ? t("Saving…") : t("Save routine")}
             </Button>
             {routine ? <DeleteRoutine onConfirm={() => remove.mutate()} /> : null}
           </div>
@@ -178,28 +178,28 @@ function ExerciseTargets({
     tracking === "weight_reps"
       ? [
           { key: "weight", label: weightUnit },
-          { key: "reps", label: "Reps" },
+          { key: "reps", label: t("Reps") },
         ]
       : tracking === "reps"
-        ? [{ key: "reps", label: "Reps" }]
+        ? [{ key: "reps", label: t("Reps") }]
         : tracking === "duration"
-          ? [{ key: "duration_seconds", label: "Seconds" }]
+          ? [{ key: "duration_seconds", label: t("Seconds") }]
           : [
               { key: "distance", label: distanceUnit },
-              { key: "duration_seconds", label: "Seconds" },
+              { key: "duration_seconds", label: t("Seconds") },
             ];
 
   return (
     <section className="rounded-2xl border bg-card p-4" aria-label={name}>
       <div className="mb-3 flex items-center gap-2">
         <p className="min-w-0 flex-1 truncate text-lg font-semibold">{name}</p>
-        <Button type="button" variant="ghost" size="icon-sm" disabled={isFirst} onClick={() => onMove(-1)} aria-label="Move up">
+        <Button type="button" variant="ghost" size="icon-sm" disabled={isFirst} onClick={() => onMove(-1)} aria-label={t("Move up")}>
           <ArrowUpIcon className="size-4" aria-hidden />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" disabled={isLast} onClick={() => onMove(1)} aria-label="Move down">
+        <Button type="button" variant="ghost" size="icon-sm" disabled={isLast} onClick={() => onMove(1)} aria-label={t("Move down")}>
           <ArrowDownIcon className="size-4" aria-hidden />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={onRemove} aria-label={`Remove ${name}`}>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={onRemove} aria-label={t("Remove {name}", { name })}>
           <Trash2Icon className="size-4" aria-hidden />
         </Button>
       </div>
@@ -209,7 +209,7 @@ function ExerciseTargets({
         name={`exercises.${index}.rest_seconds`}
         render={({ field }) => (
           <FormItem className="mb-3 flex items-center gap-3">
-            <FormLabel className="shrink-0">Rest (s)</FormLabel>
+            <FormLabel className="shrink-0">{t("Rest (s)")}</FormLabel>
             <FormControl>
               <Input inputMode="numeric" className="h-10 w-24" {...field} value={String(field.value ?? "")} />
             </FormControl>
@@ -231,7 +231,7 @@ function ExerciseTargets({
                 <FormItem className="w-32 shrink-0">
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="h-11" aria-label="Set type">
+                      <SelectTrigger className="h-11" aria-label={t("Set type")}>
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -268,15 +268,14 @@ function ExerciseTargets({
                 )}
               />
             ))}
-            <Button type="button" variant="ghost" size="icon" onClick={() => sets.remove(setIndex)} aria-label={`Remove set ${setIndex + 1}`}>
+            <Button type="button" variant="ghost" size="icon" onClick={() => sets.remove(setIndex)} aria-label={t("Remove set {count}", { count: setIndex + 1 })}>
               <XIcon className="size-4" aria-hidden />
             </Button>
           </div>
         ))}
       </div>
       <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => sets.append(emptySetTarget())}>
-        <PlusIcon className="size-4" aria-hidden /> Add set
-      </Button>
+        <PlusIcon className="size-4" aria-hidden />{" "}{t("Add set")}{" "}</Button>
     </section>
   );
 }
@@ -286,19 +285,16 @@ function DeleteRoutine({ onConfirm }: { onConfirm: () => void }) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button type="button" variant="ghost" className="text-destructive">
-          <Trash2Icon aria-hidden /> Delete routine
-        </Button>
+          <Trash2Icon aria-hidden />{" "}{t("Delete routine")}{" "}</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete this routine?</AlertDialogTitle>
-          <AlertDialogDescription>Workouts you already did from it are kept.</AlertDialogDescription>
+          <AlertDialogTitle>{t("Delete this routine?")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("Workouts you already did from it are kept.")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={onConfirm}>
-            Delete
-          </AlertDialogAction>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm}>{t("Delete")}{" "}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

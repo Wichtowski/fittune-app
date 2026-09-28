@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { PlayIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -46,7 +47,7 @@ export function ExercisePhoto({
       {src && failedSrc !== src ? (
         <img
           src={src}
-          alt={`${name} ${frame === 0 ? "start" : "finish"} position`}
+          alt={t("{name} {phase} position", { name, phase: frame === 0 ? t("start") : t("finish") })}
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
@@ -64,8 +65,7 @@ export function ExerciseVideo({ source, name }: { source: ExerciseVideoSource; n
     return (
       <Button variant="secondary" asChild>
         <a href={`https://vimeo.com/${source.id}`} target="_blank" rel="noopener noreferrer">
-          <PlayIcon aria-hidden /> Watch demo on Vimeo
-        </a>
+          <PlayIcon aria-hidden />{" "}{t("Watch demo on Vimeo")}{" "}</a>
       </Button>
     );
   }
@@ -75,16 +75,15 @@ export function ExerciseVideo({ source, name }: { source: ExerciseVideoSource; n
       <iframe
         className="aspect-video w-full rounded-xl"
         src={`https://www.youtube-nocookie.com/embed/${source.id}?autoplay=1`}
-        title={`${name} exercise demo`}
+        title={t("{name} exercise demo", { name })}
         loading="lazy"
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
       />
-      <a href={`https://www.youtube.com/watch?v=${source.id}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-muted-foreground hover:underline">Open on YouTube</a>
+      <a href={`https://www.youtube.com/watch?v=${source.id}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-muted-foreground hover:underline">{t("Open on YouTube")}</a>
     </div>
   ) : (
     <Button variant="secondary" onClick={() => setPlaying(true)}>
-      <PlayIcon aria-hidden /> Watch demo
-    </Button>
+      <PlayIcon aria-hidden />{" "}{t("Watch demo")}{" "}</Button>
   );
 }

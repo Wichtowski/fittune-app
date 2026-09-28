@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -35,7 +36,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           name="login"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username or email</FormLabel>
+              <FormLabel>{t("Username or email")}</FormLabel>
               <FormControl>
                 <Input autoComplete="username" autoCapitalize="none" autoCorrect="off" {...field} />
               </FormControl>
@@ -48,7 +49,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t("Password")}</FormLabel>
               <FormControl>
                 <Input type="password" autoComplete="current-password" {...field} />
               </FormControl>
@@ -57,7 +58,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           )}
         />
         <Button type="submit" size="lg" disabled={mutation.isPending} className="mt-2">
-          {mutation.isPending ? "Signing in…" : "Sign in"}
+          {mutation.isPending ? t("Signing in…") : t("Sign in")}
         </Button>
       </form>
     </Form>

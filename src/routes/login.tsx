@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -16,12 +17,12 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { redirect: redirectTo } = Route.useSearch();
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to continue your training.">
+    <AuthLayout title={t("Welcome back")} subtitle={t("Sign in to continue your training.")}>
       <LoginForm redirectTo={redirectTo} />
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Got an invite?{" "}
+        {t("Got an invite?")}{" "}
         <Link to="/register" className="font-semibold text-primary-strong underline-offset-4 hover:underline">
-          Create an account
+          {t("Create an account")}
         </Link>
       </p>
     </AuthLayout>

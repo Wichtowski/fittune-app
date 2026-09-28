@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -17,12 +18,12 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const { invite } = Route.useSearch();
   return (
-    <AuthLayout title="Join FitTune" subtitle="You need an invite code to create an account.">
+    <AuthLayout title={t("Join FitTune")} subtitle={t("You need an invite code to create an account.")}>
       <RegisterForm inviteCode={invite} />
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t("Already have an account?")}{" "}
         <Link to="/login" className="font-semibold text-primary-strong underline-offset-4 hover:underline">
-          Sign in
+          {t("Sign in")}
         </Link>
       </p>
     </AuthLayout>

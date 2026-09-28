@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArchiveIcon, PencilIcon } from "lucide-react";
@@ -56,49 +57,47 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
     <>
       <PageHeader
         eyebrow={
-          <Link to="/exercises" className="hover:underline">
-            Exercises
-          </Link>
+          <Link to="/exercises" className="hover:underline">{t("Exercises")}{" "}</Link>
         }
         title={exercise.name}
         actions={exercise.is_custom && !exercise.archived_at ? <CustomActions history={history} onEdit={() => setEditing(true)} /> : null}
       />
 
       <div className="mb-6 flex flex-wrap gap-2">
-        <Badge>{muscleLabels[exercise.primary_muscle]}</Badge>
+        <Badge>{t(muscleLabels[exercise.primary_muscle])}</Badge>
         {exercise.secondary_muscles.map((m) => (
           <Badge key={m} variant="outline">
-            {muscleLabels[m]}
+            {t(muscleLabels[m])}
           </Badge>
         ))}
-        <Badge variant="secondary">{equipmentLabels[exercise.equipment]}</Badge>
-        <Badge variant="secondary">{difficultyLabels[exercise.difficulty]}</Badge>
-        {exercise.archived_at ? <Badge variant="destructive">Archived</Badge> : null}
+        <Badge variant="secondary">{t(equipmentLabels[exercise.equipment])}</Badge>
+        <Badge variant="secondary">{t(difficultyLabels[exercise.difficulty])}</Badge>
+        {exercise.archived_at ? <Badge variant="destructive">{t("Archived")}</Badge> : null}
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {exercise.tracking === "weight_reps" ? (
           <>
-            <StatTile label="Heaviest weight" value={formatWeight(records.max_weight_kg?.value, weightUnit)} />
-            <StatTile label="Best est. 1RM" value={formatWeight(records.best_e1rm_kg?.value, weightUnit)} />
-            <StatTile label="Most reps" value={records.max_reps ? String(records.max_reps.value) : "–"} />
+            <StatTile label={t("Heaviest weight")} value={formatWeight(records.max_weight_kg?.value, weightUnit)} />
+            <StatTile label={t("Best est. 1RM")} value={formatWeight(records.best_e1rm_kg?.value, weightUnit)} />
+            <StatTile label={t("Most reps")} value={records.max_reps ? String(records.max_reps.value) : "–"} />
             <StatTile
-              label="Best session volume"
+              label={t("Best session volume")}
               value={records.best_session_volume_kg ? formatVolume(records.best_session_volume_kg.value, weightUnit) : "–"}
             />
           </>
         ) : exercise.tracking === "reps" ? (
           <>
-            <StatTile label="Most reps" value={records.max_reps ? String(records.max_reps.value) : "–"} />
-            <StatTile label="Sessions" value={String(sessions.length)} />
+            <StatTile label={t("Most reps")} value={records.max_reps ? String(records.max_reps.value) : "–"} />
+            <StatTile label={t("Sessions")} value={String(sessions.length)} />
           </>
         ) : (
           <>
-            <StatTile label="Longest" value={formatDuration(records.max_duration_seconds?.value)} />
+            <StatTile label={t("Longest")} value={formatDuration(records.max_duration_seconds?.value)} />
             {exercise.tracking === "distance_duration" ? (
-              <StatTile label="Farthest" value={formatDistance(records.max_distance_m?.value, distanceUnit)} />
+              <StatTile label={t("Farthest")} value={formatDistance(records.max_distance_m?.value, distanceUnit)} />
             ) : null}
-            <StatTile label="Sessions" value={String(sessions.length)} />
+            <StatTile label={t("Sessions")} value={String(sessions.length)} />
           </>
         )}
       </div>
@@ -106,16 +105,14 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
       <Card className={`mt-6 grid items-start gap-4 p-4 ${hasPhotos || videoSource ? "md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.7fr)]" : "mx-auto w-full max-w-lg"}`}>
         {hasPhotos || videoSource ? (
           <div className="min-w-0">
-            <h2 className="mb-3 font-semibold">Exercise demo</h2>
+            <h2 className="mb-3 font-semibold">{t("Exercise demo")}</h2>
             {hasPhotos ? (
               <>
                 <div className="grid grid-cols-2 gap-2">
                   <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} className="aspect-[4/3] rounded-xl" />
                   <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} frame={1} className="aspect-[4/3] rounded-xl" />
                 </div>
-                <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-muted-foreground hover:underline">
-                  Exercise photos: Free Exercise DB
-                </a>
+                <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-muted-foreground hover:underline">{t("Exercise photos: Free Exercise DB")}{" "}</a>
               </>
             ) : null}
             {videoSource ? <div className="mt-3"><ExerciseVideo key={`${videoSource.provider}-${videoSource.id}`} source={videoSource} name={exercise.name} /></div> : null}
@@ -129,19 +126,17 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
           {trend.data.length > 1 ? (
             <ChartCard
               title={trend.title}
-              description="Best set per session"
-              table={{ columns: ["Session", trend.title], rows: trend.data.map((d) => [d.tooltipTitle ?? d.label, trend.format(d.value)]) }}
+              description={t("Best set per session")}
+              table={{ columns: [t("Session"), trend.title], rows: trend.data.map((d) => [d.tooltipTitle ?? d.label, trend.format(d.value)]) }}
             >
               <TrendLineChart data={trend.data} seriesLabel={trend.title} formatValue={trend.format} />
             </ChartCard>
           ) : null}
 
           <section>
-            <h2 className="mb-3 font-display text-xl font-bold tracking-wide uppercase">History</h2>
+            <h2 className="mb-3 font-display text-xl font-bold tracking-wide uppercase">{t("History")}</h2>
             {sessions.length === 0 ? (
-              <p className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-                You haven't logged this exercise yet.
-              </p>
+              <p className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">{t("You haven't logged this exercise yet.")}{" "}</p>
             ) : (
               <ul className="grid gap-3">
                 {sessions.map((session) => {
@@ -176,9 +171,9 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
 
         <aside className="grid content-start gap-4">
           <Card className="p-5">
-            <h3 className="font-semibold">How it's tracked</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{trackingLabels[exercise.tracking]}</p>
-            <h3 className="mt-4 font-semibold">Equipment needed</h3>
+            <h3 className="font-semibold">{t("How it's tracked")}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t(trackingLabels[exercise.tracking])}</p>
+            <h3 className="mt-4 font-semibold">{t("Equipment needed")}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{requirementSummary(exercise.requires)}</p>
             {exercise.instructions ? (
               <p className="mt-4 text-sm whitespace-pre-wrap">{exercise.instructions}</p>
@@ -187,7 +182,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
         </aside>
       </div>
 
-      <ResponsiveDialog open={editing} onOpenChange={setEditing} title="Edit exercise">
+      <ResponsiveDialog open={editing} onOpenChange={setEditing} title={t("Edit exercise")}>
         <ExerciseForm exercise={exercise} onDone={() => setEditing(false)} />
       </ResponsiveDialog>
     </>
@@ -201,15 +196,15 @@ function CustomActions({ history, onEdit }: { history: ExerciseHistory; onEdit: 
     mutationFn: () => archiveExercise(history.exercise.id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
-      toast.success("Exercise archived. Past workouts keep it.");
+      toast.success(t("Exercise archived. Past workouts keep it."));
       void navigate({ to: "/exercises" });
     },
-    onError: () => toast.error("Couldn't archive the exercise."),
+    onError: () => toast.error(t("Couldn't archive the exercise.")),
   });
 
   return (
     <>
-      <Button variant="secondary" size="icon-sm" onClick={onEdit} aria-label="Edit exercise">
+      <Button variant="secondary" size="icon-sm" onClick={onEdit} aria-label={t("Edit exercise")}>
         <PencilIcon className="size-4" aria-hidden />
       </Button>
       <Button
@@ -217,7 +212,7 @@ function CustomActions({ history, onEdit }: { history: ExerciseHistory; onEdit: 
         size="icon-sm"
         disabled={archive.isPending}
         onClick={() => archive.mutate()}
-        aria-label="Archive exercise"
+        aria-label={t("Archive exercise")}
       >
         <ArchiveIcon className="size-4" aria-hidden />
       </Button>
@@ -236,25 +231,25 @@ function trendSeries(history: ExerciseHistory, units: ReturnType<typeof usePrefe
   switch (history.exercise.tracking) {
     case "weight_reps":
       return {
-        title: "Estimated 1RM",
+        title: t("Estimated 1RM"),
         data: compact(sessions.map((s) => point(s, s.best_e1rm_kg == null ? null : kgTo(units.weightUnit, s.best_e1rm_kg)))),
         format: (v: number) => `${trimNumber(v, 1)} ${units.weightUnit}`,
       };
     case "reps":
       return {
-        title: "Total reps",
+        title: t("Total reps"),
         data: compact(sessions.map((s) => point(s, s.total_reps))),
         format: (v: number) => `${v} reps`,
       };
     case "duration":
       return {
-        title: "Longest set",
+        title: t("Longest set"),
         data: compact(sessions.map((s) => point(s, s.max_duration_seconds))),
         format: (v: number) => formatDuration(v),
       };
     case "distance_duration":
       return {
-        title: "Farthest set",
+        title: t("Farthest set"),
         data: compact(sessions.map((s) => point(s, s.max_distance_m == null ? null : metresTo(units.distanceUnit, s.max_distance_m)))),
         format: (v: number) => `${trimNumber(v, 2)} ${units.distanceUnit}`,
       };

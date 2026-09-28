@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { CheckIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -25,7 +26,7 @@ type ExercisePickerProps = {
 };
 
 /** Multi-select exercise search; works offline from the cached library. */
-export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exercises", place }: ExercisePickerProps) {
+export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exercises"), place }: ExercisePickerProps) {
   const { data, error, isPending, fetchStatus, refetch } = useQuery(exercisesQuery());
   const [showAll, setShowAll] = useState(false);
   const [q, setQ] = useState("");
@@ -55,9 +56,9 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
       <div className="flex min-h-[60dvh] flex-col gap-3 md:min-h-0">
         {place ? (
           <div className="rounded-xl border bg-muted/50 p-3 text-sm">
-            <p className="font-medium">Equipment at {place.name}</p>
+            <p className="font-medium">{t("Equipment at")}{" "}{place.name}</p>
             <p className="text-muted-foreground">{equipmentSummary(place, 6)}</p>
-            <label className="mt-2 flex min-h-9 cursor-pointer items-center gap-2"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} className="size-4 accent-primary" />Show all exercises, including other equipment</label>
+            <label className="mt-2 flex min-h-9 cursor-pointer items-center gap-2"><input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} className="size-4 accent-primary" />{t("Show all exercises, including other equipment")}</label>
           </div>
         ) : null}
         <div className="relative">
@@ -65,14 +66,14 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
           <Input
             value={q}
             onChange={(event) => setQ(event.target.value)}
-            placeholder="Search exercises"
-            aria-label="Search exercises"
+            placeholder={t("Search exercises")}
+            aria-label={t("Search exercises")}
             className="pl-11"
             type="search"
           />
         </div>
 
-        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0" role="group" aria-label="Filter by muscle">
+        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0" role="group" aria-label={t("Filter by muscle")}>
           {MUSCLES.map((m) => (
             <button
               key={m}
@@ -81,7 +82,7 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
               onClick={() => setMuscle(muscle === m ? undefined : m)}
               className="h-9 shrink-0 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition-colors aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
             >
-              {muscleLabels[m]}
+              {t(muscleLabels[m])}
             </button>
           ))}
         </div>
@@ -128,8 +129,8 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium">{exercise.name}</span>
                         <span className="block truncate text-sm text-muted-foreground">
-                          {muscleLabels[exercise.primary_muscle]} · {equipmentLabels[exercise.equipment]}
-                          {exercise.is_custom ? " · Custom" : ""}
+                          {t(muscleLabels[exercise.primary_muscle])} · {t(equipmentLabels[exercise.equipment])}
+                          {exercise.is_custom ? ` · ${t("Custom")}` : ""}
                         </span>
                       </span>
                     </button>
@@ -137,16 +138,14 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
                 );
               })}
               {results.length === 0 && data ? (
-                <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  No exercises match. Create a custom one from the Exercises page.
-                </li>
+                <li className="px-4 py-10 text-center text-sm text-muted-foreground">{t("No exercises match. Create a custom one from the Exercises page.")}{" "}</li>
               ) : null}
             </ul>
           )}
         </div>
 
         <Button size="lg" disabled={selected.length === 0} onClick={confirm} className="w-full">
-          {selected.length === 0 ? "Select exercises" : `Add ${selected.length} exercise${selected.length > 1 ? "s" : ""}`}
+          {selected.length === 0 ? t("Select exercises") : t("Add exercises: {count}", { count: selected.length })}
         </Button>
       </div>
     </ResponsiveDialog>

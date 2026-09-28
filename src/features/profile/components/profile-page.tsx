@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LogOutIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
@@ -7,6 +8,7 @@ import { AccountSecurity } from "./account-security";
 import { ProfileForm } from "./profile-form";
 import { meQuery } from "@/api/auth";
 import { PageHeader } from "@/components/layout/page-header";
+import { LanguagePicker } from "@/components/language-picker";
 import { QueryFallback } from "@/components/query-error";
 import {
   AlertDialog,
@@ -39,10 +41,10 @@ export function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Profile" eyebrow={user ? `@${user.username}` : undefined} actions={<SignOutButton />} />
+      <PageHeader title={t("Profile")} eyebrow={user ? `@${user.username}` : undefined} actions={<SignOutButton />} />
 
       <div className="grid gap-4">
-        <Section title="Profile & units">
+        <Section title={t("Profile & units")}>
           {user ? (
             <ProfileForm key={user.id} user={user} />
           ) : (
@@ -52,37 +54,36 @@ export function ProfilePage() {
           )}
         </Section>
 
-        <Section title="Appearance">
+        <Section title={t("Appearance")}>
           <ToggleGroup
             type="single"
             value={preference}
             onValueChange={(value) => value && setPreference(value as ThemePreference)}
-            aria-label="Theme"
+            aria-label={t("Theme")}
             className="w-full sm:w-auto"
           >
             <ToggleGroupItem value="system">
-              <MonitorIcon className="mr-1.5 size-4" aria-hidden /> System
-            </ToggleGroupItem>
+              <MonitorIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("System")}{" "}</ToggleGroupItem>
             <ToggleGroupItem value="dark">
-              <MoonIcon className="mr-1.5 size-4" aria-hidden /> Dark
-            </ToggleGroupItem>
+              <MoonIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Dark")}{" "}</ToggleGroupItem>
             <ToggleGroupItem value="light">
-              <SunIcon className="mr-1.5 size-4" aria-hidden /> Light
-            </ToggleGroupItem>
+              <SunIcon className="mr-1.5 size-4" aria-hidden />{" "}{t("Light")}{" "}</ToggleGroupItem>
           </ToggleGroup>
         </Section>
 
-        <Section title="Offline data">
+        <Section title={t("Language")}><LanguagePicker /></Section>
+
+        <Section title={t("Offline data")}>
           <OfflineData />
         </Section>
 
-        <Section title="Security">
+        <Section title={t("Security")}>
           <AccountSecurity />
         </Section>
 
         {user?.role === "admin" ? (
-          <Section title="Invites">
-            <p className="mb-4 text-sm text-muted-foreground">FitTune is invite only. Create a code for each person you want to let in.</p>
+          <Section title={t("Invites")}>
+            <p className="mb-4 text-sm text-muted-foreground">{t("FitTune is invite only. Create a code for each person you want to let in.")}</p>
             <div className="grid gap-6">
               <CreateInvite />
               <InviteList />
@@ -92,7 +93,7 @@ export function ProfilePage() {
 
         <Card className="grid gap-2 p-5 text-sm text-muted-foreground">
           <SyncIndicator />
-          {user ? <p>Member since {formatDate(user.created_at)} · {user.email}</p> : null}
+          {user ? <p>{t("Member since")}{" "}{formatDate(user.created_at)} · {user.email}</p> : null}
           <p>FitTune {APP_VERSION}</p>
         </Card>
       </div>
@@ -122,22 +123,18 @@ function SignOutButton() {
   return (
     <>
       <Button variant="secondary" size="sm" onClick={() => (pending > 0 ? setConfirming(true) : void run())}>
-        <LogOutIcon className="size-4" aria-hidden /> Sign out
-      </Button>
+        <LogOutIcon className="size-4" aria-hidden />{" "}{t("Sign out")}{" "}</Button>
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved workouts on this device</AlertDialogTitle>
+            <AlertDialogTitle>{t("Unsaved workouts on this device")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {pending} workout{pending > 1 ? "s haven't" : " hasn't"} reached the server yet. Signing out now deletes
-              {pending > 1 ? " them" : " it"} from this device.
+              {t("Unsynced workouts: {count}. Signing out will delete them from this device.", { count: pending })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Stay signed in</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => void run()}>
-              Sign out anyway
-            </AlertDialogAction>
+            <AlertDialogCancel>{t("Stay signed in")}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => void run()}>{t("Sign out anyway")}{" "}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

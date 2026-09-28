@@ -6,6 +6,7 @@ import { syncForOffline } from "./sync";
 import { ApiError } from "@/api/client";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { queryClient } from "@/lib/query-client";
+import { t } from "@/lib/i18n";
 
 /** Automatic syncs happen at most this often; the button in Profile can always sync */
 const AUTO_SYNC_EVERY = 15 * 60 * 1000;
@@ -22,15 +23,15 @@ export async function runOfflineSync() {
   try {
     const { failed } = await syncForOffline(queryClient, run.signal);
     if (run.signal.aborted) return;
-    if (failed > 0) store.failed(`${failed} item${failed === 1 ? "" : "s"} could not be downloaded. Try again later.`);
+    if (failed > 0) store.failed(t("Items not downloaded: {count}. Try again later.", { count: failed }));
     else store.finished(new Date().toISOString());
   } catch (error) {
     if (run.signal.aborted) return;
-    store.failed(error instanceof ApiError && error.isNetworkError ? "Can't reach FitTune right now." : "Sync failed. Try again later.");
+    store.failed(error instanceof ApiError && error.isNetworkError ? t("Can't reach FitTune right now.") : t("Sync failed. Try again later."));
   } finally {
     if (current === run) current = null;
     // Whatever happened, a finished run never leaves the button spinning
-    if (!run.signal.aborted && useOfflineSyncStore.getState().status === "syncing") useOfflineSyncStore.getState().failed("Sync stopped. Try again.");
+    if (!run.signal.aborted && useOfflineSyncStore.getState().status === "syncing") useOfflineSyncStore.getState().failed(t("Sync stopped. Try again."));
   }
 }
 

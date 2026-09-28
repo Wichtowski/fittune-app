@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { activityIcons, activityRate } from "../meta";
 import { formatDay, formatDuration, formatTime } from "@/lib/format";
 import { activityLabels } from "@/lib/labels";
@@ -29,7 +30,7 @@ export function ActivityCard({
             {formatDay(activity.started_at)} · {formatTime(activity.started_at)}
           </span>
         </span>
-        <span className="mt-0.5 block text-sm text-muted-foreground">{activityLabels[activity.kind]}</span>
+        <span className="mt-0.5 block text-sm text-muted-foreground">{t(activityLabels[activity.kind])}</span>
         <span className="mt-2 flex flex-wrap gap-x-4 text-sm font-semibold tabular">
           {activity.distance_m ? <span>{formatDistance(activity.distance_m, distanceUnit)}</span> : null}
           <span>{formatDuration(activity.duration_seconds)}</span>

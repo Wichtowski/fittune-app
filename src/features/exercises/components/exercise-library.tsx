@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { SearchIcon } from "lucide-react";
@@ -32,8 +33,8 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
             type="search"
             value={filter.q ?? ""}
             onChange={(event) => onFilterChange({ ...filter, q: event.target.value || undefined })}
-            placeholder="Search exercises"
-            aria-label="Search exercises"
+            placeholder={t("Search exercises")}
+            aria-label={t("Search exercises")}
             className="pl-11"
           />
         </div>
@@ -42,14 +43,14 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
             value={filter.muscle ?? "all"}
             onValueChange={(value) => onFilterChange({ ...filter, muscle: value === "all" ? undefined : (value as Muscle) })}
           >
-            <SelectTrigger aria-label="Muscle">
+            <SelectTrigger aria-label={t("Muscle")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All muscles</SelectItem>
+              <SelectItem value="all">{t("All muscles")}</SelectItem>
               {MUSCLES.map((m) => (
                 <SelectItem key={m} value={m}>
-                  {muscleLabels[m]}
+                  {t(muscleLabels[m])}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -60,14 +61,14 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
               onFilterChange({ ...filter, equipment: value === "all" ? undefined : (value as Equipment) })
             }
           >
-            <SelectTrigger aria-label="Equipment">
+            <SelectTrigger aria-label={t("Equipment")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All equipment</SelectItem>
+              <SelectItem value="all">{t("All equipment")}</SelectItem>
               {EQUIPMENT.map((e) => (
                 <SelectItem key={e} value={e}>
-                  {equipmentLabels[e]}
+                  {t(equipmentLabels[e])}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -87,7 +88,7 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            {results.length} exercise{results.length === 1 ? "" : "s"}
+            {t("Exercises: {count}", { count: results.length })}
           </p>
           <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {results.map((exercise) => (
@@ -106,11 +107,11 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold">{exercise.name}</span>
                     <span className="block truncate text-sm text-muted-foreground">
-                      {muscleLabels[exercise.primary_muscle]} · {equipmentLabels[exercise.equipment]} ·{" "}
-                      {trackingLabels[exercise.tracking]}
+                      {t(muscleLabels[exercise.primary_muscle])} · {t(equipmentLabels[exercise.equipment])} ·{" "}
+                      {t(trackingLabels[exercise.tracking])}
                     </span>
                   </span>
-                  {exercise.is_custom ? <Badge variant="secondary">Custom</Badge> : null}
+                  {exercise.is_custom ? <Badge variant="secondary">{t("Custom")}</Badge> : null}
                 </Link>
               </li>
             ))}

@@ -11,6 +11,7 @@ import { getToken } from "@/features/auth/session";
 import { clearLocalSession } from "@/features/auth/sign-out";
 import { startConnectivity } from "@/lib/connectivity";
 import { PERSIST_MAX_AGE, queryClient, queryPersister } from "@/lib/query-client";
+import { LocaleProvider } from "@/lib/i18n";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -54,7 +55,7 @@ createRoot(root).render(
       persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE, buster: CACHE_SCHEMA_VERSION }}
       onSuccess={() => void queryClient.resumePausedMutations()}
     >
-      <RouterProvider router={router} />
+      <LocaleProvider><RouterProvider router={router} /></LocaleProvider>
     </PersistQueryClientProvider>
   </StrictMode>,
 );

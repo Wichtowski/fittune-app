@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -49,8 +50,8 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
           name="kind"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Type</FormLabel>
-              <div role="radiogroup" aria-label="Activity type" className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+              <FormLabel>{t("Type")}</FormLabel>
+              <div role="radiogroup" aria-label={t("Activity type")} className="grid grid-cols-4 gap-2 sm:grid-cols-7">
                 {ACTIVITY_KINDS.map((kind) => {
                   const Icon = activityIcons[kind];
                   const selected = field.value === kind;
@@ -70,7 +71,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
                       )}
                     >
                       <Icon className={cn("size-5", selected && "text-endurance-strong")} aria-hidden />
-                      {activityLabels[kind]}
+                      {t(activityLabels[kind])}
                     </button>
                   );
                 })}
@@ -84,7 +85,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>{t("Title")}</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -98,7 +99,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
           name="started_at"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Start</FormLabel>
+              <FormLabel>{t("Start")}</FormLabel>
               <FormControl>
                 <Input type="datetime-local" {...field} />
               </FormControl>
@@ -108,7 +109,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
         />
 
         <fieldset className="grid gap-2">
-          <legend className="mb-2 text-sm font-medium text-muted-foreground">Duration</legend>
+          <legend className="mb-2 text-sm font-medium text-muted-foreground">{t("Duration")}</legend>
           <div className="grid grid-cols-3 gap-2">
             {(["hours", "minutes", "seconds"] as const).map((name) => (
               <FormField
@@ -147,7 +148,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
             name="distance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Distance ({distanceUnit})</FormLabel>
+                <FormLabel>{t("Distance (")}{distanceUnit})</FormLabel>
                 <FormControl>
                   <Input inputMode="decimal" {...field} value={String(field.value ?? "")} />
                 </FormControl>
@@ -160,7 +161,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
             name="avg_heart_rate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Avg heart rate</FormLabel>
+                <FormLabel>{t("Avg heart rate")}</FormLabel>
                 <FormControl>
                   <Input inputMode="numeric" placeholder="bpm" {...field} value={String(field.value ?? "")} />
                 </FormControl>
@@ -173,7 +174,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
             name="elevation_gain_m"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Elevation gain (m)</FormLabel>
+                <FormLabel>{t("Elevation gain (m)")}</FormLabel>
                 <FormControl>
                   <Input inputMode="numeric" {...field} value={String(field.value ?? "")} />
                 </FormControl>
@@ -186,7 +187,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
             name="perceived_effort"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Effort (1–10)</FormLabel>
+                <FormLabel>{t("Effort (1–10)")}</FormLabel>
                 <FormControl>
                   <Input inputMode="numeric" {...field} value={String(field.value ?? "")} />
                 </FormControl>
@@ -201,9 +202,9 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>{t("Notes")}</FormLabel>
               <FormControl>
-                <Textarea placeholder="How did it feel?" {...field} />
+                <Textarea placeholder={t("How did it feel?")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -216,7 +217,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
               type="button"
               variant="secondary"
               size="lg"
-              aria-label="Delete activity"
+              aria-label={t("Delete activity")}
               onClick={() => {
                 remove.mutate(activity.id);
                 onDone();
@@ -226,7 +227,7 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
             </Button>
           ) : null}
           <Button type="submit" size="lg" variant="endurance" className="flex-1">
-            {activity ? "Save changes" : "Log activity"}
+            {activity ? t("Save changes") : t("Log activity")}
           </Button>
         </div>
       </form>

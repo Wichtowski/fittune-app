@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -29,12 +30,12 @@ function ActivityPage() {
   return (
     <>
       <PageHeader
-        title="Activity"
-        eyebrow="Runs, rides & everything cardio"
+        title={t("Activity")}
+        eyebrow={t("Runs, rides & everything cardio")}
         actions={
           <Button variant="endurance" onClick={() => void navigate({ search: { log: true } })}>
-            <PlusIcon aria-hidden /> <span className="hidden sm:inline">Log activity</span>
-            <span className="sm:hidden">Log</span>
+            <PlusIcon aria-hidden /> <span className="hidden sm:inline">{t("Log activity")}</span>
+            <span className="sm:hidden">{t("Log")}</span>
           </Button>
         }
       />
@@ -42,7 +43,7 @@ function ActivityPage() {
       <ResponsiveDialog
         open={open}
         onOpenChange={(next) => (next ? undefined : close())}
-        title={editing ? "Edit activity" : "Log activity"}
+        title={editing ? t("Edit activity") : t("Log activity")}
       >
         <ActivityForm key={editing?.id ?? "new"} activity={editing} onDone={close} />
       </ResponsiveDialog>

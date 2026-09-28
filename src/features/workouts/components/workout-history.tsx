@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { DumbbellIcon } from "lucide-react";
@@ -46,11 +47,11 @@ export function WorkoutHistory() {
     return (
       <EmptyState
         icon={DumbbellIcon}
-        title="No workouts yet"
-        description="Finished workouts show up here with their volume and sets."
+        title={t("No workouts yet")}
+        description={t("Finished workouts show up here with their volume and sets.")}
         action={
           <Button asChild size="sm">
-            <Link to="/workout">Start a workout</Link>
+            <Link to="/workout">{t("Start a workout")}</Link>
           </Button>
         }
       />
@@ -64,7 +65,7 @@ export function WorkoutHistory() {
           <h2 className="mb-3 flex items-baseline justify-between font-display text-xl font-bold tracking-wide uppercase">
             {formatMonth(`${month}-01T12:00:00`)}
             <span className="font-sans text-sm font-normal tracking-normal text-muted-foreground normal-case">
-              {items.length} workout{items.length === 1 ? "" : "s"}
+              {t("Workouts: {count}", { count: items.length })}
             </span>
           </h2>
 
@@ -79,12 +80,12 @@ export function WorkoutHistory() {
           <table className="hidden w-full overflow-hidden rounded-2xl border bg-card text-sm md:table">
             <thead className="text-left text-muted-foreground">
               <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:font-medium">
-                <th>Date</th>
-                <th>Workout</th>
-                <th className="text-right">Duration</th>
-                <th className="text-right">Sets</th>
-                <th className="text-right">Reps</th>
-                <th className="text-right">Volume</th>
+                <th>{t("Date")}</th>
+                <th>{t("Workout")}</th>
+                <th className="text-right">{t("Duration")}</th>
+                <th className="text-right">{t("Sets")}</th>
+                <th className="text-right">{t("Reps")}</th>
+                <th className="text-right">{t("Volume")}</th>
               </tr>
             </thead>
             <tbody className="tabular">
@@ -117,7 +118,7 @@ export function WorkoutHistory() {
 
       {query.hasNextPage ? (
         <Button variant="secondary" onClick={() => void query.fetchNextPage()} disabled={query.isFetchingNextPage}>
-          {query.isFetchingNextPage ? "Loading…" : "Load more"}
+          {query.isFetchingNextPage ? t("Loading…") : t("Load more")}
         </Button>
       ) : null}
     </div>
