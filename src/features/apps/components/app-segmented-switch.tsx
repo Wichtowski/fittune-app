@@ -17,11 +17,11 @@ export function AppSegmentedSwitch({ className }: { className?: string }) {
           to={apps[id].home}
           aria-current={id === active ? "page" : undefined}
           className={cn(
-            "flex h-11 items-center justify-center gap-2 rounded-xl font-display text-lg font-bold tracking-wide uppercase text-muted-foreground transition-colors hover:text-foreground",
+            "flex h-11 items-center justify-center gap-1.5 rounded-xl font-display text-base font-bold tracking-wide uppercase text-muted-foreground transition-colors hover:text-foreground",
             id === active && "bg-card text-foreground shadow-sm",
           )}
         >
-          <AppMark app={id} className="size-6" />
+          <AppMark app={id} className="size-5" />
           {apps[id].name}
         </Link>
       ))}
