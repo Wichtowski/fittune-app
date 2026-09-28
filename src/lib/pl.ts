@@ -716,4 +716,5 @@ export const pl: Record<string, string> = {
   "Try again in a moment. FitTune keeps working offline in the meantime.": "Spróbuj ponownie za chwilę. W tym czasie FitTune działa offline.",
   "Nutrition": "Odżywianie",
   "Switch app": "Zmień aplikację",
+  "Open FitTune": "Otwórz FitTune",
 };

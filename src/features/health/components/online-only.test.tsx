@@ -52,3 +52,12 @@ it("hides the connection banner on FitHealth pages", async () => {
   renderInRouter(BannerProbe, { path: "/health", app: "health" });
   expect(await screen.findByText("gate")).toBeInTheDocument();
 });
+
+it.each([
+  ["the device is offline", { deviceOnline: false }],
+  ["the servers are down", { apiDown: true }],
+])("offers FitTune, which works offline, when %s", async (_, state) => {
+  useConnectivity.setState(state);
+  renderInRouter(page, { path: "/health", app: "health" });
+  expect(await screen.findByRole("link", { name: "Open FitTune" })).toHaveAttribute("href", "/train");
+});

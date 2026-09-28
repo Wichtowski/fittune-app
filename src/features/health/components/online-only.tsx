@@ -37,11 +37,17 @@ export function OnlineOnly({ children }: { children: React.ReactNode }) {
       <Icon className="size-10 text-muted-foreground" aria-hidden />
       <p className="font-display text-2xl font-bold tracking-wide uppercase">{t(title)}</p>
       <p className="max-w-sm text-muted-foreground">{t(body)}</p>
-      {reason === "manual" ? (
-        <Link to="/profile" className="font-medium text-primary-strong underline-offset-4 hover:underline">
-          {t("Turn it off in Profile")}
+      <div className="flex flex-col items-center gap-2">
+        {reason === "manual" ? (
+          <Link to="/profile" className="font-medium text-primary-strong underline-offset-4 hover:underline">
+            {t("Turn it off in Profile")}
+          </Link>
+        ) : null}
+        {/* The gate replaces the page header and its switcher, so offer the app that works offline */}
+        <Link to="/train" className="font-medium text-primary-strong underline-offset-4 hover:underline">
+          {t("Open FitTune")}
         </Link>
-      ) : null}
+      </div>
     </div>
   );
 }

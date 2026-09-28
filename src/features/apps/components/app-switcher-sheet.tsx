@@ -23,7 +23,7 @@ export function AppSwitcherSheet({ className }: { className?: string }) {
         <DrawerHeader>
           <DrawerTitle>{t("Switch app")}</DrawerTitle>
         </DrawerHeader>
-        <ul className="flex flex-col gap-2 px-5 pb-safe">
+        <ul className="flex flex-col gap-2 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
           {appIds.map((id) => (
             <li key={id} data-app={id}>
               <DrawerClose asChild>
