@@ -1,4 +1,7 @@
-.PHONY: install dev build preview typecheck lint test check deploy anatomy
+# The API checkout whose dev fixtures `make fixtures` seeds
+FITTUNE_API_DIR ?= ../fittune-api
+
+.PHONY: install dev build preview typecheck lint test check deploy anatomy fixtures
 
 install:
 	bun install
@@ -28,3 +31,6 @@ deploy:
 
 anatomy:
 	uv run scripts/anatomy/build.py
+
+fixtures:
+	$(MAKE) -C $(FITTUNE_API_DIR) seed
