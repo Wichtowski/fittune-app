@@ -8,6 +8,7 @@ import {
   HouseIcon,
   type LucideIcon,
   UserRoundIcon,
+  UsersIcon,
 } from "lucide-react";
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
@@ -46,5 +47,9 @@ export const desktopNav: { heading: string; items: NavItem[] }[] = [
       { to: "/routines", label: "Routines", icon: ClipboardListIcon },
       { to: "/exercises", label: "Exercises", icon: BookOpenIcon },
     ],
+  },
+  {
+    heading: "Together",
+    items: [{ to: "/friends", label: "Friends", icon: UsersIcon }],
   },
 ];

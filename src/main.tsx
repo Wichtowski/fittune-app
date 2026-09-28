@@ -10,7 +10,7 @@ import { registerMutationDefaults } from "@/api/mutation-defaults";
 import { getToken } from "@/features/auth/session";
 import { clearLocalSession } from "@/features/auth/sign-out";
 import { startConnectivity } from "@/lib/connectivity";
-import { PERSIST_MAX_AGE, queryClient, queryPersister } from "@/lib/query-client";
+import { PERSIST_MAX_AGE, queryClient, queryPersister, shouldPersistQuery } from "@/lib/query-client";
 import { LocaleProvider } from "@/lib/i18n";
 import { routeTree } from "./routeTree.gen";
 
@@ -52,7 +52,12 @@ createRoot(root).render(
   <StrictMode>
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE, buster: CACHE_SCHEMA_VERSION }}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: PERSIST_MAX_AGE,
+        buster: CACHE_SCHEMA_VERSION,
+        dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+      }}
       onSuccess={() => void queryClient.resumePausedMutations()}
     >
       <LocaleProvider><RouterProvider router={router} /></LocaleProvider>
