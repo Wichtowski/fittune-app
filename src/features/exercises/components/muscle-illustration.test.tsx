@@ -69,4 +69,12 @@ describe("muscle map", () => {
     rerender(<MuscleMap muscle="cardio" secondaryMuscles={["calves"]} />);
     expect(container.querySelector('[data-muscle="calves"]')).toHaveAttribute("data-engagement", "secondary");
   });
+
+  it("offers the 3D viewer only when exercise detail supplies the action", () => {
+    const { rerender } = render(<MuscleMap muscle="chest" />);
+    expect(screen.queryByRole("button", { name: "View in 3D" })).toBeNull();
+    rerender(<MuscleMap muscle="chest" onView3D={() => {}} />);
+    expect(screen.getByRole("button", { name: "View in 3D" })).toBeInTheDocument();
+  });
+
 });

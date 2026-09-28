@@ -2,7 +2,7 @@ import { t } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArchiveIcon, PencilIcon } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { toast } from "sonner";
 
 import { ExerciseForm } from "./exercise-form";
@@ -28,6 +28,8 @@ import { difficultyLabels, equipmentLabels, muscleLabels, trackingLabels } from 
 import { formatDistance, formatVolume, formatWeight, kgTo, metresTo, trimNumber } from "@/lib/units";
 import type { ExerciseHistory } from "@/schemas/exercise";
 
+const AnatomyViewer = lazy(() => import("./anatomy-viewer"));
+
 export function ExerciseDetail({ exerciseId }: { exerciseId: string }) {
   const query = useQuery(exerciseHistoryQuery(exerciseId));
   if (!query.data) {
@@ -49,6 +51,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const preferences = usePreferences();
   const { weightUnit, distanceUnit } = preferences;
   const [editing, setEditing] = useState(false);
+  const [viewing3D, setViewing3D] = useState(false);
   const trend = trendSeries(history, preferences);
   const videoSource = exerciseVideoSource(exercise);
   const hasPhotos = hasExercisePhotos(exercise.media);
@@ -118,7 +121,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
             {videoSource ? <div className="mt-3"><ExerciseVideo key={`${videoSource.provider}-${videoSource.id}`} source={videoSource} name={exercise.name} /></div> : null}
           </div>
         ) : null}
-        <MuscleMap muscle={exercise.primary_muscle} secondaryMuscles={exercise.secondary_muscles} />
+        <MuscleMap muscle={exercise.primary_muscle} secondaryMuscles={exercise.secondary_muscles} onView3D={() => setViewing3D(true)} />
       </Card>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -184,6 +187,13 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
 
       <ResponsiveDialog open={editing} onOpenChange={setEditing} title={t("Edit exercise")}>
         <ExerciseForm exercise={exercise} onDone={() => setEditing(false)} />
+      </ResponsiveDialog>
+      <ResponsiveDialog open={viewing3D} onOpenChange={setViewing3D} title={t("3D muscle map")} className="md:max-w-2xl">
+        {viewing3D ? (
+          <Suspense fallback={<div className="h-[min(60dvh,32rem)] animate-pulse rounded-xl bg-muted" />}>
+            <AnatomyViewer muscle={exercise.primary_muscle} secondaryMuscles={exercise.secondary_muscles} />
+          </Suspense>
+        ) : null}
       </ResponsiveDialog>
     </>
   );
