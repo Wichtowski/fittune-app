@@ -13,6 +13,7 @@ import { ExerciseLibrary } from "@/features/exercises/components/exercise-librar
 import { equipmentSchema, muscleSchema } from "@/schemas/common";
 
 export const Route = createFileRoute("/_app/exercises/")({
+  staticData: { app: "train" },
   validateSearch: z.object({
     q: z.string().optional(),
     muscle: muscleSchema.optional().catch(undefined),

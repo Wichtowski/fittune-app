@@ -5,7 +5,7 @@ import { type DraftWorkout, needsSync, toWorkoutInput } from "./draft";
 import { useWorkoutStore } from "./store";
 import { ApiError } from "@/api/client";
 import { queryKeys } from "@/api/query-keys";
-import { getWorkout, putWorkout } from "@/api/workouts";
+import { fittune } from "@/api/fittune";
 import { useSession } from "@/features/auth/session";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 
@@ -46,7 +46,7 @@ export function useWorkoutSync() {
 
   const { mutateAsync } = useMutation({
     mutationKey: SYNC_MUTATION_KEY,
-    mutationFn: (workout: DraftWorkout) => putWorkout(workout.id, toWorkoutInput(workout)),
+    mutationFn: (workout: DraftWorkout) => fittune.putWorkout(workout.id, toWorkoutInput(workout)),
     retry: false,
   });
 
@@ -78,7 +78,7 @@ export function useWorkoutSync() {
           store.markFailed(workout.id, workout.revision, "Unexpected error while saving");
         } else if (error.status === 409) {
           // Another device saved a newer revision; keep this device's version on top.
-          const server = await getWorkout(workout.id).catch(() => null);
+          const server = await fittune.getWorkout(workout.id).catch(() => null);
           if (server) store.rebase(workout.id, server.revision);
           else store.markFailed(workout.id, workout.revision, error.message);
         } else if (error.isRetryable) {

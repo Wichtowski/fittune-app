@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { changePassword, deleteAccount } from "@/api/auth";
+import { account } from "@/api/account";
 import { ApiError } from "@/api/client";
 import {
   AlertDialog,
@@ -33,7 +33,7 @@ export function ChangePassword() {
   });
   const mutation = useMutation({
     mutationFn: (values: ChangePasswordForm) =>
-      changePassword({ current_password: values.current_password, new_password: values.new_password }),
+      account.changePassword({ current_password: values.current_password, new_password: values.new_password }),
     onSuccess: () => {
       form.reset();
       toast.success(t("Password changed. Other devices were signed out."));
@@ -75,7 +75,7 @@ export function DeleteAccount() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation({
-    mutationFn: () => deleteAccount(password),
+    mutationFn: () => account.deleteAccount(password),
     onSuccess: () => {
       clearLocalSession({ discardWorkouts: true });
       void navigate({ to: "/register", replace: true });

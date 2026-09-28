@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 
 import { onSignedIn } from "../sign-out";
-import { register } from "@/api/auth";
+import { account } from "@/api/account";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ export function RegisterForm({ inviteCode = "" }: { inviteCode?: string }) {
 
   const mutation = useMutation({
     mutationFn: (values: RegisterValues) =>
-      register({
+      account.register({
         username: values.username,
         email: values.email,
         password: values.password,

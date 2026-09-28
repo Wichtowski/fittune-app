@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { WorkoutHistory } from "@/features/workouts/components/workout-history";
 
 export const Route = createFileRoute("/_app/workouts/")({
+  staticData: { app: "train" },
   loader: ({ context }) => void context.queryClient.prefetchInfiniteQuery(workoutsInfiniteQuery("completed")),
   component: HistoryPage,
 });

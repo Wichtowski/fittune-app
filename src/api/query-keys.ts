@@ -28,6 +28,22 @@ export const queryKeys = {
     list: (kind?: ActivityKind) => ["activities", "list", kind ?? "all"] as const,
     detail: (id: string) => ["activities", "detail", id] as const,
   },
+  /** Friend data is never persisted for offline use, see `shouldPersistQuery` */
+  friends: {
+    all: ["friends"] as const,
+    list: ["friends", "list"] as const,
+    requests: ["friends", "requests"] as const,
+    feed: ["friends", "feed"] as const,
+    blocks: ["friends", "blocks"] as const,
+    sharing: ["friends", "sharing"] as const,
+    lookup: (username: string) => ["friends", "lookup", username.toLowerCase()] as const,
+    /** Everything about one friend, dropped together when access ends */
+    user: (id: string) => ["friends", "user", id] as const,
+    detail: (id: string) => ["friends", "user", id, "detail"] as const,
+    userFeed: (id: string) => ["friends", "user", id, "feed"] as const,
+    overview: (id: string, period: Period, tz: string) => ["friends", "user", id, "overview", period, tz] as const,
+    records: (id: string) => ["friends", "user", id, "records"] as const,
+  },
   stats: {
     all: ["stats"] as const,
     overview: (period: Period, tz: string) => ["stats", "overview", period, tz] as const,

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RoutineEditor } from "@/features/routines/components/routine-editor";
 
 export const Route = createFileRoute("/_app/routines/$routineId")({
+  staticData: { app: "train" },
   loader: ({ context, params }) => void context.queryClient.prefetchQuery(routineQuery(params.routineId)),
   component: EditRoutinePage,
 });

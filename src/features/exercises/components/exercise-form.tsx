@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
-import { createExercise, updateExercise } from "@/api/exercises";
+import { fittune } from "@/api/fittune";
 import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -41,7 +41,7 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
   });
 
   const mutation = useMutation({
-    mutationFn: (input: ExerciseInput) => (exercise ? updateExercise(exercise.id, input) : createExercise(input)),
+    mutationFn: (input: ExerciseInput) => (exercise ? fittune.updateExercise(exercise.id, input) : fittune.createExercise(input)),
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.exercises.detail(saved.id), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });

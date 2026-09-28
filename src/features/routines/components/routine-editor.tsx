@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { emptySetTarget, newExerciseEntry, toRoutineForm, toRoutineInput } from "../mapping";
 import { TemplatePicker } from "./template-picker";
 import { queryKeys } from "@/api/query-keys";
-import { createRoutine, deleteRoutine, updateRoutine } from "@/api/routines";
+import { fittune } from "@/api/fittune";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +51,7 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
   const save = useMutation({
     mutationFn: (values: RoutineFormOutput) => {
       const input = toRoutineInput(values, units);
-      return routine ? updateRoutine(routine.id, input) : createRoutine(input);
+      return routine ? fittune.updateRoutine(routine.id, input) : fittune.createRoutine(input);
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.routines.detail(saved.id), saved);
@@ -63,7 +63,7 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
   });
 
   const remove = useMutation({
-    mutationFn: () => deleteRoutine(routine?.id ?? ""),
+    mutationFn: () => fittune.deleteRoutine(routine?.id ?? ""),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.routines.all });
       toast.success(t("Routine deleted"));

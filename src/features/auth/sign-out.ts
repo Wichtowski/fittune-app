@@ -1,5 +1,5 @@
 import { useSession } from "./session";
-import { logout } from "@/api/auth";
+import { account } from "@/api/account";
 import { queryKeys } from "@/api/query-keys";
 import { useConnectivity } from "@/lib/connectivity";
 import { QUERY_CACHE_KEY, queryClient } from "@/lib/query-client";
@@ -28,7 +28,7 @@ export function clearLocalSession({ discardWorkouts = false } = {}) {
 /** Explicit sign-out: revokes the token and removes all of this user's local data. */
 export async function signOut() {
   try {
-    await logout();
+    await account.logout();
   } catch {
     // Offline or already expired: the local session is cleared either way.
   }

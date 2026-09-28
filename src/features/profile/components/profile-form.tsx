@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { updateProfile } from "@/api/auth";
+import { account } from "@/api/account";
 import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -31,7 +31,7 @@ export function ProfileForm({ user }: { user: User }) {
 
   const mutation = useMutation({
     mutationFn: (values: ProfileValues) =>
-      updateProfile({
+      account.updateProfile({
         display_name: values.display_name || null,
         birthday: values.birthday || null,
         account_type: values.account_type === "none" ? null : values.account_type,

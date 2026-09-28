@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { EquipmentChecklist } from "./equipment-checklist";
 import { placeKindLabels, placePresets } from "../presets";
-import { savePlace } from "@/api/places";
+import { fittune } from "@/api/fittune";
 import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -24,7 +24,7 @@ export function PlaceForm({ id, place, onDone }: { id: string; place?: Place; on
     defaultValues: place ? { name: place.name, kind: place.kind, equipment: [...place.equipment] } : { ...placePresets.home, name: t(placePresets.home.name) },
   });
   const mutation = useMutation({
-    mutationFn: (values: PlaceInput) => savePlace(id, values),
+    mutationFn: (values: PlaceInput) => fittune.savePlace(id, values),
     onSuccess: (saved) => {
       queryClient.setQueryData<Place[]>(queryKeys.places, (current = []) => [...current.filter((p) => p.id !== saved.id), saved]);
       void queryClient.invalidateQueries({ queryKey: queryKeys.places });

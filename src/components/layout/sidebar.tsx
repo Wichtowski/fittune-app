@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PlayIcon } from "lucide-react";
 
-import { Logo } from "./logo";
-import { desktopNav } from "./nav-items";
 import { meQuery } from "@/api/auth";
 import { Button } from "@/components/ui/button";
+import { apps } from "@/features/apps/apps";
+import { AppSegmentedSwitch } from "@/features/apps/components/app-segmented-switch";
+import { useActiveApp } from "@/features/apps/use-active-app";
 import { ActiveWorkoutBar } from "@/features/workouts/components/active-workout-bar";
 import { SyncIndicator } from "@/features/workouts/components/sync-indicator";
 import { useWorkoutStore } from "@/features/workouts/store";
@@ -14,24 +15,24 @@ import { useWorkoutStore } from "@/features/workouts/store";
 export function Sidebar() {
   const { data: me } = useQuery(meQuery());
   const hasActive = useWorkoutStore((state) => state.active !== null);
+  const app = apps[useActiveApp()];
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 border-r bg-card/40 px-4 py-6 md:flex">
-      <Link to="/" className="px-2">
-        <Logo />
-      </Link>
+      <AppSegmentedSwitch />
 
       {hasActive ? (
         <ActiveWorkoutBar />
-      ) : (
+      ) : app.primaryAction === "start-workout" ? (
         <Button asChild size="lg" className="w-full">
           <Link to="/workout">
-            <PlayIcon className="fill-current" aria-hidden />{" "}{t("Start workout")}{" "}</Link>
+            <PlayIcon className="fill-current" aria-hidden /> {t("Start workout")}
+          </Link>
         </Button>
-      )}
+      ) : null}
 
       <nav aria-label={t("Primary")} className="flex flex-1 flex-col gap-5 overflow-y-auto">
-        {desktopNav.map((group) => (
+        {app.desktopNav.map((group) => (
           <div key={group.heading} className="flex flex-col gap-1">
             <p className="px-3 text-xs font-semibold tracking-wider text-muted-foreground/70 uppercase">
               {t(group.heading)}

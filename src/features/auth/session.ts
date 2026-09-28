@@ -1,3 +1,4 @@
+import { type ParsedLocation, redirect } from "@tanstack/react-router";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -31,3 +32,8 @@ export const useSession = create<SessionState>()(
 
 export const getToken = () => useSession.getState().token;
 export const isAuthenticated = () => getToken() !== null;
+
+/** Sends a signed-out visitor to login, and back to where they were going afterwards */
+export function requireAuth(location: ParsedLocation) {
+  if (!isAuthenticated()) throw redirect({ to: "/login", search: { redirect: location.href } });
+}

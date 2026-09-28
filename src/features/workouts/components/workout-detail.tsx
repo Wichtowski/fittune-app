@@ -10,8 +10,8 @@ import { setLabels, summariseSet } from "../previous";
 import { useWorkoutStore } from "../store";
 import { SyncIndicator } from "./sync-indicator";
 import { queryKeys } from "@/api/query-keys";
-import { createRoutine } from "@/api/routines";
-import { deleteWorkout, workoutQuery } from "@/api/workouts";
+import { fittune } from "@/api/fittune";
+import { workoutQuery } from "@/api/workouts";
 import { PageHeader } from "@/components/layout/page-header";
 import { QueryFallback } from "@/components/query-error";
 import {
@@ -181,7 +181,7 @@ function WorkoutActions({ workout, canEdit }: { workout: Viewable; canEdit: bool
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const remove = useMutation({
-    mutationFn: () => deleteWorkout(workout.id),
+    mutationFn: () => fittune.deleteWorkout(workout.id),
     onMutate: async () => {
       // Optimistically drop it from every cached history page.
       await queryClient.cancelQueries({ queryKey: queryKeys.workouts.all });
@@ -209,7 +209,7 @@ function WorkoutActions({ workout, canEdit }: { workout: Viewable; canEdit: bool
 
   const saveAsRoutine = useMutation({
     mutationFn: () =>
-      createRoutine({
+      fittune.createRoutine({
         name: workout.title,
         notes: null,
         exercises: workout.exercises.map((exercise) => ({
