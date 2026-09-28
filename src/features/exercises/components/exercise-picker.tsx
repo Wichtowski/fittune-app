@@ -116,7 +116,7 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = "Add exerci
                         <ExercisePhoto
                           name={exercise.name}
                           muscle={exercise.primary_muscle}
-                          isCustom={exercise.is_custom}
+                          media={exercise.media}
                           className="size-10 rounded-xl"
                         />
                         {isSelected ? (
