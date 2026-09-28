@@ -90,6 +90,11 @@ Changing places never removes exercises already in the workout.
 get an "Update" toast; the app never reloads itself in the middle of a workout. API responses
 are cached per user by TanStack Query, never by the service worker.
 
+**Offline data.** Opening the app online (at most every 15 minutes, and whenever the connection returns) downloads the profile, exercises, routines, places, records, the last 20 workouts and the history of their exercises into the persisted cache (`features/offline/sync.ts`).
+Profile → Offline data shows when that last happened and has a "Sync now" button.
+A banner tells users when they are offline or when the API is unreachable (no response, or a 502/503/504 while online), and that logging keeps working either way.
+Bump `CACHE_SCHEMA_VERSION` in `main.tsx` whenever a cached response shape changes; old caches are then dropped instead of breaking screens.
+
 **Responsive by composition.** On phones, a bottom tab bar with a central Workout button, bottom
 sheets and big touch targets put doing the workout first. From `md` up there's a sidebar, and the
 pages switch to denser compositions (history tables, side-by-side charts, a two-pane routine

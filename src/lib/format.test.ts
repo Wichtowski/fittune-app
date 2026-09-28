@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatClock, formatDay, formatDuration, percentChange } from "./format";
+import { formatAgo, formatClock, formatDay, formatDuration, percentChange } from "./format";
 import { rangePeriod, startOfWeek, toDateString } from "./dates";
 
 describe("formatting", () => {
@@ -18,6 +18,14 @@ describe("formatting", () => {
     const now = new Date(2026, 8, 27, 12);
     expect(formatDay(new Date(2026, 8, 27, 8).toISOString(), now)).toBe("Today");
     expect(formatDay(new Date(2026, 8, 26, 22).toISOString(), now)).toBe("Yesterday");
+  });
+
+  it("says how long ago something happened", () => {
+    const now = new Date("2026-09-28T12:00:00");
+    expect(formatAgo("2026-09-28T11:59:40", now)).toBe("just now");
+    expect(formatAgo("2026-09-28T11:55:00", now)).toBe("5 min ago");
+    expect(formatAgo("2026-09-28T09:00:00", now)).toBe("3 h ago");
+    expect(formatAgo("2026-09-27T09:00:00", now)).toBe("Yesterday");
   });
 
   it("computes period-over-period change", () => {
