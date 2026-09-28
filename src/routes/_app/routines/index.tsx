@@ -21,7 +21,7 @@ function RoutinesPage() {
         actions={
           <Button asChild>
             <Link to="/routines/new">
-              <PlusIcon aria-hidden />{" "}{t("New")}{" "}</Link>
+              <PlusIcon aria-hidden />{" "}{t("Browse plans")}{" "}</Link>
           </Button>
         }
       />
