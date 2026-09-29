@@ -3,6 +3,16 @@ import type { Bucket, Period } from "@/schemas/stats";
 
 /** Every server-state cache key in one place, so invalidation stays predictable. */
 export const queryKeys = {
+  /** FitHealth: online only, never persisted (see `shouldPersistQuery`) */
+  health: {
+    all: ["health"] as const,
+    day: (date: string) => ["health", "day", date] as const,
+    days: ["health", "day"] as const,
+    meals: ["health", "meals"] as const,
+    products: (q: string) => ["health", "products", q] as const,
+    profile: ["health", "profile"] as const,
+    weights: ["health", "weights"] as const,
+  },
   me: ["me"] as const,
   places: ["places"] as const,
   invites: ["invites"] as const,
