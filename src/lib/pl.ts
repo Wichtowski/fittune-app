@@ -847,4 +847,13 @@ export const pl: Record<string, string> = {
   "The barcode scanner could not start.": "Nie udało się uruchomić skanera kodów.",
   "The camera needs a secure (https) connection, or this browser has no camera access.": "Aparat wymaga bezpiecznego połączenia (https) albo ta przeglądarka nie ma dostępu do aparatu.",
   "Allow camera": "Zezwól na aparat",
+  "Install FitTune": "Zainstaluj FitTune",
+  "Take FitTune with you": "Miej FitTune zawsze pod ręką",
+  "Tap Share in the browser bar": "Stuknij Udostępnij na pasku przeglądarki",
+  "Choose “Add to Home Screen”": "Wybierz „Do ekranu początkowego”",
+  "Install FitTune for quick access from your home screen.": "Zainstaluj FitTune, aby otwierać je prosto z ekranu początkowego.",
+  "Install": "Zainstaluj",
+  "Dismiss install suggestion": "Zamknij propozycję instalacji",
+  "Got it": "Rozumiem",
+  "Not now": "Nie teraz",
 };
