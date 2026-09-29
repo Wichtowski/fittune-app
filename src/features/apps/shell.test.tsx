@@ -45,14 +45,15 @@ it("leaves the remembered app alone on shared pages", async () => {
 
 it("shows FitHealth navigation on FitHealth pages", async () => {
   renderInRouter(BottomNav, { path: "/health", app: "health" });
-  expect(await screen.findByRole("link", { name: "Today" })).toHaveAttribute("href", "/health");
+  expect(await screen.findByRole("link", { name: "Diary" })).toHaveAttribute("href", "/health");
+  expect(screen.getByRole("link", { name: "Goals" })).toHaveAttribute("href", "/health/goals");
   expect(screen.queryByRole("link", { name: "Workout" })).not.toBeInTheDocument();
 });
 
 it("keeps FitHealth navigation on a shared page reached from FitHealth", async () => {
   useLastApp.setState({ lastApp: "health" });
   renderInRouter(BottomNav, { path: "/profile" });
-  expect(await screen.findByRole("link", { name: "Today" })).toBeInTheDocument();
+  expect(await screen.findByRole("link", { name: "Diary" })).toBeInTheDocument();
 });
 
 it("shows FitTune navigation on FitTune pages", async () => {

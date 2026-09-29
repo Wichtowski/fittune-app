@@ -7,7 +7,8 @@ import {
   HistoryIcon,
   HouseIcon,
   type LucideIcon,
-  SunIcon,
+  NotebookPenIcon,
+  TargetIcon,
   UserRoundIcon,
   UsersIcon,
 } from "lucide-react";
@@ -80,10 +81,19 @@ export const apps: Record<AppId, AppDefinition> = {
     home: "/health",
     description: "Nutrition: food diary and product scanning",
     mobileNav: [
-      { to: "/health", label: "Today", icon: SunIcon, exact: true },
+      { to: "/health", label: "Diary", icon: NotebookPenIcon, exact: true },
+      { to: "/health/goals", label: "Goals", icon: TargetIcon },
       { to: "/profile", label: "Profile", icon: UserRoundIcon },
     ],
-    desktopNav: [{ heading: "Nutrition", items: [{ to: "/health", label: "Today", icon: SunIcon, exact: true }] }],
+    desktopNav: [
+      {
+        heading: "Nutrition",
+        items: [
+          { to: "/health", label: "Diary", icon: NotebookPenIcon, exact: true },
+          { to: "/health/goals", label: "Goals", icon: TargetIcon },
+        ],
+      },
+    ],
     primaryAction: null,
   },
 };

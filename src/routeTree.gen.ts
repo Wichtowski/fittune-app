@@ -24,6 +24,7 @@ import { Route as AppExercisesExerciseIdRouteImport } from './routes/_app/exerci
 import { Route as AppFriendsIndexRouteImport } from './routes/_app/friends/index'
 import { Route as AppFriendsUserIdRouteImport } from './routes/_app/friends/$userId'
 import { Route as AppHealthIndexRouteImport } from './routes/_app/health/index'
+import { Route as AppHealthGoalsRouteImport } from './routes/_app/health/goals'
 import { Route as AppRoutinesIndexRouteImport } from './routes/_app/routines/index'
 import { Route as AppRoutinesRoutineIdRouteImport } from './routes/_app/routines/$routineId'
 import { Route as AppRoutinesNewRouteImport } from './routes/_app/routines/new'
@@ -104,6 +105,11 @@ const AppHealthIndexRoute = AppHealthIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppHealthRoute,
 } as any)
+const AppHealthGoalsRoute = AppHealthGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => AppHealthRoute,
+} as any)
 const AppRoutinesIndexRoute = AppRoutinesIndexRouteImport.update({
   id: '/routines/',
   path: '/routines/',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/workout': typeof AppWorkoutRoute
   '/exercises/$exerciseId': typeof AppExercisesExerciseIdRoute
   '/friends/$userId': typeof AppFriendsUserIdRoute
+  '/health/goals': typeof AppHealthGoalsRoute
   '/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/routines/new': typeof AppRoutinesNewRoute
   '/workouts/$workoutId': typeof AppWorkoutsWorkoutIdRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/workout': typeof AppWorkoutRoute
   '/exercises/$exerciseId': typeof AppExercisesExerciseIdRoute
   '/friends/$userId': typeof AppFriendsUserIdRoute
+  '/health/goals': typeof AppHealthGoalsRoute
   '/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/routines/new': typeof AppRoutinesNewRoute
   '/workouts/$workoutId': typeof AppWorkoutsWorkoutIdRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/_app/workout': typeof AppWorkoutRoute
   '/_app/exercises/$exerciseId': typeof AppExercisesExerciseIdRoute
   '/_app/friends/$userId': typeof AppFriendsUserIdRoute
+  '/_app/health/goals': typeof AppHealthGoalsRoute
   '/_app/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/_app/routines/new': typeof AppRoutinesNewRoute
   '/_app/workouts/$workoutId': typeof AppWorkoutsWorkoutIdRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/workout'
     | '/exercises/$exerciseId'
     | '/friends/$userId'
+    | '/health/goals'
     | '/routines/$routineId'
     | '/routines/new'
     | '/workouts/$workoutId'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/workout'
     | '/exercises/$exerciseId'
     | '/friends/$userId'
+    | '/health/goals'
     | '/routines/$routineId'
     | '/routines/new'
     | '/workouts/$workoutId'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/_app/workout'
     | '/_app/exercises/$exerciseId'
     | '/_app/friends/$userId'
+    | '/_app/health/goals'
     | '/_app/routines/$routineId'
     | '/_app/routines/new'
     | '/_app/workouts/$workoutId'
@@ -374,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHealthIndexRouteImport
       parentRoute: typeof AppHealthRoute
     }
+    '/_app/health/goals': {
+      id: '/_app/health/goals'
+      path: '/goals'
+      fullPath: '/health/goals'
+      preLoaderRoute: typeof AppHealthGoalsRouteImport
+      parentRoute: typeof AppHealthRoute
+    }
     '/_app/routines/': {
       id: '/_app/routines/'
       path: '/routines'
@@ -413,10 +432,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppHealthRouteChildren {
+  AppHealthGoalsRoute: typeof AppHealthGoalsRoute
   AppHealthIndexRoute: typeof AppHealthIndexRoute
 }
 
 const AppHealthRouteChildren: AppHealthRouteChildren = {
+  AppHealthGoalsRoute: AppHealthGoalsRoute,
   AppHealthIndexRoute: AppHealthIndexRoute,
 }
 
