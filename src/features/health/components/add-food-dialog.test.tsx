@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { AddFoodDialog } from "./add-food-dialog";
@@ -55,13 +55,13 @@ it("searches, picks a product and logs the chosen amount", async () => {
   await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
 });
 
-it("does not save an empty amount", async () => {
+it.each(["", "0.01", "5001"])("does not save an invalid amount (%s)", async (value) => {
   vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [oats], off: [] });
   const put = vi.spyOn(fithealth, "putEntry");
   renderDialog();
 
   fireEvent.click(await screen.findByRole("button", { name: /Oat flakes/ }));
-  fireEvent.change(await screen.findByRole("spinbutton", { name: "Amount (g)" }), { target: { value: "" } });
+  fireEvent.change(await screen.findByRole("spinbutton", { name: "Amount (g)" }), { target: { value } });
   expect(screen.getByRole("button", { name: "Add to Breakfast" })).toBeDisabled();
   expect(put).not.toHaveBeenCalled();
 });
@@ -164,4 +164,21 @@ it("offers Open Food Facts products in search and confirms them before use", asy
 
   expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("Płatki owsiane górskie");
   expect(screen.getByRole("link", { name: /Open Food Facts/ })).toBeInTheDocument();
+});
+
+it("keeps search open when a cancelled product creation finishes", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [candidate] });
+  let complete!: (product: Product) => void;
+  const create = vi.spyOn(fithealth, "createProduct").mockImplementation(() => new Promise((resolve) => { complete = resolve; }));
+  renderDialog();
+  fireEvent.click(await screen.findByRole("button", { name: /Płatki owsiane górskie/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Save product" }));
+  await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  expect(screen.getByRole("searchbox", { name: "Search products" })).toBeInTheDocument();
+
+  await act(async () => complete(oats));
+
+  expect(screen.getByRole("searchbox", { name: "Search products" })).toBeInTheDocument();
+  expect(screen.queryByRole("spinbutton", { name: "Amount (g)" })).not.toBeInTheDocument();
 });

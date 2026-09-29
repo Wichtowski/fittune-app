@@ -9,7 +9,7 @@ export interface KeyValueStorage {
   removeItem(key: string): void;
 }
 
-const memory = new Map<string, string>();
+const memory = new Map<string, string | null>();
 
 const memoryStorage: KeyValueStorage = {
   getItem: (key) => memory.get(key) ?? null,
@@ -27,6 +27,7 @@ function createStorage(): KeyValueStorage {
   }
   return {
     getItem: (key) => {
+      if (memory.has(key)) return memory.get(key) ?? null;
       try {
         return window.localStorage.getItem(key);
       } catch {
@@ -36,6 +37,7 @@ function createStorage(): KeyValueStorage {
     setItem: (key, value) => {
       try {
         window.localStorage.setItem(key, value);
+        memory.delete(key);
       } catch {
         memory.set(key, value);
       }
@@ -43,8 +45,9 @@ function createStorage(): KeyValueStorage {
     removeItem: (key) => {
       try {
         window.localStorage.removeItem(key);
-      } catch {
         memory.delete(key);
+      } catch {
+        memory.set(key, null);
       }
     },
   };

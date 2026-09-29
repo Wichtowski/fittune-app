@@ -52,7 +52,6 @@ export function AddFoodDialog({ open, onOpenChange, date, meal }: {
       void queryClient.invalidateQueries({ queryKey: queryKeys.health.day(date) });
       void queryClient.invalidateQueries({ queryKey: ["health", "products"] });
       toast.success(t("Added to {meal}", { meal: mealName }));
-      close();
     },
     onError: (error) => toast.error(error instanceof ApiError ? error.message : t("Could not save. Try again.")),
   });
@@ -98,7 +97,7 @@ export function AddFoodDialog({ open, onOpenChange, date, meal }: {
           submitLabel={t("Add to {meal}", { meal: mealName })}
           pending={save.isPending}
           onBack={() => setStep({ kind: "search" })}
-          onSubmit={(grams) => save.mutate({ product: step.product, grams })}
+          onSubmit={(grams) => save.mutate({ product: step.product, grams }, { onSuccess: close })}
         />
       ) : null}
     </ResponsiveDialog>

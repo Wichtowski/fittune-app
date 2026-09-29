@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 
 import { storage } from "@/lib/storage";
+import { useMediaQuery } from "./use-media-query";
 
 export type ThemePreference = "system" | "light" | "dark";
 
@@ -32,18 +33,16 @@ export function useTheme() {
   const preference = useSyncExternalStore(
     (onChange) => {
       listeners.add(onChange);
-      const media = window.matchMedia("(prefers-color-scheme: light)");
-      media.addEventListener("change", onChange);
       return () => {
         listeners.delete(onChange);
-        media.removeEventListener("change", onChange);
       };
     },
     read,
     () => "system" as const,
   );
+  const light = useMediaQuery("(prefers-color-scheme: light)");
   const resolved: "light" | "dark" =
-    preference === "system" ? (systemIsLight() ? "light" : "dark") : preference;
+    preference === "system" ? (light ? "light" : "dark") : preference;
 
   useEffect(() => apply(preference), [preference, resolved]);
   return { preference, resolved, setPreference: setThemePreference };

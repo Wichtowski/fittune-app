@@ -47,7 +47,7 @@ export function BodyProfileForm({ profile }: { profile: Profile }) {
     resolver: zodResolver(profileInputSchema),
     defaultValues: {
       sex: profile.sex ?? undefined,
-      height_cm: profile.height_cm ?? (undefined as unknown as number),
+      height_cm: profile.height_cm ?? undefined,
       activity: profile.activity ?? "light",
       goal: profile.goal ?? "maintain",
       pace_kg_per_week: profile.pace_kg_per_week || 0.5,

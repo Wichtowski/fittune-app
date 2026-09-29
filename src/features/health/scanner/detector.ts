@@ -1,5 +1,7 @@
+import type { BarcodeFormat } from "barcode-detector/ponyfill";
+
 /** Product barcodes; QR and other symbologies are ignored */
-const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e"];
+const FORMATS: BarcodeFormat[] = ["ean_13", "ean_8", "upc_a", "upc_e"];
 
 export type Detector = { detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]> };
 
@@ -29,5 +31,5 @@ export async function createDetector(): Promise<Detector> {
   prepareZXingModule({
     overrides: { locateFile: (path: string, prefix: string) => (path.endsWith(".wasm") ? wasmUrl : prefix + path) },
   });
-  return new BarcodeDetector({ formats: FORMATS as never });
+  return new BarcodeDetector({ formats: FORMATS });
 }

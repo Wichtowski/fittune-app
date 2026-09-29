@@ -51,18 +51,27 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
       : null,
   );
   const detected = useRef(onDetected);
-  detected.current = onDetected;
+  useEffect(() => { detected.current = onDetected; }, [onDetected]);
 
   useEffect(() => {
     if (manual) return;
     let stream: MediaStream | null = null;
     let timer: number | undefined;
     let stopped = false;
+    const stop = () => {
+      stopped = true;
+      window.clearTimeout(timer);
+      stream?.getTracks().forEach((track) => track.stop());
+      stream = null;
+    };
 
     void (async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-        if (stopped || !video.current) return;
+        if (stopped || !video.current) {
+          stop();
+          return;
+        }
         video.current.srcObject = stream;
         await video.current.play();
         const detector = await createDetector();
@@ -70,16 +79,17 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
           if (stopped || !video.current) return;
           try {
             const found = await detector.detect(video.current);
+            if (stopped) return;
             const code = found.map((b) => normalizeBarcode(b.rawValue)).find((c) => c !== null);
             if (code) {
-              stopped = true;
+              stop();
               detected.current(code);
               return;
             }
           } catch {
             // A frame that could not be read; try the next one
           }
-          timer = window.setTimeout(() => void tick(), SCAN_INTERVAL_MS);
+          if (!stopped) timer = window.setTimeout(() => void tick(), SCAN_INTERVAL_MS);
         };
         void tick();
       } catch (error) {
@@ -89,11 +99,7 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
       }
     })();
 
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-      stream?.getTracks().forEach((track) => track.stop());
-    };
+    return stop;
   }, [manual]);
 
   if (manual) return <ManualEntry reason={manual.reason} onDetected={onDetected} onCancel={onCancel} />;

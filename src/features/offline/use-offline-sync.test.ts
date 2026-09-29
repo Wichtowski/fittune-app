@@ -56,5 +56,6 @@ describe("runOfflineSync", () => {
     stopOfflineSync();
     await sync;
     expect(useOfflineSyncStore.getState()).toMatchObject({ status: "idle", lastSyncedAt: null, error: null });
+    expect(queryClient.getQueryCache().getAll()).toEqual([]);
   });
 });

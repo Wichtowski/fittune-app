@@ -80,13 +80,12 @@ export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDr
   const form = useForm<ProductInput>({ resolver: zodResolver(productInputSchema), defaultValues: fromDraft(initial) });
   const mutation = useMutation({
     mutationFn: fithealth.createProduct,
-    onSuccess: onSaved,
     onError: (error) => applyServerErrors(error, form.setError),
   });
 
   return (
     <Form {...form}>
-      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))} noValidate>
+      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values, { onSuccess: onSaved }))} noValidate>
         {initial.barcode ? (
           <p className="text-sm text-muted-foreground">{t("Barcode")}: <span className="font-medium text-foreground tabular">{initial.barcode}</span></p>
         ) : null}

@@ -110,7 +110,7 @@ class FitTuneClient extends ApiClient {
       };
       xhr.onload = () => {
         reportResponse(xhr.status);
-        if (xhr.status === 401) this.unauthorized();
+        if (xhr.status === 401) this.unauthorized(token);
         let body: unknown;
         try {
           body = JSON.parse(xhr.responseText || "null");
@@ -149,7 +149,7 @@ class FitTuneClient extends ApiClient {
       throw new ApiError(0, "network_error", "Photo unavailable while offline.");
     }
     reportResponse(response.status);
-    if (response.status === 401) this.unauthorized();
+    if (response.status === 401) this.unauthorized(token);
     if (!response.ok) throw new ApiError(response.status, "photo_unavailable", "Could not load photo.");
     return response.blob();
   };

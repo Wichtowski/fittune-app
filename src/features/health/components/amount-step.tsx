@@ -21,7 +21,7 @@ export function AmountStep({ food, initialGrams, submitLabel, pending, onSubmit,
 }) {
   const [text, setText] = useState(String(initialGrams ?? food.serving_g ?? 100));
   const grams = Number(text);
-  const valid = text.trim() !== "" && Number.isFinite(grams) && grams > 0 && grams <= 5000;
+  const valid = text.trim() !== "" && Number.isFinite(grams) && grams >= 0.1 && grams <= 5000;
   const amount = scale(food.per_100g, valid ? grams : 0);
 
   return (
@@ -31,7 +31,7 @@ export function AmountStep({ food, initialGrams, submitLabel, pending, onSubmit,
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (valid) onSubmit(grams);
+        if (valid && !pending) onSubmit(grams);
       }}
     >
       <div>
@@ -41,7 +41,7 @@ export function AmountStep({ food, initialGrams, submitLabel, pending, onSubmit,
       </div>
       <div className="grid gap-2">
         <Label htmlFor="amount-grams">{t("Amount (g)")}</Label>
-        <Input id="amount-grams" type="number" inputMode="decimal" min={0} max={5000} step="any" value={text} onChange={(event) => setText(event.target.value)} autoFocus />
+        <Input id="amount-grams" type="number" inputMode="decimal" min={0.1} max={5000} step="any" value={text} onChange={(event) => setText(event.target.value)} autoFocus />
         {food.serving_g ? (
           <div className="flex flex-wrap gap-2">
             {[1, 2].map((count) => (

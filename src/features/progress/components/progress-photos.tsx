@@ -39,7 +39,7 @@ export function WorkoutPhotos({ workoutId, justCompleted, waitingForSync }: { wo
     onError: () => toast.error("Couldn't delete the photo"),
   });
   const choose = (selected?: File) => {
-    if (!selected) return;
+    if (!selected || upload.isPending) return;
     if (selected.size > 10 * 1024 * 1024) { toast.error("Choose an image under 10 MB"); return; }
     setFile(selected);
     setPreview(URL.createObjectURL(selected));
@@ -55,10 +55,10 @@ export function WorkoutPhotos({ workoutId, justCompleted, waitingForSync }: { wo
     <p className="mt-1 text-sm text-muted-foreground">Private to you. Add a photo now or return to this workout later.</p>
     {justCompleted && !skipped && !file ? <Button variant="ghost" size="sm" onClick={() => setSkipped(true)}>Skip for now</Button> : null}
     {skipped ? <Button className="mt-3" size="sm" variant="secondary" onClick={() => setSkipped(false)}>Add photo</Button> : <div className="mt-3 flex flex-wrap gap-2">
-      <input ref={camera} type="file" accept="image/*" capture="user" className="sr-only" aria-label="Take progress photo" onChange={(event) => { choose(event.target.files?.[0]); event.target.value = ""; }} />
-      <input ref={library} type="file" accept="image/*" className="sr-only" aria-label="Choose progress photo" onChange={(event) => { choose(event.target.files?.[0]); event.target.value = ""; }} />
-      <Button size="sm" variant="secondary" onClick={() => camera.current?.click()}>Take photo</Button>
-      <Button size="sm" variant="secondary" onClick={() => library.current?.click()}>Choose from library</Button>
+      <input ref={camera} type="file" accept="image/*" capture="user" className="sr-only" aria-label="Take progress photo" disabled={upload.isPending} onChange={(event) => { choose(event.target.files?.[0]); event.target.value = ""; }} />
+      <input ref={library} type="file" accept="image/*" className="sr-only" aria-label="Choose progress photo" disabled={upload.isPending} onChange={(event) => { choose(event.target.files?.[0]); event.target.value = ""; }} />
+      <Button size="sm" variant="secondary" disabled={upload.isPending} onClick={() => camera.current?.click()}>Take photo</Button>
+      <Button size="sm" variant="secondary" disabled={upload.isPending} onClick={() => library.current?.click()}>Choose from library</Button>
     </div>}
     {preview ? <div className="mt-4 max-w-sm">
       <img src={preview} alt="Photo preview" className="max-h-80 w-full rounded-xl object-contain" />

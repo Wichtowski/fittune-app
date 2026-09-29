@@ -23,14 +23,21 @@ export type SyncResult = { failed: number };
  * timing out in the API client
  */
 export async function syncForOffline(queryClient: QueryClient, signal?: AbortSignal): Promise<SyncResult> {
+  const checkCancelled = () => {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  };
+  checkCancelled();
   // Core data first and in order: if the first request fails the API is unreachable
-  queryClient.setQueryData(queryKeys.me, await account.getMe(signal));
+  const me = await account.getMe(signal);
+  checkCancelled();
+  queryClient.setQueryData(queryKeys.me, me);
   const [exercises, routines, places, records] = await Promise.all([
     fittune.getExercises(signal),
     fittune.getRoutines(signal),
     fittune.getPlaces(signal),
     fittune.getRecords(signal),
   ]);
+  checkCancelled();
   queryClient.setQueryData(queryKeys.exercises.list(), exercises);
   queryClient.setQueryData(queryKeys.routines.list, routines);
   queryClient.setQueryData(queryKeys.places, places);
@@ -40,22 +47,30 @@ export async function syncForOffline(queryClient: QueryClient, signal?: AbortSig
     fittune.getWorkoutsPage("completed", undefined, signal),
     fittune.getWorkoutsPage("in_progress", undefined, signal),
   ]);
+  checkCancelled();
   // A fresh first page replaces what was cached; older pages load again when scrolled to
   queryClient.setQueryData(queryKeys.workouts.list("completed"), { pages: [completed], pageParams: [undefined] });
   queryClient.setQueryData(queryKeys.workouts.list("in_progress"), { pages: [inProgress], pageParams: [undefined] });
 
   const workoutIds = completed.items.slice(0, OFFLINE_WORKOUTS).map((w) => w.id);
   const workouts = await settle(workoutIds, async (id) => {
+    checkCancelled();
     const workout = await fittune.getWorkout(id, signal);
+    checkCancelled();
     queryClient.setQueryData(queryKeys.workouts.detail(id), workout);
     return workout;
   });
 
+  checkCancelled();
   const exerciseIds = [...new Set(workouts.ok.flatMap((workout) => workout.exercises.map((e) => e.exercise_id)))];
   const histories = await settle(exerciseIds.slice(0, MAX_EXERCISE_HISTORIES), async (id) => {
-    queryClient.setQueryData(queryKeys.exercises.history(id), await fittune.getExerciseHistory(id, signal));
+    checkCancelled();
+    const history = await fittune.getExerciseHistory(id, signal);
+    checkCancelled();
+    queryClient.setQueryData(queryKeys.exercises.history(id), history);
   });
 
+  checkCancelled();
   return { failed: workouts.failed + histories.failed };
 }
 

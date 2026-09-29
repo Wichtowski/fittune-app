@@ -64,7 +64,8 @@ export function ProfileForm({ user }: { user: User }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="grid gap-5" noValidate>
+      <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} noValidate>
+        <fieldset disabled={mutation.isPending} className="grid gap-5">
         <FormField
           control={form.control}
           name="display_name"
@@ -148,6 +149,7 @@ export function ProfileForm({ user }: { user: User }) {
         <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty} className="justify-self-start">
           {mutation.isPending ? t("Saving…") : t("Save profile")}
         </Button>
+        </fieldset>
       </form>
     </Form>
   );

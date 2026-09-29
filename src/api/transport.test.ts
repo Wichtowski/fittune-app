@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { REQUEST_TIMEOUT_MS, send } from "./transport";
+import { z } from "zod";
+
+import { configureApiClient, REQUEST_TIMEOUT_MS, send } from "./transport";
 
 /** A fetch that never answers, like a server that accepted the connection and hung */
 function hangingFetch() {
@@ -15,9 +17,36 @@ function hangingFetch() {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  configureApiClient({ getToken: () => null, onUnauthorized: () => {} });
 });
 
 describe("send", () => {
+  it.each([200, 503])("keeps the timeout active while a %s response body is downloading", async (status) => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn((_url: URL, init?: RequestInit) => Promise.resolve(new Response(new ReadableStream({
+      start(controller) {
+        init?.signal?.addEventListener("abort", () => controller.error(new DOMException("Aborted", "AbortError")));
+      },
+    }), { status }))));
+    const pending = send("/me", { schema: z.object({ id: z.string() }) });
+    const assertion = expect(pending).rejects.toMatchObject({ status: 0, code: "timeout" });
+    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS);
+    await assertion;
+  });
+
+  it("does not sign out a new session when an old request returns 401", async () => {
+    let token = "old-session";
+    const onUnauthorized = vi.fn();
+    configureApiClient({ getToken: () => token, onUnauthorized });
+    let answer!: (response: Response) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((resolve) => { answer = resolve; })));
+    const pending = send("/me");
+    token = "new-session";
+    answer(new Response(null, { status: 401 }));
+    await expect(pending).rejects.toMatchObject({ status: 401 });
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
+
   it("gives up on a server that does not answer", async () => {
     vi.useFakeTimers();
     vi.stubGlobal("fetch", hangingFetch());
