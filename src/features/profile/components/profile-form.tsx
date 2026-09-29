@@ -1,9 +1,10 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { updateProfile } from "@/api/auth";
+import { account } from "@/api/account";
 import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -30,7 +31,7 @@ export function ProfileForm({ user }: { user: User }) {
 
   const mutation = useMutation({
     mutationFn: (values: ProfileValues) =>
-      updateProfile({
+      account.updateProfile({
         display_name: values.display_name || null,
         birthday: values.birthday || null,
         account_type: values.account_type === "none" ? null : values.account_type,
@@ -53,7 +54,7 @@ export function ProfileForm({ user }: { user: User }) {
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.me, saved);
       form.reset(form.getValues());
-      toast.success("Profile saved");
+      toast.success(t("Profile saved"));
     },
     onError: (error, _values, context) => {
       if (context?.previous) queryClient.setQueryData(queryKeys.me, context.previous);
@@ -69,7 +70,7 @@ export function ProfileForm({ user }: { user: User }) {
           name="display_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display name</FormLabel>
+              <FormLabel>{t("Display name")}</FormLabel>
               <FormControl>
                 <Input autoComplete="name" {...field} />
               </FormControl>
@@ -83,7 +84,7 @@ export function ProfileForm({ user }: { user: User }) {
             name="birthday"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Birthday</FormLabel>
+                <FormLabel>{t("Birthday")}</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -96,7 +97,7 @@ export function ProfileForm({ user }: { user: User }) {
             name="account_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>I am a…</FormLabel>
+                <FormLabel>{t("I am a…")}</FormLabel>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
@@ -104,10 +105,10 @@ export function ProfileForm({ user }: { user: User }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">Prefer not to say</SelectItem>
+                    <SelectItem value="none">{t("Prefer not to say")}</SelectItem>
                     {ACCOUNT_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {accountTypeLabels[type]}
+                        {t(accountTypeLabels[type])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -122,10 +123,10 @@ export function ProfileForm({ user }: { user: User }) {
             name="weight_unit"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weight</FormLabel>
+                <FormLabel>{t("Weight")}</FormLabel>
                 <ToggleGroup type="single" value={field.value} onValueChange={(v) => v && field.onChange(v)} className="w-full">
-                  <ToggleGroupItem value="kg">Kilograms</ToggleGroupItem>
-                  <ToggleGroupItem value="lb">Pounds</ToggleGroupItem>
+                  <ToggleGroupItem value="kg">{t("Kilograms")}</ToggleGroupItem>
+                  <ToggleGroupItem value="lb">{t("Pounds")}</ToggleGroupItem>
                 </ToggleGroup>
               </FormItem>
             )}
@@ -135,17 +136,17 @@ export function ProfileForm({ user }: { user: User }) {
             name="distance_unit"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Distance</FormLabel>
+                <FormLabel>{t("Distance")}</FormLabel>
                 <ToggleGroup type="single" value={field.value} onValueChange={(v) => v && field.onChange(v)} className="w-full">
-                  <ToggleGroupItem value="km">Kilometres</ToggleGroupItem>
-                  <ToggleGroupItem value="mi">Miles</ToggleGroupItem>
+                  <ToggleGroupItem value="km">{t("Kilometres")}</ToggleGroupItem>
+                  <ToggleGroupItem value="mi">{t("Miles")}</ToggleGroupItem>
                 </ToggleGroup>
               </FormItem>
             )}
           />
         </div>
         <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty} className="justify-self-start">
-          {mutation.isPending ? "Saving…" : "Save profile"}
+          {mutation.isPending ? t("Saving…") : t("Save profile")}
         </Button>
       </form>
     </Form>

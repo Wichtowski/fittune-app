@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useNavigate } from "@tanstack/react-router";
 import { FlagIcon } from "lucide-react";
 
@@ -38,20 +39,19 @@ export function FinishWorkoutDialog({ workout }: { workout: DraftWorkout }) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button size="sm" className="px-4">
-          <FlagIcon className="size-4" aria-hidden /> Finish
-        </Button>
+          <FlagIcon className="size-4" aria-hidden />{" "}{t("Finish")}{" "}</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Finish workout?</AlertDialogTitle>
+          <AlertDialogTitle>{t("Finish workout?")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {formatDuration(elapsed)} · {summary.completedSets} sets · {formatVolume(summary.volumeKg, weightUnit)}
-            {unfinished > 0 ? ` · ${unfinished} unticked set${unfinished > 1 ? "s" : ""} won't count towards your stats.` : ""}
+            {formatDuration(elapsed)} · {t("Sets: {count}", { count: summary.completedSets })} · {formatVolume(summary.volumeKg, weightUnit)}
+            {unfinished > 0 ? ` · ${t("Unfinished sets: {count}. They won't count towards your stats.", { count: unfinished })}` : ""}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Keep going</AlertDialogCancel>
-          <AlertDialogAction onClick={onFinish}>Finish & save</AlertDialogAction>
+          <AlertDialogCancel>{t("Keep going")}</AlertDialogCancel>
+          <AlertDialogAction onClick={onFinish}>{t("Finish & save")}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -5,6 +5,7 @@ import { StartWorkout } from "@/features/workouts/components/start-workout";
 import { useWorkoutStore } from "@/features/workouts/store";
 
 export const Route = createFileRoute("/_app/workout")({
+  staticData: { app: "train" },
   component: WorkoutPage,
 });
 

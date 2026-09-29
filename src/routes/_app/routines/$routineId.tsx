@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RoutineEditor } from "@/features/routines/components/routine-editor";
 
 export const Route = createFileRoute("/_app/routines/$routineId")({
+  staticData: { app: "train" },
   loader: ({ context, params }) => void context.queryClient.prefetchQuery(routineQuery(params.routineId)),
   component: EditRoutinePage,
 });
@@ -18,7 +20,7 @@ function EditRoutinePage() {
 
   return (
     <>
-      <PageHeader title={data?.name ?? "Routine"} eyebrow="Edit routine" />
+      <PageHeader title={data?.name ?? t("Routine")} eyebrow={t("Edit routine")} />
       {data ? (
         <RoutineEditor key={data.id} routine={data} />
       ) : error ? (

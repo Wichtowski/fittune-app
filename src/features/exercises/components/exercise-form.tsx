@@ -1,9 +1,10 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
-import { createExercise, updateExercise } from "@/api/exercises";
+import { fittune } from "@/api/fittune";
 import { queryKeys } from "@/api/query-keys";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -40,11 +41,11 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
   });
 
   const mutation = useMutation({
-    mutationFn: (input: ExerciseInput) => (exercise ? updateExercise(exercise.id, input) : createExercise(input)),
+    mutationFn: (input: ExerciseInput) => (exercise ? fittune.updateExercise(exercise.id, input) : fittune.createExercise(input)),
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.exercises.detail(saved.id), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });
-      toast.success(exercise ? "Exercise updated" : "Exercise created");
+      toast.success(exercise ? t("Exercise updated") : t("Exercise created"));
       onDone(saved);
     },
     onError: (error) => applyServerErrors(error, form.setError),
@@ -60,9 +61,9 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t("Name")}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Sled push" {...field} />
+                <Input placeholder={t("e.g. Sled push")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,10 +71,10 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <SelectField control={form.control} name="tracking" label="Tracks" options={TRACKING} labels={trackingLabels} />
-          <SelectField control={form.control} name="primary_muscle" label="Primary muscle" options={MUSCLES} labels={muscleLabels} />
-          <SelectField control={form.control} name="equipment" label="Equipment" options={EQUIPMENT} labels={equipmentLabels} />
-          <SelectField control={form.control} name="difficulty" label="Difficulty" options={DIFFICULTIES} labels={difficultyLabels} />
+          <SelectField control={form.control} name="tracking" label={t("Tracks")} options={TRACKING} labels={trackingLabels} />
+          <SelectField control={form.control} name="primary_muscle" label={t("Primary muscle")} options={MUSCLES} labels={muscleLabels} />
+          <SelectField control={form.control} name="equipment" label={t("Equipment")} options={EQUIPMENT} labels={equipmentLabels} />
+          <SelectField control={form.control} name="difficulty" label={t("Difficulty")} options={DIFFICULTIES} labels={difficultyLabels} />
         </div>
 
         <FormField
@@ -81,7 +82,7 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
           name="secondary_muscles"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Secondary muscles</FormLabel>
+              <FormLabel>{t("Secondary muscles")}</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {MUSCLES.filter((m) => m !== primary).map((muscle) => {
                   const selected = field.value.includes(muscle);
@@ -98,7 +99,7 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
                         selected && "border-primary bg-primary/15 font-medium",
                       )}
                     >
-                      {muscleLabels[muscle]}
+                      {t(muscleLabels[muscle])}
                     </button>
                   );
                 })}
@@ -112,8 +113,8 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
           name="requires"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Equipment needed</FormLabel>
-              <FormDescription>Everything the exercise needs. It shows up at places that have all of it; leave empty for bodyweight.</FormDescription>
+              <FormLabel>{t("Equipment needed")}</FormLabel>
+              <FormDescription>{t("Everything the exercise needs. It shows up at places that have all of it; leave empty for bodyweight.")}</FormDescription>
               <EquipmentChecklist value={field.value} onChange={field.onChange} />
               <FormMessage />
             </FormItem>
@@ -125,11 +126,11 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
           name="video_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>YouTube video id</FormLabel>
+              <FormLabel>{t("YouTube video id")}</FormLabel>
               <FormControl>
                 <Input placeholder="dQw4w9WgXcQ" autoCapitalize="none" {...field} value={field.value ?? ""} />
               </FormControl>
-              <FormDescription>Optional demo video (the 11 characters after “v=”).</FormDescription>
+              <FormDescription>{t("Optional demo video (the 11 characters after “v=”).")}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -140,9 +141,9 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
           name="instructions"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Instructions</FormLabel>
+              <FormLabel>{t("Instructions")}</FormLabel>
               <FormControl>
-                <Textarea placeholder="Setup and cues" {...field} value={field.value ?? ""} />
+                <Textarea placeholder={t("Setup and cues")} {...field} value={field.value ?? ""} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -150,7 +151,7 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
         />
 
         <Button type="submit" size="lg" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving…" : exercise ? "Save changes" : "Create exercise"}
+          {mutation.isPending ? t("Saving…") : exercise ? t("Save changes") : t("Create exercise")}
         </Button>
       </form>
     </Form>

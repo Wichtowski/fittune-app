@@ -17,6 +17,7 @@ import csv
 import io
 import json
 import shutil
+import struct
 import subprocess
 import tempfile
 import urllib.request
@@ -35,6 +36,7 @@ HERE = Path(__file__).resolve().parent
 APP = HERE.parent.parent
 CACHE = HERE / ".cache"
 OUTPUT = APP / "src/features/exercises/anatomy.generated.ts"
+MODEL = APP / "public/anatomy/bodyparts3d-3.glb"
 
 # Release 3.0 is used on purpose: 4.0 dropped latissimus dorsi and rectus abdominis, and
 # its body is remodelled, so the two releases cannot be mixed
@@ -112,6 +114,37 @@ def select_structures() -> list[Structure]:
         if structure:
             structures.append(structure)
     return structures
+
+
+def export_model(structures: list[Structure], work: Path) -> None:
+    MODEL.parent.mkdir(parents=True, exist_ok=True)
+    manifest = [{"path": str(s.path), "kind": s.kind, "muscle": s.muscle} for s in structures]
+    (work / "model.json").write_text(json.dumps(manifest))
+    subprocess.run(
+        ["blender", "--background", "--factory-startup", "--python", str(HERE / "export_glb.py"),
+         "--", str(work / "model.json"), str(MODEL)],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+    with MODEL.open("rb") as glb:
+        glb.seek(12)
+        json_length, _ = struct.unpack("<II", glb.read(8))
+        document = json.loads(glb.read(json_length))
+    exported = {node.get("extras", {}).get("muscle") for node in document["nodes"]} - {None}
+    expected = {structure.muscle for structure in structures if structure.muscle}
+    if exported != expected:
+        raise RuntimeError(f"3D muscle groups differ from the 2D mapping: {exported ^ expected}")
+    if "KHR_draco_mesh_compression" not in document.get("extensionsUsed", []):
+        raise RuntimeError("3D model is not Draco compressed")
+    triangles = sum(
+        document["accessors"][primitive["indices"]]["count"] // 3
+        for mesh in document["meshes"] for primitive in mesh["primitives"]
+    )
+    if triangles > 250_000:
+        raise RuntimeError(f"3D model exceeds the 250,000 triangle budget: {triangles:,}")
+    if MODEL.stat().st_size > 3_000_000:
+        raise RuntimeError(f"3D model exceeds the 3 MB budget: {MODEL.stat().st_size:,} bytes")
+    print(f"wrote {MODEL.relative_to(APP)} ({MODEL.stat().st_size // 1024} KB, {triangles:,} triangles)")
 
 
 def render(structures: list[Structure], work: Path) -> tuple[dict, dict[str, np.ndarray]]:
@@ -229,16 +262,19 @@ def write_module(meta: dict, views: dict[str, tuple[str, list[dict]]], focus: di
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--keep", type=Path, help="keep intermediate renders in this directory")
+    parser.add_argument("--3d-only", dest="model_only", action="store_true", help="export the 3D model without rebuilding the 2D views")
     args = parser.parse_args()
 
     structures = select_structures()
     print(f"{len(structures)} structures selected")
     work = args.keep or Path(tempfile.mkdtemp(prefix="anatomy-"))
     work.mkdir(parents=True, exist_ok=True)
-    meta, buffers = render(structures, work)
-    scale = MM_PER_PX * SVG_UNITS_PER_MM
-    views = {view: vectorise(structures, ids, scale) for view, ids in buffers.items()}
-    write_module(meta, views, focus_views(structures, buffers), scale)
+    export_model(structures, work)
+    if not args.model_only:
+        meta, buffers = render(structures, work)
+        scale = MM_PER_PX * SVG_UNITS_PER_MM
+        views = {view: vectorise(structures, ids, scale) for view, ids in buffers.items()}
+        write_module(meta, views, focus_views(structures, buffers), scale)
     if not args.keep:
         shutil.rmtree(work)
 

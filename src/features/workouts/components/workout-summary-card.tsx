@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { Link } from "@tanstack/react-router";
 import { DumbbellIcon } from "lucide-react";
 
@@ -25,12 +26,12 @@ export function WorkoutSummaryCard({ workout, weightUnit }: { workout: WorkoutSu
         </span>
         {workout.place ? <span className="mt-1 block truncate text-xs text-muted-foreground">{workout.place.name}</span> : null}
         <span className="mt-0.5 block truncate text-sm text-muted-foreground">
-          {workout.exercise_names.join(", ") || "No exercises"}
+          {workout.exercise_names.join(", ") || t("No exercises")}
         </span>
         <span className="mt-2 flex gap-4 text-sm tabular">
-          <Metric label="Time" value={workout.ended_at ? formatDuration(workout.duration_seconds) : "In progress"} />
-          <Metric label="Sets" value={String(workout.set_count)} />
-          <Metric label="Volume" value={formatVolume(workout.volume_kg, weightUnit)} />
+          <Metric label={t("Time")} value={workout.ended_at ? formatDuration(workout.duration_seconds) : t("In progress")} />
+          <Metric label={t("Sets")} value={String(workout.set_count)} />
+          <Metric label={t("Volume")} value={formatVolume(workout.volume_kg, weightUnit)} />
         </span>
       </span>
     </Link>

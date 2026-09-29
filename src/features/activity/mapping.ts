@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { toDateTimeLocal } from "@/lib/dates";
 import { metresTo, toMetres, trimNumber } from "@/lib/units";
 import type { Activity, ActivityFormInput, ActivityFormOutput, ActivityInput } from "@/schemas/activity";
@@ -7,7 +8,7 @@ import { activityLabels } from "@/lib/labels";
 export function defaultTitle(kind: ActivityKind, date = new Date()): string {
   const hour = date.getHours();
   const part = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
-  return `${part} ${activityLabels[kind].toLowerCase()}`;
+  return t("{part} {activity}", { part: t(part), activity: t(activityLabels[kind]).toLowerCase() });
 }
 
 export function toFormValues(activity: Activity | undefined, unit: DistanceUnit): ActivityFormInput {

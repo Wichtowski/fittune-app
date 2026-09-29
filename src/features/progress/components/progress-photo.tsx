@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { photoBlob } from "@/api/photos";
+import { fittune } from "@/api/fittune";
 
 /** Object URLs stay in memory and are revoked when the photo is no longer shown. */
 export function ProgressPhotoImage({ id, size = "thumb", className = "" }: { id: string; size?: "full" | "thumb"; className?: string }) {
@@ -9,7 +9,7 @@ export function ProgressPhotoImage({ id, size = "thumb", className = "" }: { id:
   useEffect(() => {
     let active = true;
     let objectUrl: string | null = null;
-    void photoBlob(id, size).then((blob) => {
+    void fittune.photoBlob(id, size).then((blob) => {
       if (!active) return;
       objectUrl = URL.createObjectURL(blob);
       setUrl(objectUrl);

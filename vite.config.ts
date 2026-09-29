@@ -33,6 +33,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        globIgnores: ["**/anatomy-viewer-*.js", "**/draco_*.js"],
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
         // API responses are cached by TanStack Query (per user), never by the service worker.
@@ -43,7 +44,10 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "src") },
   },
-  server: { port: 5173 },
+  // Fixed, uncommon ports and a named host so FitTune never collides with other local apps on
+  // 3000, 5173 or 8080; strictPort fails loudly instead of silently moving to another port
+  server: { port: 4734, strictPort: true, allowedHosts: ["fittune.local"] },
+  preview: { port: 4734, strictPort: true, allowedHosts: ["fittune.local"] },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],

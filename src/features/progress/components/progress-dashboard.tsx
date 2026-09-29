@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { BookOpenIcon, TrophyIcon } from "lucide-react";
@@ -28,7 +29,7 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
   const [metric, setMetric] = useState<Metric>("volume");
   const period = useMemo(() => rangePeriod(range), [range]);
   const bucket = RANGES[range].bucket;
-  const comparedTo = `previous ${RANGES[range].label}`;
+  const comparedTo = t("previous {range}", { range: t(RANGES[range].label) });
 
   // Keep the previous range on screen while the new one loads (no layout jump).
   const overview = useQuery({ ...overviewQuery(period, timeZone), placeholderData: keepPreviousData });
@@ -39,21 +40,21 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
   const points = timeline.data ?? [];
   const chart = {
     volume: {
-      title: "Training volume",
+      title: t("Training volume"),
       data: volumeSeries(points, bucket, preferences.weightUnit),
       series: "strength" as const,
       format: (v: number) => `${v.toLocaleString()} ${preferences.weightUnit}`,
       unit: preferences.weightUnit,
     },
     workouts: {
-      title: "Workouts",
+      title: t("Workouts"),
       data: workoutCountSeries(points, bucket),
       series: "strength" as const,
-      format: (v: number) => `${v} workout${v === 1 ? "" : "s"}`,
-      unit: "workouts",
+      format: (v: number) => t("Workouts: {count}", { count: v }),
+      unit: t("workouts"),
     },
     distance: {
-      title: "Distance",
+      title: t("Distance"),
       data: distanceSeries(points, bucket, preferences.distanceUnit),
       series: "endurance" as const,
       format: (v: number) => `${v} ${preferences.distanceUnit}`,
@@ -72,36 +73,36 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
         type="single"
         value={range}
         onValueChange={(value) => value && onRangeChange(value as RangeKey)}
-        aria-label="Time range"
+        aria-label={t("Time range")}
         className="w-full md:w-auto md:justify-self-start"
       >
         {(Object.keys(RANGES) as RangeKey[]).map((key) => (
           <ToggleGroupItem key={key} value={key}>
-            {RANGES[key].label}
+            {t(RANGES[key].label)}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
 
-      <section aria-label="Totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label={t("Totals")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {current && previous ? (
           <>
-            <StatTile label="Workouts" value={String(current.workouts)} current={current.workouts} previous={previous.workouts} comparedTo={comparedTo} />
+            <StatTile label={t("Workouts")} value={String(current.workouts)} current={current.workouts} previous={previous.workouts} comparedTo={comparedTo} />
             <StatTile
-              label="Volume"
+              label={t("Volume")}
               value={formatVolume(current.volume_kg, preferences.weightUnit)}
               current={current.volume_kg}
               previous={previous.volume_kg}
               comparedTo={comparedTo}
             />
             <StatTile
-              label="Training time"
+              label={t("Training time")}
               value={formatDuration(current.workout_seconds + current.activity_seconds)}
               current={current.workout_seconds + current.activity_seconds}
               previous={previous.workout_seconds + previous.activity_seconds}
               comparedTo={comparedTo}
             />
             <StatTile
-              label="Distance"
+              label={t("Distance")}
               value={formatDistance(current.activity_distance_m, preferences.distanceUnit, 1)}
               current={current.activity_distance_m}
               previous={previous.activity_distance_m}
@@ -119,23 +120,23 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
         <ChartCard
           className="lg:col-span-2"
           title={chart.title}
-          description={`Per ${bucket} · ${RANGES[range].label}`}
+          description={t("Per {bucket} · {range}", { bucket: t(bucket), range: t(RANGES[range].label) })}
           refreshing={stale(timeline)}
           table={{
-            columns: [bucket === "week" ? "Week of" : "Month", `${chart.title} (${chart.unit})`],
-            rows: chart.data.map((d) => [d.tooltipTitle?.replace("Week of ", "") ?? d.label, d.value.toLocaleString()]),
+            columns: [bucket === "week" ? t("Week of") : t("Month"), `${chart.title} (${chart.unit})`],
+            rows: chart.data.map((d) => [d.label, d.value.toLocaleString()]),
           }}
         >
           <ToggleGroup
             type="single"
             value={metric}
             onValueChange={(value) => value && setMetric(value as Metric)}
-            aria-label="Metric"
+            aria-label={t("Metric")}
             className="mb-3"
           >
-            <ToggleGroupItem value="volume">Volume</ToggleGroupItem>
-            <ToggleGroupItem value="workouts">Workouts</ToggleGroupItem>
-            <ToggleGroupItem value="distance">Distance</ToggleGroupItem>
+            <ToggleGroupItem value="volume">{t("Volume")}</ToggleGroupItem>
+            <ToggleGroupItem value="workouts">{t("Workouts")}</ToggleGroupItem>
+            <ToggleGroupItem value="distance">{t("Distance")}</ToggleGroupItem>
           </ToggleGroup>
           {timeline.isPending ? (
             <QueryFallback query={timeline}>
@@ -154,37 +155,36 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
         </ChartCard>
 
         <ChartCard
-          title="Muscle distribution"
-          description="Working sets by primary muscle"
+          title={t("Muscle distribution")}
+          description={t("Working sets by primary muscle")}
           refreshing={stale(muscles)}
           table={{
-            columns: ["Muscle", "Sets", `Volume (${preferences.weightUnit})`],
-            rows: (muscles.data ?? []).map((m) => [muscleLabels[m.muscle], m.sets, formatVolume(m.volume_kg, preferences.weightUnit)]),
+            columns: [t("Muscle"), t("Sets"), `${t("Volume")} (${preferences.weightUnit})`],
+            rows: (muscles.data ?? []).map((m) => [t(muscleLabels[m.muscle]), m.sets, formatVolume(m.volume_kg, preferences.weightUnit)]),
           }}
         >
           {muscles.data && muscles.data.length > 0 ? (
             <BarList
               items={muscles.data.map((m) => ({
                 key: m.muscle,
-                label: muscleLabels[m.muscle],
+                label: t(muscleLabels[m.muscle]),
                 value: m.sets,
                 display: String(m.sets),
                 detail: formatVolume(m.volume_kg, preferences.weightUnit),
               }))}
             />
           ) : (
-            <p className="text-sm text-muted-foreground">No strength training in this period.</p>
+            <p className="text-sm text-muted-foreground">{t("No strength training in this period.")}</p>
           )}
         </ChartCard>
       </div>
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-xl font-bold tracking-wide uppercase">Personal records</h2>
+          <h2 className="font-display text-xl font-bold tracking-wide uppercase">{t("Personal records")}</h2>
           <Button asChild variant="ghost" size="sm">
             <Link to="/exercises">
-              <BookOpenIcon className="size-4" aria-hidden /> Exercise library
-            </Link>
+              <BookOpenIcon className="size-4" aria-hidden />{" "}{t("Exercise library")}{" "}</Link>
           </Button>
         </div>
         {records.isPending ? (
@@ -192,17 +192,17 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
             <Skeleton className="h-48" />
           </QueryFallback>
         ) : !records.data || records.data.length === 0 ? (
-          <EmptyState icon={TrophyIcon} title="No records yet" description="Finish a workout and your bests show up here." />
+          <EmptyState icon={TrophyIcon} title={t("No records yet")} description={t("Finish a workout and your bests show up here.")} />
         ) : (
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
               <thead className="text-left text-muted-foreground">
                 <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:font-medium">
-                  <th>Exercise</th>
-                  <th className="text-right">Best</th>
-                  <th className="hidden text-right sm:table-cell">Est. 1RM</th>
-                  <th className="hidden text-right md:table-cell">Sessions</th>
-                  <th className="hidden text-right md:table-cell">Last done</th>
+                  <th>{t("Exercise")}</th>
+                  <th className="text-right">{t("Best")}</th>
+                  <th className="hidden text-right sm:table-cell">{t("Est. 1RM")}</th>
+                  <th className="hidden text-right md:table-cell">{t("Sessions")}</th>
+                  <th className="hidden text-right md:table-cell">{t("Last done")}</th>
                 </tr>
               </thead>
               <tbody className="tabular">
@@ -216,13 +216,13 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
                       >
                         {record.exercise_name}
                       </Link>
-                      <p className="text-xs text-muted-foreground">{muscleLabels[record.primary_muscle]}</p>
+                      <p className="text-xs text-muted-foreground">{t(muscleLabels[record.primary_muscle])}</p>
                     </td>
                     <td className="text-right font-semibold">
                       {record.tracking === "weight_reps"
                         ? formatWeight(record.max_weight_kg, preferences.weightUnit)
                         : record.tracking === "reps"
-                          ? `${record.max_reps ?? "–"} reps`
+                          ? t("Reps: {count}", { count: record.max_reps ?? "–" })
                           : record.tracking === "duration"
                             ? formatDuration(record.max_duration_seconds)
                             : formatDistance(record.max_distance_m, preferences.distanceUnit)}

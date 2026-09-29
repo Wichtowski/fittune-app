@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useOfflineSyncStore } from "@/features/offline/store";
 import { isServerUnavailable } from "@/lib/connectivity";
 import { formatAgo } from "@/lib/format";
+import { t } from "@/lib/i18n";
 
 export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const unreachable = error instanceof ApiError && (error.isNetworkError || isServerUnavailable(error.status));
@@ -16,11 +17,9 @@ export function QueryError({ error, onRetry }: { error: unknown; onRetry?: () =>
   return (
     <div role="alert" className="flex flex-col items-center gap-3 rounded-2xl border px-6 py-8 text-center">
       <TriangleAlertIcon className="size-6 text-muted-foreground" aria-hidden />
-      <p className="text-sm text-muted-foreground">{error instanceof Error ? error.message : "Something went wrong."}</p>
+      <p className="text-sm text-muted-foreground">{error instanceof Error ? t(error.message) : t("Something went wrong.")}</p>
       {onRetry ? (
-        <Button variant="secondary" size="sm" onClick={onRetry}>
-          Try again
-        </Button>
+        <Button variant="secondary" size="sm" onClick={onRetry}>{t("Try again")}</Button>
       ) : null}
     </div>
   );
@@ -32,13 +31,13 @@ export function NotAvailableOffline() {
   return (
     <div role="status" className="flex flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-8 text-center">
       <CloudOffIcon className="size-6 text-muted-foreground" aria-hidden />
-      <p className="text-sm font-medium">Not available offline yet</p>
+      <p className="text-sm font-medium">{t("Not available offline yet")}</p>
       <p className="max-w-sm text-sm text-muted-foreground">
-        {lastSyncedAt ? `Last synced ${formatAgo(lastSyncedAt)}. ` : ""}It downloads to this device the next time FitTune
-        is online.
+        {lastSyncedAt ? `${t("Last synced {when}.", { when: formatAgo(lastSyncedAt) })} ` : ""}
+        {t("It downloads to this device the next time FitTune is online.")}
       </p>
       <Link to="/profile" className="text-sm font-medium text-primary-strong underline-offset-4 hover:underline">
-        Offline data settings
+        {t("Offline data settings")}
       </Link>
     </div>
   );

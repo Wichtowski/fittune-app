@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Link, Outlet } from "@tanstack/react-router";
 
@@ -28,9 +29,9 @@ function NotFound() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
       <p className="font-display text-7xl font-bold text-primary-strong">404</p>
-      <p className="text-muted-foreground">This page skipped leg day and never showed up.</p>
+      <p className="text-muted-foreground">{t("This page skipped leg day and never showed up.")}</p>
       <Button asChild>
-        <Link to="/">Back to home</Link>
+        <Link to="/">{t("Back to home")}</Link>
       </Button>
     </div>
   );

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ActivityIcon, FlameIcon, PlayIcon, TrophyIcon } from "lucide-react";
@@ -56,7 +57,7 @@ export function Dashboard() {
 
   return (
     <>
-      <PageHeader eyebrow={greeting()} title={me?.display_name ?? me?.username ?? "Today"} />
+      <PageHeader eyebrow={greeting()} title={me?.display_name ?? me?.username ?? t("Today")} />
 
       {/* Phone: the next action comes first. */}
       <div className="mb-6 grid gap-3 md:hidden">
@@ -66,10 +67,9 @@ export function Dashboard() {
           <div className="grid grid-cols-[1fr_auto] gap-3">
             <Button asChild size="lg" className="h-16 text-lg">
               <Link to="/workout">
-                <PlayIcon className="fill-current" aria-hidden /> Start workout
-              </Link>
+                <PlayIcon className="fill-current" aria-hidden />{" "}{t("Start workout")}{" "}</Link>
             </Button>
-            <Button asChild size="lg" variant="endurance" className="h-16" aria-label="Log activity">
+            <Button asChild size="lg" variant="endurance" className="h-16" aria-label={t("Log activity")}>
               <Link to="/activity" search={{ log: true }}>
                 <ActivityIcon aria-hidden />
               </Link>
@@ -78,32 +78,32 @@ export function Dashboard() {
         )}
       </div>
 
-      <section aria-label="This week" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label={t("This week")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {current && previous ? (
           <>
             <StatTile
-              label="Workouts this week"
+              label={t("Workouts this week")}
               value={String(current.workouts)}
               current={current.workouts}
               previous={previous.workouts}
               comparedTo="last week"
             />
             <StatTile
-              label="Volume"
+              label={t("Volume")}
               value={formatVolume(current.volume_kg, preferences.weightUnit)}
               current={current.volume_kg}
               previous={previous.volume_kg}
               comparedTo="last week"
             />
             <StatTile
-              label="Active time"
+              label={t("Active time")}
               value={formatDuration(current.workout_seconds + current.activity_seconds)}
               current={current.workout_seconds + current.activity_seconds}
               previous={previous.workout_seconds + previous.activity_seconds}
               comparedTo="last week"
             />
             <StatTile
-              label="Distance"
+              label={t("Distance")}
               value={formatDistance(current.activity_distance_m, preferences.distanceUnit, 1)}
               current={current.activity_distance_m}
               previous={previous.activity_distance_m}
@@ -121,20 +121,19 @@ export function Dashboard() {
         <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <FlameIcon className="size-4 text-endurance-strong" aria-hidden />
           <span>
-            <span className="font-semibold text-foreground">{overview.data.streak_weeks}-week</span> training streak
-          </span>
+            <span className="font-semibold text-foreground">{t("Training streak (weeks): {count}", { count: overview.data.streak_weeks })}</span></span>
         </p>
       ) : null}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <ChartCard
           className="lg:col-span-2"
-          title="Weekly volume"
-          description={`Last 12 weeks · ${preferences.weightUnit}`}
+          title={t("Weekly volume")}
+          description={`${t("Last 12 weeks")} · ${preferences.weightUnit}`}
           refreshing={timeline.isFetching && !timeline.isPending}
           table={{
-            columns: ["Week of", `Volume (${preferences.weightUnit})`],
-            rows: volumeData.map((d) => [d.tooltipTitle?.replace("Week of ", "") ?? d.label, d.value.toLocaleString()]),
+            columns: [t("Week of"), `${t("Volume")} (${preferences.weightUnit})`],
+            rows: volumeData.map((d) => [d.label, d.value.toLocaleString()]),
           }}
         >
           {timeline.isPending ? (
@@ -145,7 +144,7 @@ export function Dashboard() {
             <ColumnChart
               data={volumeData}
               series="strength"
-              seriesLabel="Volume"
+              seriesLabel={t("Volume")}
               formatValue={(v) => `${v.toLocaleString()} ${preferences.weightUnit}`}
               formatTick={compactTick}
             />
@@ -153,29 +152,29 @@ export function Dashboard() {
         </ChartCard>
 
         <Card className="hidden flex-col gap-3 p-5 lg:flex">
-          <h3 className="font-semibold">Muscle focus</h3>
-          <p className="-mt-2 text-sm text-muted-foreground">Working sets, last 4 weeks</p>
+          <h3 className="font-semibold">{t("Muscle focus")}</h3>
+          <p className="-mt-2 text-sm text-muted-foreground">{t("Working sets, last 4 weeks")}</p>
           {muscles.data && muscles.data.length > 0 ? (
             <BarList
               items={muscles.data.slice(0, 8).map((m) => ({
                 key: m.muscle,
-                label: muscleLabels[m.muscle],
+                label: t(muscleLabels[m.muscle]),
                 value: m.sets,
-                display: `${m.sets} set${m.sets === 1 ? "" : "s"}`,
+                display: t("Sets: {count}", { count: m.sets }),
               }))}
             />
           ) : (
-            <p className="text-sm text-muted-foreground">Log a few workouts to see which muscles you train most.</p>
+            <p className="text-sm text-muted-foreground">{t("Log a few workouts to see which muscles you train most.")}</p>
           )}
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section className="lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold tracking-wide uppercase">Recent</h2>
+            <h2 className="font-display text-xl font-bold tracking-wide uppercase">{t("Recent")}</h2>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/workouts">All workouts</Link>
+              <Link to="/workouts">{t("All workouts")}</Link>
             </Button>
           </div>
           {workouts.isPending || activities.isPending ? (
@@ -188,11 +187,11 @@ export function Dashboard() {
           ) : feed.length === 0 ? (
             <EmptyState
               icon={ActivityIcon}
-              title="Nothing logged yet"
-              description="Start a workout or log a run — it will show up here."
+              title={t("Nothing logged yet")}
+              description={t("Start a workout or log a run - it will show up here.")}
             />
           ) : (
-            <ul className="grid gap-3">
+            <ul className="grid grid-cols-1 gap-3">
               {feed.map((entry) => (
                 <li key={`${entry.type}-${entry.item.id}`}>
                   {entry.type === "workout" ? (
@@ -210,9 +209,9 @@ export function Dashboard() {
 
         <section className="hidden lg:block">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold tracking-wide uppercase">Records</h2>
+            <h2 className="font-display text-xl font-bold tracking-wide uppercase">{t("Records")}</h2>
             <Button asChild variant="ghost" size="sm">
-              <Link to="/progress">Progress</Link>
+              <Link to="/progress">{t("Progress")}</Link>
             </Button>
           </div>
           <Card className="divide-y">
@@ -242,7 +241,7 @@ export function Dashboard() {
                 </Link>
               ))}
             {records.data && records.data.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Personal records appear after your first workout.</p>
+              <p className="p-4 text-sm text-muted-foreground">{t("Personal records appear after your first workout.")}</p>
             ) : null}
           </Card>
         </section>

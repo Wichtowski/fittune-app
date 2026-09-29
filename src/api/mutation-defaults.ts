@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { deleteActivity, putActivity } from "./activities";
+import { fittune } from "./fittune";
 import type { ActivityInput } from "@/schemas/activity";
 
 export const mutationKeys = {
@@ -16,9 +16,9 @@ export type SaveActivityVariables = { id: string; input: ActivityInput };
  */
 export function registerMutationDefaults(queryClient: QueryClient) {
   queryClient.setMutationDefaults(mutationKeys.saveActivity, {
-    mutationFn: ({ id, input }: SaveActivityVariables) => putActivity(id, input),
+    mutationFn: ({ id, input }: SaveActivityVariables) => fittune.putActivity(id, input),
   });
   queryClient.setMutationDefaults(mutationKeys.deleteActivity, {
-    mutationFn: (id: string) => deleteActivity(id),
+    mutationFn: (id: string) => fittune.deleteActivity(id),
   });
 }

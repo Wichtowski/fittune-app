@@ -83,6 +83,40 @@
   --anatomy-muscle: oklch(0.36 0.012 260);
 }
 
+/* Restore FitTune's accent on tiles nested inside FitHealth */
+[data-app="train"] {
+  --primary: oklch(0.87 0.2 126);
+  --primary-foreground: oklch(0.22 0.05 130);
+  --primary-strong: oklch(0.52 0.14 132);
+  --ring: oklch(0.6 0.16 130);
+}
+
+.dark[data-app="train"],
+.dark [data-app="train"] {
+  --primary: oklch(0.9 0.2 126);
+  --primary-foreground: oklch(0.2 0.05 130);
+  --primary-strong: oklch(0.9 0.2 126);
+  --ring: oklch(0.9 0.2 126 / 60%);
+}
+
+/* FitHealth: the same product in teal. Only the primary and ring tokens change, so every button,
+   active nav item and focus ring follows. `[data-app]` sits on <html> inside the shell and on
+   launcher tiles */
+[data-app="health"] {
+  --primary: oklch(0.8 0.12 185);
+  --primary-foreground: oklch(0.22 0.05 195);
+  --primary-strong: oklch(0.5 0.1 195);
+  --ring: oklch(0.6 0.1 190);
+}
+
+.dark[data-app="health"],
+.dark [data-app="health"] {
+  --primary: oklch(0.82 0.12 185);
+  --primary-foreground: oklch(0.2 0.05 195);
+  --primary-strong: oklch(0.82 0.12 185);
+  --ring: oklch(0.82 0.12 185 / 60%);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -160,6 +194,46 @@
   input[type="number"] {
     -moz-appearance: textfield;
   }
+}
+
+.profile-dots::before,
+.profile-dots::after {
+  content: "";
+  position: absolute;
+  inset: -48px;
+  color: var(--primary-strong);
+  opacity: 0.3;
+  background-image:
+    radial-gradient(circle at 8% 16%, currentColor 1.5px, transparent 2px),
+    radial-gradient(circle at 34% 8%, currentColor 1px, transparent 1.5px),
+    radial-gradient(circle at 73% 24%, currentColor 2px, transparent 2.5px),
+    radial-gradient(circle at 92% 54%, currentColor 1px, transparent 1.5px),
+    radial-gradient(circle at 48% 46%, currentColor 1.5px, transparent 2px),
+    radial-gradient(circle at 17% 68%, currentColor 1px, transparent 1.5px),
+    radial-gradient(circle at 62% 83%, currentColor 1.5px, transparent 2px),
+    radial-gradient(circle at 86% 94%, currentColor 1px, transparent 1.5px);
+  background-size: 380px 460px;
+}
+
+.profile-dots::after {
+  opacity: 0.15;
+  background-size: 530px 610px;
+  background-position: 110px 70px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .profile-dots::before {
+    animation: profile-drift 18s ease-in-out infinite alternate;
+  }
+
+  .profile-dots::after {
+    animation: profile-drift 26s ease-in-out -13s infinite alternate-reverse;
+  }
+}
+
+@keyframes profile-drift {
+  from { transform: translate(-12px, 20px); }
+  to { transform: translate(16px, -24px); }
 }
 
 /* Safe-area helpers for notched phones and a future Capacitor shell. */

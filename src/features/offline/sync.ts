@@ -1,12 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { getMe } from "@/api/auth";
-import { getExerciseHistory, getExercises } from "@/api/exercises";
-import { getPlaces } from "@/api/places";
+import { account } from "@/api/account";
+import { fittune } from "@/api/fittune";
 import { queryKeys } from "@/api/query-keys";
-import { getRoutines } from "@/api/routines";
-import { getRecords } from "@/api/stats";
-import { getWorkout, getWorkoutsPage } from "@/api/workouts";
 
 /** Recent workouts whose details, and whose exercises' history, are kept for offline use */
 export const OFFLINE_WORKOUTS = 20;
@@ -28,12 +24,12 @@ export type SyncResult = { failed: number };
  */
 export async function syncForOffline(queryClient: QueryClient, signal?: AbortSignal): Promise<SyncResult> {
   // Core data first and in order: if the first request fails the API is unreachable
-  queryClient.setQueryData(queryKeys.me, await getMe(signal));
+  queryClient.setQueryData(queryKeys.me, await account.getMe(signal));
   const [exercises, routines, places, records] = await Promise.all([
-    getExercises(signal),
-    getRoutines(signal),
-    getPlaces(signal),
-    getRecords(signal),
+    fittune.getExercises(signal),
+    fittune.getRoutines(signal),
+    fittune.getPlaces(signal),
+    fittune.getRecords(signal),
   ]);
   queryClient.setQueryData(queryKeys.exercises.list(), exercises);
   queryClient.setQueryData(queryKeys.routines.list, routines);
@@ -41,8 +37,8 @@ export async function syncForOffline(queryClient: QueryClient, signal?: AbortSig
   queryClient.setQueryData(queryKeys.stats.records, records);
 
   const [completed, inProgress] = await Promise.all([
-    getWorkoutsPage("completed", undefined, signal),
-    getWorkoutsPage("in_progress", undefined, signal),
+    fittune.getWorkoutsPage("completed", undefined, signal),
+    fittune.getWorkoutsPage("in_progress", undefined, signal),
   ]);
   // A fresh first page replaces what was cached; older pages load again when scrolled to
   queryClient.setQueryData(queryKeys.workouts.list("completed"), { pages: [completed], pageParams: [undefined] });
@@ -50,14 +46,14 @@ export async function syncForOffline(queryClient: QueryClient, signal?: AbortSig
 
   const workoutIds = completed.items.slice(0, OFFLINE_WORKOUTS).map((w) => w.id);
   const workouts = await settle(workoutIds, async (id) => {
-    const workout = await getWorkout(id, signal);
+    const workout = await fittune.getWorkout(id, signal);
     queryClient.setQueryData(queryKeys.workouts.detail(id), workout);
     return workout;
   });
 
   const exerciseIds = [...new Set(workouts.ok.flatMap((workout) => workout.exercises.map((e) => e.exercise_id)))];
   const histories = await settle(exerciseIds.slice(0, MAX_EXERCISE_HISTORIES), async (id) => {
-    queryClient.setQueryData(queryKeys.exercises.history(id), await getExerciseHistory(id, signal));
+    queryClient.setQueryData(queryKeys.exercises.history(id), await fittune.getExerciseHistory(id, signal));
   });
 
   return { failed: workouts.failed + histories.failed };

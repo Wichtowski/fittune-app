@@ -15,11 +15,24 @@ Zod · React Hook Form · vite-plugin-pwa (Workbox) · Recharts · Zustand (loca
 
 ## Getting started
 
+Locally the app runs on `http://fittune.local:4734` and talks to the API on `http://api-fittune.local:4733`.
+Fixed, uncommon ports plus named hosts keep FitTune from colliding with other local apps that default to 3000, 5173 or 8080.
+Vite uses `strictPort`, so a taken port fails at startup instead of quietly moving somewhere the API's CORS list does not allow.
+
+Add both names to `/etc/hosts` once (needs `sudo`):
+
+```text
+127.0.0.1  fittune.local api-fittune.local
+```
+
 ```bash
 bun install
-cp .env.example .env.local   # optional; .env.development already points at localhost:4733
-bun run dev                  # http://localhost:5173 (run fittune-api on :4733)
+cp .env.example .env.local   # optional; .env.development already points at api-fittune.local:4733
+bun run dev                  # http://fittune.local:4734 (run fittune-api on :4733)
 ```
+
+The API must allow the app's origin: `FITTUNE_CORS_ORIGINS` in `fittune-api/.env` has to include `http://fittune.local:4734` (its `.env.example` does; update an older `.env` by hand).
+`localhost:4734` still works for the app, but then use `http://localhost:4733` as `VITE_API_BASE_URL` in `.env.local`, because sessions and cached data are stored per origin.
 
 | Command | What it does |
 |---------|--------------|
@@ -40,8 +53,8 @@ First run, with `fittune-api` checked out next to this repo:
 cd ../fittune-api
 cp .env.example .env    # sets FITTUNE_ENV=development and FITTUNE_FIXTURES_DATABASE_URL
 make up && make seed    # Postgres + RustFS, then create, migrate and seed fittune_dev
-make run-fixtures       # API on :4733 against fittune_dev
-cd ../fittune-app && bun run dev
+make run-fixtures       # API on http://api-fittune.local:4733 against fittune_dev
+cd ../fittune-app && bun run dev   # http://fittune.local:4734
 ```
 
 `make fixtures` in this repo runs `make seed` in `../fittune-api` (set `FITTUNE_API_DIR` for another location).
@@ -66,7 +79,7 @@ Rerunning `make seed` leaves the workout alone once the app has saved a newer re
 - `make seed` again refreshes the same records in place (dates move up to today). Account ids stay the same, so a signed-in session and cached data keep working; Profile → Offline data → Sync now refreshes the cache straight away.
 - `make seed-reset` recreates only the fixture accounts; `make reset` recreates the whole fixture database. Both give the accounts new ids, so the old token stops working and the app signs out on its next request. Local workouts still waiting to sync belong to the old id and are dropped when you sign in again.
 - Switch accounts with Profile → Sign out, which also clears the cached data and any local workout. Signing in as a different user on a device that still has another user's local workout discards that workout too.
-- For a completely clean browser, clear the site data for `localhost:5173` (DevTools → Application → Storage). That removes the session, the persisted query cache, the local workout draft and outbox (`fittune.*` keys) and the service worker.
+- For a completely clean browser, clear the site data for `fittune.local:4734` (DevTools → Application → Storage). That removes the session, the persisted query cache, the local workout draft and outbox (`fittune.*` keys) and the service worker.
 
 ## Layout
 
@@ -169,7 +182,11 @@ The Barbell Curl demo opens its original Vimeo page; the video is not copied int
 
 ## Deployment
 
-Deploy the API's workout places migration and `/api/v1/places` endpoints before this client version.
+This client requires the matching `fittune-api` namespace changes from `feat/fithealth-namespaces` for FitHealth shell #27 (epic #26).
+Training endpoints live under `/api/v1/train/*`, including `/api/v1/train/places`, while `/api/v1/health` is reserved for FitHealth.
+Account and social endpoints stay flat under `/api/v1`; the server health check stays at `/health`.
+Merge and deploy together, API first: old flat training endpoints are no longer supported.
+Deploy the API's workout places migration before this client version.
 Existing workouts and cached drafts without a place remain valid.
 
 The static build is served from the shared VPS by the platform-edge Caddy on

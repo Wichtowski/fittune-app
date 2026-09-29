@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -5,7 +6,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { changePassword, deleteAccount } from "@/api/auth";
+import { account } from "@/api/account";
 import { ApiError } from "@/api/client";
 import {
   AlertDialog,
@@ -32,10 +33,10 @@ export function ChangePassword() {
   });
   const mutation = useMutation({
     mutationFn: (values: ChangePasswordForm) =>
-      changePassword({ current_password: values.current_password, new_password: values.new_password }),
+      account.changePassword({ current_password: values.current_password, new_password: values.new_password }),
     onSuccess: () => {
       form.reset();
-      toast.success("Password changed. Other devices were signed out.");
+      toast.success(t("Password changed. Other devices were signed out."));
     },
     onError: (error) => applyServerErrors(error, form.setError),
   });
@@ -51,7 +52,7 @@ export function ChangePassword() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {name === "current_password" ? "Current password" : name === "new_password" ? "New password" : "Confirm new password"}
+                  {name === "current_password" ? t("Current password") : name === "new_password" ? t("New password") : t("Confirm new password")}
                 </FormLabel>
                 <FormControl>
                   <Input type="password" autoComplete={name === "current_password" ? "current-password" : "new-password"} {...field} />
@@ -62,7 +63,7 @@ export function ChangePassword() {
           />
         ))}
         <Button type="submit" variant="secondary" disabled={mutation.isPending} className="justify-self-start">
-          {mutation.isPending ? "Changing…" : "Change password"}
+          {mutation.isPending ? t("Changing…") : t("Change password")}
         </Button>
       </form>
     </Form>
@@ -74,42 +75,38 @@ export function DeleteAccount() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const mutation = useMutation({
-    mutationFn: () => deleteAccount(password),
+    mutationFn: () => account.deleteAccount(password),
     onSuccess: () => {
       clearLocalSession({ discardWorkouts: true });
       void navigate({ to: "/register", replace: true });
-      toast.success("Your account and all its data were deleted.");
+      toast.success(t("Your account and all its data were deleted."));
     },
-    onError: (err) => setError(err instanceof ApiError ? (err.fields.password ?? err.message) : "Something went wrong."),
+    onError: (err) => setError(err instanceof ApiError ? (err.fields.password ?? err.message) : t("Something went wrong.")),
   });
 
   return (
     <AlertDialog onOpenChange={() => setError(null)}>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" className="justify-self-start text-destructive">
-          Delete account
-        </Button>
+        <Button variant="ghost" className="justify-self-start text-destructive">{t("Delete account")}{" "}</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-          <AlertDialogDescription>
-            All workouts, activities, routines and custom exercises are permanently removed. Enter your password to confirm.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t("Delete your account?")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("All workouts, activities, routines and custom exercises are permanently removed. Enter your password to confirm.")}{" "}</AlertDialogDescription>
         </AlertDialogHeader>
         <Input
           type="password"
           autoComplete="current-password"
-          aria-label="Password"
+          aria-label={t("Password")}
           aria-invalid={error !== null}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
           <Button variant="destructive" disabled={!password || mutation.isPending} onClick={() => mutation.mutate()}>
-            {mutation.isPending ? "Deleting…" : "Delete forever"}
+            {mutation.isPending ? t("Deleting…") : t("Delete forever")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

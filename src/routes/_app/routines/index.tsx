@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RoutineList } from "@/features/routines/components/routine-list";
 
 export const Route = createFileRoute("/_app/routines/")({
+  staticData: { app: "train" },
   loader: ({ context }) => void context.queryClient.prefetchQuery(routinesQuery()),
   component: RoutinesPage,
 });
@@ -15,13 +17,12 @@ function RoutinesPage() {
   return (
     <>
       <PageHeader
-        title="Routines"
-        eyebrow="Plan your training"
+        title={t("Routines")}
+        eyebrow={t("Plan your training")}
         actions={
           <Button asChild>
             <Link to="/routines/new">
-              <PlusIcon aria-hidden /> New
-            </Link>
+              <PlusIcon aria-hidden />{" "}{t("Browse plans")}{" "}</Link>
           </Button>
         }
       />

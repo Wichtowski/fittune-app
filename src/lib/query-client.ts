@@ -1,5 +1,5 @@
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { QueryClient } from "@tanstack/react-query";
+import { defaultShouldDehydrateQuery, type Query, QueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "@/api/client";
 import { storage } from "@/lib/storage";
@@ -32,3 +32,14 @@ export const queryPersister = createSyncStoragePersister({
 });
 
 export const PERSIST_MAX_AGE = 7 * DAY;
+
+/**
+ * Kept in memory only:
+ * - friends' progress, so a friend who stops sharing, unfriends or blocks does not stay
+ *   readable from this device's storage
+ * - FitHealth data, FitHealth is online only and must never show a stale diary
+ */
+export function shouldPersistQuery(query: Query) {
+  const scope = query.queryKey[0];
+  return defaultShouldDehydrateQuery(query) && scope !== "friends" && scope !== "health";
+}

@@ -3,6 +3,7 @@ import { type ReactNode, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 export type TableView = { columns: string[]; rows: (string | number)[][] };
 
@@ -32,7 +33,7 @@ export function ChartCard({ title, description, table, refreshing = false, child
             type="button"
             onClick={() => setView(view === "chart" ? "table" : "chart")}
             className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
-            aria-label={view === "chart" ? `Show ${title} as a table` : `Show ${title} as a chart`}
+            aria-label={view === "chart" ? t("Show {title} as a table", { title }) : t("Show {title} as a chart", { title })}
           >
             {view === "chart" ? <TableIcon className="size-4.5" /> : <ChartColumnIcon className="size-4.5" />}
           </button>

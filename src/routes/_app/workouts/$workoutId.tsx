@@ -4,6 +4,7 @@ import { z } from "zod";
 import { WorkoutDetail } from "@/features/workouts/components/workout-detail";
 
 export const Route = createFileRoute("/_app/workouts/$workoutId")({
+  staticData: { app: "train" },
   validateSearch: z.object({ completed: z.boolean().optional() }),
   component: WorkoutDetailPage,
 });
