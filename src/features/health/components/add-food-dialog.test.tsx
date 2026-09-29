@@ -3,6 +3,14 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest";
 
 import { AddFoodDialog } from "./add-food-dialog";
+
+// The camera and decoder have their own tests; here a scan simply reports a barcode
+const scanner = vi.hoisted(() => ({ code: "" }));
+vi.mock("../scanner/barcode-scanner", () => ({
+  BarcodeScanner: ({ onDetected }: { onDetected: (code: string) => void }) => (
+    <button type="button" onClick={() => onDetected(scanner.code)}>Detect barcode</button>
+  ),
+}));
 import { fithealth } from "@/api/fithealth";
 import type { Candidate, Product } from "@/schemas/health";
 
@@ -96,11 +104,9 @@ const candidate: Candidate = {
 };
 
 async function scan(code: string) {
+  scanner.code = code;
   fireEvent.click(screen.getByRole("button", { name: "Scan barcode" }));
-  // jsdom has no camera, so the scanner offers typing the barcode
-  const field = await screen.findByRole("textbox", { name: "Barcode" });
-  fireEvent.change(field, { target: { value: code } });
-  fireEvent.click(screen.getByRole("button", { name: "Look up" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Detect barcode" }));
 }
 
 it("goes straight to the amount for a barcode FitHealth knows", async () => {
@@ -142,17 +148,6 @@ it("opens an empty product form with the barcode for an unknown product", async 
   expect(await screen.findByText("4006381333931")).toBeInTheDocument();
   expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("");
   expect(screen.queryByRole("link", { name: /Open Food Facts/ })).not.toBeInTheDocument();
-});
-
-it("does not look up a mistyped barcode", async () => {
-  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
-  const lookup = vi.spyOn(fithealth, "lookupBarcode");
-  renderDialog();
-
-  await scan("5900259127762");
-
-  expect(await screen.findByText("Check the digits, this is not a valid barcode")).toBeInTheDocument();
-  expect(lookup).not.toHaveBeenCalled();
 });
 
 it("offers Open Food Facts products in search and confirms them before use", async () => {
