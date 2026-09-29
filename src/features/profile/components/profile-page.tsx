@@ -43,7 +43,8 @@ export function ProfilePage() {
   const { preference, setPreference } = useTheme();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="relative isolate mx-auto max-w-3xl">
+      <div aria-hidden className="profile-dots pointer-events-none fixed inset-0 -z-10 overflow-hidden md:left-64" />
       <PageHeader title={t("Profile")} eyebrow={user ? `@${user.username}` : undefined} actions={<SignOutButton />} />
 
       <div className="grid gap-4">
