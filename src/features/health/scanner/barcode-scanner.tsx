@@ -1,10 +1,9 @@
+import { CameraOffIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { normalizeBarcode } from "../barcode";
 import { createDetector } from "./detector";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { t } from "@/lib/i18n";
 
 /** How often a video frame is checked for a barcode */
@@ -15,51 +14,54 @@ const SCAN_INTERVAL_MS = 250;
  */
 const MAX_FAILED_FRAMES = 3;
 
-function ManualEntry({ reason, onDetected, onCancel }: { reason?: string; onDetected: (code: string) => void; onCancel: () => void }) {
-  const [text, setText] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  return (
-    <form
-      className="grid gap-3"
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        const code = normalizeBarcode(text);
-        if (code) onDetected(code);
-        else setError(t("Check the digits, this is not a valid barcode"));
-      }}
-    >
-      {reason ? <p className="text-sm text-muted-foreground">{reason}</p> : null}
-      <div className="grid gap-2">
-        <Label htmlFor="manual-barcode">{t("Barcode")}</Label>
-        <Input id="manual-barcode" inputMode="numeric" autoComplete="off" value={text} maxLength={14} aria-invalid={error !== null}
-          onChange={(event) => { setText(event.target.value.replace(/\D/g, "")); setError(null); }} autoFocus />
-        {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>{t("Back")}</Button>
-        <Button type="submit" disabled={text.length < 8}>{t("Look up")}</Button>
-      </div>
-    </form>
-  );
-}
+/** Why the camera is not scanning, and whether asking again can help */
+type Problem = { message: string; hint?: string; retry?: "allow" | "again" };
 
 /**
- * Reads a product barcode with the back camera; without a camera, or when access is refused,
- * it asks for the digits instead so adding food never dead-ends
+ * Camera errors in words a user can act on. A dismissed prompt can be shown again; a site the
+ * user blocked cannot, browsers only re-ask once it is allowed in the site settings
  */
+async function cameraProblem(error: unknown): Promise<Problem> {
+  const name = error instanceof DOMException ? error.name : "";
+  if (name === "NotFoundError" || name === "OverconstrainedError") return { message: t("No camera found on this device.") };
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    let state: PermissionState | undefined;
+    try {
+      state = (await navigator.permissions?.query({ name: "camera" as PermissionName }))?.state;
+    } catch {
+      // Safari and older browsers cannot query the camera permission
+    }
+    if (state === "denied") {
+      return {
+        message: t("Camera access is blocked for this site."),
+        hint: t("Allow the camera for FitTune in your browser's site settings, then try again."),
+        retry: "again",
+      };
+    }
+    return { message: t("FitTune needs the camera to scan barcodes."), retry: "allow" };
+  }
+  if (name === "NotReadableError") return { message: t("Another app is using the camera. Close it and try again."), retry: "again" };
+  return { message: t("The camera could not start."), retry: "again" };
+}
+
+/** Reads a product barcode with the back camera, stopping the camera as soon as it has one */
 export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: string) => void; onCancel: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
-  const [manual, setManual] = useState<{ reason?: string } | null>(
+  // Browsers only offer the camera on secure (https or localhost) pages
+  const [problem, setProblem] = useState<Problem | null>(() =>
     typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia
-      ? { reason: t("This device does not give the app a camera. Type the barcode instead.") }
+      ? { message: t("The camera needs a secure (https) connection, or this browser has no camera access.") }
       : null,
   );
+  // Each retry starts the camera again, and with it the browser's permission prompt
+  const [attempt, setAttempt] = useState(0);
   const detected = useRef(onDetected);
-  useEffect(() => { detected.current = onDetected; }, [onDetected]);
+  useEffect(() => {
+    detected.current = onDetected;
+  }, [onDetected]);
 
   useEffect(() => {
-    if (manual) return;
+    if (problem) return;
     let stream: MediaStream | null = null;
     let timer: number | undefined;
     let stopped = false;
@@ -69,27 +71,26 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
       stream?.getTracks().forEach((track) => track.stop());
       stream = null;
     };
-
-    // The camera stays off and the user types the barcode; the camera must never be left running
-    const fallBack = (reason: string) => {
+    // The camera must never be left running behind a message
+    const fail = (next: Problem) => {
       if (stopped) return;
       stop();
-      setManual({ reason });
+      setProblem(next);
     };
-    const scannerFailed = () => fallBack(t("The barcode scanner failed. Type the barcode instead."));
+    const scannerFailed = () => fail({ message: t("The barcode scanner could not start."), retry: "again" });
 
     void (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        const granted = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        stream = granted;
         if (stopped || !video.current) {
-          stop();
+          granted.getTracks().forEach((track) => track.stop());
           return;
         }
-        video.current.srcObject = stream;
+        video.current.srcObject = granted;
         await video.current.play();
       } catch (error) {
-        const denied = error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "SecurityError");
-        fallBack(denied ? t("Camera access was refused. Type the barcode instead.") : t("The camera could not start. Type the barcode instead."));
+        if (!stopped) fail(await cameraProblem(error));
         return;
       }
 
@@ -126,9 +127,33 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
     })();
 
     return stop;
-  }, [manual]);
+  }, [problem, attempt]);
 
-  if (manual) return <ManualEntry reason={manual.reason} onDetected={onDetected} onCancel={onCancel} />;
+  if (problem) {
+    return (
+      <div className="grid gap-4">
+        <div role="alert" className="flex flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-8 text-center">
+          <CameraOffIcon className="size-8 text-muted-foreground" aria-hidden />
+          <p className="font-medium">{problem.message}</p>
+          {problem.hint ? <p className="max-w-sm text-sm text-muted-foreground">{problem.hint}</p> : null}
+        </div>
+        <div className={problem.retry ? "grid grid-cols-2 gap-2" : "grid"}>
+          <Button type="button" variant="secondary" onClick={onCancel}>{t("Back")}</Button>
+          {problem.retry ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setProblem(null);
+                setAttempt((n) => n + 1);
+              }}
+            >
+              {problem.retry === "allow" ? t("Allow camera") : t("Try again")}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-3">
@@ -137,10 +162,7 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
         <div aria-hidden className="pointer-events-none absolute inset-x-8 top-1/2 h-24 -translate-y-1/2 rounded-xl border-2 border-primary" />
       </div>
       <p className="text-center text-sm text-muted-foreground">{t("Point the camera at the barcode on the pack")}</p>
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>{t("Back")}</Button>
-        <Button type="button" variant="secondary" onClick={() => setManual({})}>{t("Type it instead")}</Button>
-      </div>
+      <Button type="button" variant="secondary" onClick={onCancel}>{t("Back")}</Button>
     </div>
   );
 }
