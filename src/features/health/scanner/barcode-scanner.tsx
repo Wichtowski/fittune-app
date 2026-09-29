@@ -9,6 +9,11 @@ import { t } from "@/lib/i18n";
 
 /** How often a video frame is checked for a barcode */
 const SCAN_INTERVAL_MS = 250;
+/**
+ * A working decoder answers "nothing found" for unreadable frames rather than throwing, so this
+ * many errors in a row means it is broken (for example its WASM did not load)
+ */
+const MAX_FAILED_FRAMES = 3;
 
 function ManualEntry({ reason, onDetected, onCancel }: { reason?: string; onDetected: (code: string) => void; onCancel: () => void }) {
   const [text, setText] = useState("");
@@ -65,6 +70,14 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
       stream = null;
     };
 
+    // The camera stays off and the user types the barcode; the camera must never be left running
+    const fallBack = (reason: string) => {
+      if (stopped) return;
+      stop();
+      setManual({ reason });
+    };
+    const scannerFailed = () => fallBack(t("The barcode scanner failed. Type the barcode instead."));
+
     void (async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
@@ -74,29 +87,42 @@ export function BarcodeScanner({ onDetected, onCancel }: { onDetected: (code: st
         }
         video.current.srcObject = stream;
         await video.current.play();
-        const detector = await createDetector();
-        const tick = async () => {
-          if (stopped || !video.current) return;
-          try {
-            const found = await detector.detect(video.current);
-            if (stopped) return;
-            const code = found.map((b) => normalizeBarcode(b.rawValue)).find((c) => c !== null);
-            if (code) {
-              stop();
-              detected.current(code);
-              return;
-            }
-          } catch {
-            // A frame that could not be read; try the next one
-          }
-          if (!stopped) timer = window.setTimeout(() => void tick(), SCAN_INTERVAL_MS);
-        };
-        void tick();
       } catch (error) {
-        if (stopped) return;
         const denied = error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "SecurityError");
-        setManual({ reason: denied ? t("Camera access was refused. Type the barcode instead.") : t("The camera could not start. Type the barcode instead.") });
+        fallBack(denied ? t("Camera access was refused. Type the barcode instead.") : t("The camera could not start. Type the barcode instead."));
+        return;
       }
+
+      let detector: Awaited<ReturnType<typeof createDetector>>;
+      try {
+        detector = await createDetector();
+      } catch {
+        scannerFailed();
+        return;
+      }
+      let failedFrames = 0;
+      const tick = async () => {
+        if (stopped || !video.current) return;
+        try {
+          const found = await detector.detect(video.current);
+          if (stopped) return;
+          failedFrames = 0;
+          const code = found.map((b) => normalizeBarcode(b.rawValue)).find((c) => c !== null);
+          if (code) {
+            stop();
+            detected.current(code);
+            return;
+          }
+        } catch {
+          failedFrames += 1;
+          if (failedFrames >= MAX_FAILED_FRAMES) {
+            scannerFailed();
+            return;
+          }
+        }
+        if (!stopped) timer = window.setTimeout(() => void tick(), SCAN_INTERVAL_MS);
+      };
+      void tick();
     })();
 
     return stop;

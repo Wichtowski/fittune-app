@@ -67,3 +67,14 @@ it("offers manual entry when the decoder fails instead of retrying forever", asy
   expect(screen.getByText("The barcode scanner failed. Type the barcode instead.")).toBeInTheDocument();
   expect(stop).toHaveBeenCalledTimes(1);
 });
+
+it("turns the camera off and offers manual entry when the decoder cannot start", async () => {
+  vi.mocked(createDetector).mockRejectedValue(new Error("WASM failed to load"));
+  vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+  const stop = vi.fn();
+  vi.stubGlobal("navigator", { mediaDevices: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop }] }) } });
+  render(<BarcodeScanner onDetected={vi.fn()} onCancel={vi.fn()} />);
+
+  expect(await screen.findByText("The barcode scanner failed. Type the barcode instead.")).toBeInTheDocument();
+  expect(stop).toHaveBeenCalledTimes(1);
+});

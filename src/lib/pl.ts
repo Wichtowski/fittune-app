@@ -836,6 +836,7 @@ export const pl: Record<string, string> = {
   "This device does not give the app a camera. Type the barcode instead.": "To urządzenie nie udostępnia aplikacji aparatu. Wpisz kod kreskowy.",
   "Camera access was refused. Type the barcode instead.": "Odmówiono dostępu do aparatu. Wpisz kod kreskowy.",
   "The camera could not start. Type the barcode instead.": "Nie udało się uruchomić aparatu. Wpisz kod kreskowy.",
+  "The barcode scanner failed. Type the barcode instead.": "Skaner kodów nie działa. Wpisz kod kreskowy.",
   "Camera": "Aparat",
   "Point the camera at the barcode on the pack": "Skieruj aparat na kod kreskowy na opakowaniu",
   "Type it instead": "Wpisz ręcznie",
