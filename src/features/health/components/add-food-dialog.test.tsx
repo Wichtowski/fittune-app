@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 
 import { AddFoodDialog } from "./add-food-dialog";
 import { fithealth } from "@/api/fithealth";
-import type { Product } from "@/schemas/health";
+import type { Candidate, Product } from "@/schemas/health";
 
 const oats: Product = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -31,7 +31,7 @@ function renderDialog(onOpenChange = vi.fn()) {
 }
 
 it("searches, picks a product and logs the chosen amount", async () => {
-  const search = vi.spyOn(fithealth, "searchProducts").mockResolvedValue([oats]);
+  const search = vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [oats], off: [] });
   const put = vi.spyOn(fithealth, "putEntry").mockImplementation((id, input) =>
     Promise.resolve({ id, ...input, product_id: oats.id, product_name: oats.name, product_brand: oats.brand, per_100g: oats.per_100g }),
   );
@@ -56,7 +56,7 @@ it("searches, picks a product and logs the chosen amount", async () => {
 });
 
 it("does not save an empty amount", async () => {
-  vi.spyOn(fithealth, "searchProducts").mockResolvedValue([oats]);
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [oats], off: [] });
   const put = vi.spyOn(fithealth, "putEntry");
   renderDialog();
 
@@ -67,7 +67,7 @@ it("does not save an empty amount", async () => {
 });
 
 it("creates a missing product and continues to the amount", async () => {
-  vi.spyOn(fithealth, "searchProducts").mockResolvedValue([]);
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
   const create = vi.spyOn(fithealth, "createProduct").mockResolvedValue({ ...oats, serving_g: null, serving_name: null });
   renderDialog();
 
@@ -83,4 +83,85 @@ it("creates a missing product and continues to the amount", async () => {
   await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
   expect(create.mock.calls[0]?.[0]).toMatchObject({ name: "Oat flakes", per_100g: { energy_kcal: 372, protein_g: 13, fat_g: 7, carbs_g: 60, sugars_g: null } });
   expect(await screen.findByRole("spinbutton", { name: "Amount (g)" })).toHaveValue(100);
+});
+
+const candidate: Candidate = {
+  barcode: "5900259127761",
+  name: "Płatki owsiane górskie",
+  brand: "Melvit",
+  main_category: "en:oat-flakes",
+  per_100g: oats.per_100g,
+  serving_g: 40,
+  serving_name: "40 g",
+};
+
+async function scan(code: string) {
+  fireEvent.click(screen.getByRole("button", { name: "Scan barcode" }));
+  // jsdom has no camera, so the scanner offers typing the barcode
+  const field = await screen.findByRole("textbox", { name: "Barcode" });
+  fireEvent.change(field, { target: { value: code } });
+  fireEvent.click(screen.getByRole("button", { name: "Look up" }));
+}
+
+it("goes straight to the amount for a barcode FitHealth knows", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
+  const lookup = vi.spyOn(fithealth, "lookupBarcode").mockResolvedValue({ status: "found", product: oats });
+  renderDialog();
+
+  await scan("5900259127761");
+
+  expect(await screen.findByRole("spinbutton", { name: "Amount (g)" })).toHaveValue(40);
+  expect(lookup).toHaveBeenCalledWith("5900259127761");
+});
+
+it("prefills an Open Food Facts product and saves it as confirmed", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
+  vi.spyOn(fithealth, "lookupBarcode").mockResolvedValue({ status: "off", candidate });
+  const create = vi.spyOn(fithealth, "createProduct").mockResolvedValue({ ...oats, source: "off", barcode: candidate.barcode });
+  renderDialog();
+
+  await scan("5900259127761");
+
+  expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("Płatki owsiane górskie");
+  expect(screen.getByRole("spinbutton", { name: "Energy (kcal)" })).toHaveValue(372);
+  expect(screen.getByRole("link", { name: /Open Food Facts/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Save product" }));
+
+  await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+  expect(create.mock.calls[0]?.[0]).toMatchObject({ name: "Płatki owsiane górskie", barcode: "5900259127761", source: "off", serving_g: 40 });
+  expect(await screen.findByRole("spinbutton", { name: "Amount (g)" })).toBeInTheDocument();
+});
+
+it("opens an empty product form with the barcode for an unknown product", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
+  vi.spyOn(fithealth, "lookupBarcode").mockResolvedValue({ status: "not_found" });
+  renderDialog();
+
+  await scan("4006381333931");
+
+  expect(await screen.findByText("4006381333931")).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("");
+  expect(screen.queryByRole("link", { name: /Open Food Facts/ })).not.toBeInTheDocument();
+});
+
+it("does not look up a mistyped barcode", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
+  const lookup = vi.spyOn(fithealth, "lookupBarcode");
+  renderDialog();
+
+  await scan("5900259127762");
+
+  expect(await screen.findByText("Check the digits, this is not a valid barcode")).toBeInTheDocument();
+  expect(lookup).not.toHaveBeenCalled();
+});
+
+it("offers Open Food Facts products in search and confirms them before use", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [candidate] });
+  renderDialog();
+
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search products" }), { target: { value: "platki" } });
+  fireEvent.click(await screen.findByRole("button", { name: /Płatki owsiane górskie/ }));
+
+  expect(await screen.findByRole("textbox", { name: "Name" })).toHaveValue("Płatki owsiane górskie");
+  expect(screen.getByRole("link", { name: /Open Food Facts/ })).toBeInTheDocument();
 });

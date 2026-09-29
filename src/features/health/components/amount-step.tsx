@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { OffAttribution } from "./off-attribution";
 import { formatAmount, scale } from "../nutrition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { t } from "@/lib/i18n";
 import type { Nutrients } from "@/schemas/health";
 
-type Food = { name: string; brand: string | null; per_100g: Nutrients; serving_g?: number | null; serving_name?: string | null };
+type Food = { name: string; brand: string | null; per_100g: Nutrients; serving_g?: number | null; serving_name?: string | null; source?: string };
 
 /** Chooses how much was eaten, with what that amount contains updating as the user types */
 export function AmountStep({ food, initialGrams, submitLabel, pending, onSubmit, onBack }: {
@@ -36,6 +37,7 @@ export function AmountStep({ food, initialGrams, submitLabel, pending, onSubmit,
       <div>
         <p className="font-semibold">{food.name}</p>
         {food.brand ? <p className="text-sm text-muted-foreground">{food.brand}</p> : null}
+        {food.source === "off" ? <OffAttribution className="mt-1" /> : null}
       </div>
       <div className="grid gap-2">
         <Label htmlFor="amount-grams">{t("Amount (g)")}</Label>

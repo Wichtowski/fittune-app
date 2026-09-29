@@ -60,6 +60,8 @@ export const productInputSchema = z
     }),
     serving_g: z.number().min(0.1).max(2000).nullable(),
     serving_name: z.string().trim().max(40).nullable(),
+    barcode: z.string().nullable(),
+    source: z.enum(["manual", "off"]),
   })
   .superRefine((value, ctx) => {
     const n = value.per_100g;
@@ -74,6 +76,28 @@ export const productInputSchema = z
     }
   });
 export type ProductInput = z.infer<typeof productInputSchema>;
+
+/** An Open Food Facts listing that becomes a FitHealth product once someone confirms it */
+export const candidateSchema = z.object({
+  barcode: z.string(),
+  name: z.string(),
+  brand: z.string().nullable(),
+  main_category: z.string().nullable(),
+  per_100g: nutrientsSchema.nullable(),
+  serving_g: z.number().nullable(),
+  serving_name: z.string().nullable(),
+});
+export type Candidate = z.infer<typeof candidateSchema>;
+
+export const lookupSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("found"), product: productSchema }),
+  z.object({ status: z.literal("off"), candidate: candidateSchema }),
+  z.object({ status: z.literal("not_found") }),
+]);
+export type Lookup = z.infer<typeof lookupSchema>;
+
+export const searchResultsSchema = z.object({ products: z.array(productSchema), off: z.array(candidateSchema) });
+export type SearchResults = z.infer<typeof searchResultsSchema>;
 
 export const mealSchema = z.object({ id: z.guid(), name: z.string(), position: z.number() });
 export type Meal = z.infer<typeof mealSchema>;
