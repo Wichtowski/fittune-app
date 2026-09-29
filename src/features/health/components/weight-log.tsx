@@ -7,9 +7,11 @@ import { ApiError } from "@/api/client";
 import { fithealth } from "@/api/fithealth";
 import { weightsQuery } from "@/api/health";
 import { queryKeys } from "@/api/query-keys";
+import { QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toDateString } from "@/lib/dates";
 import { formatShortDate } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -68,8 +70,10 @@ export function WeightLog() {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : weights.data ? (
         <p className="text-sm text-muted-foreground">{t("No weight logged yet. Targets need one.")}</p>
+      ) : (
+        <QueryFallback query={weights}><Skeleton className="h-24" /></QueryFallback>
       )}
     </div>
   );

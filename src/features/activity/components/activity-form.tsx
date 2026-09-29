@@ -118,8 +118,8 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
                 name={name}
                 render={({ field }) => (
                   <FormItem>
-                    <FormControl>
-                      <div className="relative">
+                    <div className="relative">
+                      <FormControl>
                         <Input
                           inputMode="numeric"
                           aria-label={name}
@@ -127,19 +127,17 @@ export function ActivityForm({ activity, onDone }: ActivityFormProps) {
                           {...field}
                           value={String(field.value ?? "")}
                         />
-                        <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
+                      </FormControl>
+                      <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
                           {name.slice(0, 1)}
-                        </span>
-                      </div>
-                    </FormControl>
+                      </span>
+                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             ))}
           </div>
-          {form.formState.errors.minutes ? (
-            <p className="text-sm text-destructive">{form.formState.errors.minutes.message}</p>
-          ) : null}
         </fieldset>
 
         <div className="grid grid-cols-2 gap-3">

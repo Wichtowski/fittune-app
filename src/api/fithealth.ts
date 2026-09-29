@@ -5,11 +5,13 @@ import {
   daySchema,
   type EntryInput,
   entrySchema,
+  lookupSchema,
   mealSchema,
   type ProductInput,
   productSchema,
   type ProfileInput,
   profileSchema,
+  searchResultsSchema,
   weightSchema,
 } from "@/schemas/health";
 
@@ -21,7 +23,10 @@ class FitHealthClient extends ApiClient {
 
   // Products, shared by everyone
   searchProducts = (q: string, signal?: AbortSignal) =>
-    this.request("/products", { schema: z.array(productSchema), query: { q, limit: 20 }, signal });
+    this.request("/products", { schema: searchResultsSchema, query: { q, limit: 20 }, signal });
+  /** `code` must already be a valid barcode, see `normalizeBarcode` */
+  lookupBarcode = (code: string, signal?: AbortSignal) =>
+    this.request(`/products/barcode/${code}`, { schema: lookupSchema, signal });
   createProduct = (input: ProductInput) =>
     this.request("/products", { method: "POST", body: input, schema: productSchema });
   updateProduct = (id: string, input: ProductInput) =>

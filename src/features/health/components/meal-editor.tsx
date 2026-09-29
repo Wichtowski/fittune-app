@@ -7,8 +7,10 @@ import { ApiError } from "@/api/client";
 import { fithealth } from "@/api/fithealth";
 import { mealsQuery } from "@/api/health";
 import { queryKeys } from "@/api/query-keys";
+import { QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
 import type { Meal } from "@/schemas/health";
 
@@ -76,6 +78,8 @@ export function MealEditor() {
     ids.splice(index + delta, 0, moved);
     reorder.mutate(ids);
   };
+
+  if (!meals.data) return <QueryFallback query={meals}><Skeleton className="h-32" /></QueryFallback>;
 
   return (
     <div className="grid gap-3">

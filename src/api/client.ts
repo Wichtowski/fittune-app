@@ -27,7 +27,7 @@ export abstract class ApiClient {
     return authToken();
   }
 
-  protected unauthorized() {
-    reportUnauthorized();
+  protected unauthorized(token: string) {
+    reportUnauthorized(token);
   }
 }

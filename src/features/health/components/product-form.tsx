@@ -8,23 +8,39 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { applyServerErrors } from "@/lib/form-errors";
 import { t } from "@/lib/i18n";
-import { type Product, type ProductInput, productInputSchema } from "@/schemas/health";
+import { OffAttribution } from "./off-attribution";
+import { type Nutrients, type Product, type ProductInput, productInputSchema } from "@/schemas/health";
 
-const empty = (name: string): ProductInput => ({
-  name,
-  brand: null,
-  per_100g: {
-    energy_kcal: Number.NaN,
-    protein_g: Number.NaN,
-    fat_g: Number.NaN,
-    carbs_g: Number.NaN,
-    saturated_fat_g: null,
-    sugars_g: null,
-    fiber_g: null,
-    salt_g: null,
-  },
-  serving_g: null,
-  serving_name: null,
+/** What the form starts from: typed search text, a scanned barcode, or an Open Food Facts listing */
+export type ProductDraft = {
+  name: string;
+  brand?: string | null;
+  per_100g?: Nutrients | null;
+  serving_g?: number | null;
+  serving_name?: string | null;
+  barcode?: string | null;
+  source?: ProductInput["source"];
+};
+
+const blankLabel: ProductInput["per_100g"] = {
+  energy_kcal: Number.NaN,
+  protein_g: Number.NaN,
+  fat_g: Number.NaN,
+  carbs_g: Number.NaN,
+  saturated_fat_g: null,
+  sugars_g: null,
+  fiber_g: null,
+  salt_g: null,
+};
+
+const fromDraft = (draft: ProductDraft): ProductInput => ({
+  name: draft.name,
+  brand: draft.brand ?? null,
+  per_100g: draft.per_100g ?? blankLabel,
+  serving_g: draft.serving_g ?? null,
+  serving_name: draft.serving_name ?? null,
+  barcode: draft.barcode ?? null,
+  source: draft.source ?? "manual",
 });
 
 /** Blank inputs become `null`, so optional values stay unset and required ones fail validation */
@@ -60,17 +76,22 @@ function NumberField({ control, name, label, step = "0.1" }: { control: Control<
 }
 
 /** New products go into the shared database, so the label values are checked like the API does */
-export function ProductForm({ initialName, onSaved, onCancel }: { initialName: string; onSaved: (product: Product) => void; onCancel: () => void }) {
-  const form = useForm<ProductInput>({ resolver: zodResolver(productInputSchema), defaultValues: empty(initialName) });
+export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDraft; onSaved: (product: Product) => void; onCancel: () => void }) {
+  const form = useForm<ProductInput>({ resolver: zodResolver(productInputSchema), defaultValues: fromDraft(initial) });
   const mutation = useMutation({
     mutationFn: fithealth.createProduct,
-    onSuccess: onSaved,
     onError: (error) => applyServerErrors(error, form.setError),
   });
 
   return (
     <Form {...form}>
-      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values))} noValidate>
+      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values, { onSuccess: onSaved }))} noValidate>
+        {initial.barcode ? (
+          <p className="text-sm text-muted-foreground">{t("Barcode")}: <span className="font-medium text-foreground tabular">{initial.barcode}</span></p>
+        ) : null}
+        {initial.source === "off" ? (
+          <p className="rounded-xl bg-muted p-3 text-sm">{t("Check these values against the pack, then save. Everyone will use this product.")}</p>
+        ) : null}
         <FormField control={form.control} name="name" render={({ field }) => (
           <FormItem><FormLabel>{t("Name")}</FormLabel><FormControl><Input {...field} maxLength={120} /></FormControl><FormMessage /></FormItem>
         )} />
@@ -104,7 +125,7 @@ export function ProductForm({ initialName, onSaved, onCancel }: { initialName: s
             </FormItem>
           )} />
         </div>
-        <p className="text-xs text-muted-foreground">{t("Products are shared with everyone using FitHealth.")}</p>
+        {initial.source === "off" ? <OffAttribution /> : <p className="text-xs text-muted-foreground">{t("Products are shared with everyone using FitHealth.")}</p>}
         <div className="grid grid-cols-2 gap-2">
           <Button type="button" variant="secondary" onClick={onCancel}>{t("Back")}</Button>
           <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? t("Saving…") : t("Save product")}</Button>

@@ -15,69 +15,68 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { t } from "@/lib/i18n";
 import type { Entry } from "@/schemas/health";
 
-/** Change how much of a logged food was eaten, move it to another meal, or remove it */
-export function EntryDialog({ entry, onOpenChange }: { entry: Entry | null; onOpenChange: (open: boolean) => void }) {
+function EntryEditor({ entry, onDone }: { entry: Entry; onDone: () => void }) {
   const queryClient = useQueryClient();
-  const meals = useQuery({ ...mealsQuery(), enabled: entry !== null });
-  const [mealId, setMealId] = useState<string | null>(null);
-  const done = () => {
-    if (entry) void queryClient.invalidateQueries({ queryKey: queryKeys.health.day(entry.date) });
-    setMealId(null);
-    onOpenChange(false);
-  };
+  const meals = useQuery(mealsQuery());
+  const [mealId, setMealId] = useState(entry.meal_id);
+  const refresh = () => void queryClient.invalidateQueries({ queryKey: queryKeys.health.day(entry.date) });
   const failed = (error: Error) => toast.error(error instanceof ApiError ? error.message : t("Could not save. Try again."));
 
   const save = useMutation({
-    mutationFn: ({ entry, grams, mealId }: { entry: Entry; grams: number; mealId: string }) =>
+    mutationFn: (grams: number) =>
       fithealth.putEntry(entry.id, { date: entry.date, meal_id: mealId, product_id: entry.product_id ?? "", grams }),
-    onSuccess: done,
+    onSuccess: refresh,
     onError: failed,
   });
   const remove = useMutation({
-    mutationFn: (entry: Entry) => fithealth.deleteEntry(entry.id),
+    mutationFn: () => fithealth.deleteEntry(entry.id),
     onSuccess: () => {
       toast.success(t("Removed"));
-      done();
+      refresh();
     },
     onError: failed,
   });
-
-  const currentMeal = mealId ?? entry?.meal_id ?? "";
+  const pending = save.isPending || remove.isPending;
   // A meal deleted since keeps its entries, so it may be missing from the active list
   const options = meals.data ?? [];
 
   return (
-    <ResponsiveDialog open={entry !== null} onOpenChange={(open) => (open ? onOpenChange(true) : done())} title={t("Edit entry")}>
-      {entry ? (
-        <div className="grid gap-4">
-          {options.length > 0 && entry.product_id ? (
-            <div className="grid gap-2">
-              <Label htmlFor="entry-meal">{t("Meal")}</Label>
-              <Select value={currentMeal} onValueChange={setMealId}>
-                <SelectTrigger id="entry-meal"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {options.some((m) => m.id === currentMeal) ? null : <SelectItem value={currentMeal}>{t("Deleted meal")}</SelectItem>}
-                  {options.map((meal) => <SelectItem key={meal.id} value={meal.id}>{t(meal.name)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-          {entry.product_id ? (
-            <AmountStep
-              food={{ name: entry.product_name, brand: entry.product_brand, per_100g: entry.per_100g }}
-              initialGrams={entry.grams}
-              submitLabel={t("Save")}
-              pending={save.isPending}
-              onSubmit={(grams) => save.mutate({ entry, grams, mealId: currentMeal })}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("This product no longer exists, so the entry can only be removed.")}</p>
-          )}
-          <Button variant="ghost" className="text-destructive" disabled={remove.isPending} onClick={() => remove.mutate(entry)}>
-            <Trash2Icon aria-hidden /> {t("Remove from diary")}
-          </Button>
+    <div className="grid gap-4">
+      {options.length > 0 && entry.product_id ? (
+        <div className="grid gap-2">
+          <Label htmlFor="entry-meal">{t("Meal")}</Label>
+          <Select value={mealId} onValueChange={setMealId} disabled={pending}>
+            <SelectTrigger id="entry-meal"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {options.some((m) => m.id === mealId) ? null : <SelectItem value={mealId}>{t("Deleted meal")}</SelectItem>}
+              {options.map((meal) => <SelectItem key={meal.id} value={meal.id}>{t(meal.name)}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       ) : null}
+      {entry.product_id ? (
+        <AmountStep
+          food={{ name: entry.product_name, brand: entry.product_brand, per_100g: entry.per_100g }}
+          initialGrams={entry.grams}
+          submitLabel={t("Save")}
+          pending={pending}
+          onSubmit={(grams) => save.mutate(grams, { onSuccess: onDone })}
+        />
+      ) : (
+        <p className="text-sm text-muted-foreground">{t("This product no longer exists, so the entry can only be removed.")}</p>
+      )}
+      <Button variant="ghost" className="text-destructive" disabled={pending} onClick={() => remove.mutate(undefined, { onSuccess: onDone })}>
+        <Trash2Icon aria-hidden /> {t("Remove from diary")}
+      </Button>
+    </div>
+  );
+}
+
+/** Change how much of a logged food was eaten, move it to another meal, or remove it */
+export function EntryDialog({ entry, onOpenChange }: { entry: Entry | null; onOpenChange: (open: boolean) => void }) {
+  return (
+    <ResponsiveDialog open={entry !== null} onOpenChange={onOpenChange} title={t("Edit entry")}>
+      {entry ? <EntryEditor key={entry.id} entry={entry} onDone={() => onOpenChange(false)} /> : null}
     </ResponsiveDialog>
   );
 }

@@ -37,6 +37,7 @@ export function useWorkoutSync() {
   const queryClient = useQueryClient();
   const online = useOnlineStatus();
   const userId = useSession((state) => state.userId);
+  const token = useSession((state) => state.token);
   const ownerId = useWorkoutStore((state) => state.ownerId);
   const nextKey = useWorkoutStore(selectNextKey);
   const [attempt, setAttempt] = useState(0);
@@ -52,17 +53,19 @@ export function useWorkoutSync() {
 
   useEffect(() => {
     // Never upload one user's local workouts with another user's session.
-    if (!nextKey || !online || inFlight.current || !userId || ownerId !== userId) return;
+    if (!nextKey || !online || inFlight.current || !token || !userId || ownerId !== userId) return;
+    const sessionIsCurrent = () => useSession.getState().token === token && useWorkoutStore.getState().ownerId === userId;
     const [id] = nextKey.split(":");
     const delay = Math.max(DEBOUNCE_MS, retryAt.current - Date.now());
 
     const timer = window.setTimeout(async () => {
       const workout = id ? findWorkout(id) : undefined;
-      if (!workout || !needsSync(workout)) return;
+      if (!workout || !needsSync(workout) || !sessionIsCurrent()) return;
       const store = useWorkoutStore.getState();
       inFlight.current = true;
       try {
         const saved = await mutateAsync(workout);
+        if (!sessionIsCurrent()) return;
         retryAt.current = 0;
         failures.current = 0;
         store.markSynced(workout.id, workout.revision);
@@ -74,11 +77,13 @@ export function useWorkoutSync() {
           void queryClient.invalidateQueries({ queryKey: ["exercises", "history"] });
         }
       } catch (error) {
+        if (!sessionIsCurrent()) return;
         if (!(error instanceof ApiError)) {
           store.markFailed(workout.id, workout.revision, "Unexpected error while saving");
         } else if (error.status === 409) {
           // Another device saved a newer revision; keep this device's version on top.
           const server = await fittune.getWorkout(workout.id).catch(() => null);
+          if (!sessionIsCurrent()) return;
           if (server) store.rebase(workout.id, server.revision);
           else store.markFailed(workout.id, workout.revision, error.message);
         } else if (error.isRetryable) {
@@ -94,7 +99,7 @@ export function useWorkoutSync() {
     }, delay);
 
     return () => window.clearTimeout(timer);
-  }, [nextKey, online, attempt, userId, ownerId, mutateAsync, queryClient]);
+  }, [nextKey, online, attempt, userId, token, ownerId, mutateAsync, queryClient]);
 }
 
 export type SyncStatus = "synced" | "saving" | "pending" | "offline" | "error";

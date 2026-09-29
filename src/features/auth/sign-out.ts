@@ -27,11 +27,14 @@ export function clearLocalSession({ discardWorkouts = false } = {}) {
 
 /** Explicit sign-out: revokes the token and removes all of this user's local data. */
 export async function signOut() {
+  const token = useSession.getState().token;
   try {
     await account.logout();
   } catch {
     // Offline or already expired: the local session is cleared either way.
   }
+  const currentToken = useSession.getState().token;
+  if (currentToken && currentToken !== token) return;
   clearLocalSession({ discardWorkouts: true });
 }
 

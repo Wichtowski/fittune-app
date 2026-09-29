@@ -20,6 +20,11 @@ describe("progress", () => {
     expect(progress(2400, 2000)).toEqual({ ratio: 1, left: -400, over: true });
   });
 
+  it("distinguishes a zero target from a missing target", () => {
+    expect(progress(0, 0)).toEqual({ ratio: 0, left: 0, over: false });
+    expect(progress(5, 0)).toEqual({ ratio: 1, left: -5, over: true });
+  });
+
   it("has nothing to show without a target", () => {
     expect(progress(500, undefined)).toEqual({ ratio: 0, left: null, over: false });
   });

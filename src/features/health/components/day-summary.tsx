@@ -23,7 +23,7 @@ function Macro({ label, eaten, target }: { label: string; eaten: number; target?
         <span className="text-muted-foreground">{label}</span>
         <span className="tabular">
           <span className="font-semibold">{formatAmount(eaten, "g")}</span>
-          {target ? <span className="text-muted-foreground"> / {formatAmount(target, "g")} g</span> : " g"}
+          {target !== undefined ? <span className="text-muted-foreground"> / {formatAmount(target, "g")} g</span> : " g"}
         </span>
       </div>
       <Bar ratio={ratio} over={over} />

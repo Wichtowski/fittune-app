@@ -18,7 +18,8 @@ export function scale(per100g: Nutrients, grams: number): Totals {
 
 /** How far into a target the day is; `ratio` is capped at 1 for bars, `left` goes negative when over */
 export function progress(eaten: number, target: number | undefined): { ratio: number; left: number | null; over: boolean } {
-  if (!target) return { ratio: 0, left: null, over: false };
+  if (target === undefined) return { ratio: 0, left: null, over: false };
+  if (target === 0) return { ratio: eaten > 0 ? 1 : 0, left: -Math.round(eaten) || 0, over: eaten > 0 };
   return { ratio: Math.min(eaten / target, 1), left: Math.round(target - eaten), over: eaten > target };
 }
 

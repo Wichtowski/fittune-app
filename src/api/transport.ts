@@ -48,8 +48,8 @@ export function configureApiClient(next: ClientHooks) {
   hooks = next;
 }
 
-export function reportUnauthorized() {
-  hooks.onUnauthorized();
+export function reportUnauthorized(token: string) {
+  if (hooks.getToken() === token) hooks.onUnauthorized();
 }
 
 /** The token of the signed-in session, shared by every client */
@@ -97,15 +97,51 @@ export async function send<T extends z.ZodType | undefined = undefined>(
   if (options.signal?.aborted) controller.abort();
   options.signal?.addEventListener("abort", forwardAbort);
 
-  let response: Response;
   try {
-    response = await fetch(url, {
+    const response = await fetch(url, {
       method: options.method ?? "GET",
       headers,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: controller.signal,
     });
+
+    reportResponse(response.status);
+    if (response.status === 401 && token) reportUnauthorized(token);
+
+    if (!response.ok) {
+      const body = (await response.json().catch((error: unknown) => {
+        if (controller.signal.aborted) throw error;
+        return null;
+      })) as {
+        code?: string;
+        message?: string;
+        fields?: Record<string, string>;
+      } | null;
+      throw new ApiError(
+        response.status,
+        body?.code ?? "http_error",
+        body?.message ?? `Request failed (${response.status})`,
+        body?.fields ?? {},
+      );
+    }
+
+    if (response.status === 204 || !options.schema) {
+      return undefined as T extends z.ZodType ? z.infer<T> : void;
+    }
+    const json: unknown = await response.json().catch((error: unknown) => {
+      if (error instanceof SyntaxError) {
+        throw new ApiError(response.status, "invalid_response", "The server sent an unexpected response.");
+      }
+      throw error;
+    });
+    const parsed = options.schema.safeParse(json);
+    if (!parsed.success) {
+      console.error("Unexpected API response", path, parsed.error.issues);
+      throw new ApiError(response.status, "invalid_response", "The server sent an unexpected response.");
+    }
+    return parsed.data as T extends z.ZodType ? z.infer<T> : void;
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     // A caller's abort (a cancelled query) is not a failure; our own timeout is
     if (!timedOut && error instanceof DOMException && error.name === "AbortError") throw error;
     reportNoResponse();
@@ -116,32 +152,4 @@ export async function send<T extends z.ZodType | undefined = undefined>(
     clearTimeout(timer);
     options.signal?.removeEventListener("abort", forwardAbort);
   }
-
-  reportResponse(response.status);
-  if (response.status === 401 && token) hooks.onUnauthorized();
-
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as {
-      code?: string;
-      message?: string;
-      fields?: Record<string, string>;
-    } | null;
-    throw new ApiError(
-      response.status,
-      body?.code ?? "http_error",
-      body?.message ?? `Request failed (${response.status})`,
-      body?.fields ?? {},
-    );
-  }
-
-  if (response.status === 204 || !options.schema) {
-    return undefined as T extends z.ZodType ? z.infer<T> : void;
-  }
-  const json: unknown = await response.json();
-  const parsed = options.schema.safeParse(json);
-  if (!parsed.success) {
-    console.error("Unexpected API response", path, parsed.error.issues);
-    throw new ApiError(response.status, "invalid_response", "The server sent an unexpected response.");
-  }
-  return parsed.data as T extends z.ZodType ? z.infer<T> : void;
 }
