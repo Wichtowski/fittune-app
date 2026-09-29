@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, Link, Outlet } from "@tanstack/react-router";
 
 import { UpdatePrompt } from "@/components/layout/update-prompt";
+import { InstallPrompt } from "@/components/layout/install-prompt";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -18,6 +19,7 @@ function RootLayout() {
       <Outlet />
       <Toaster />
       <UpdatePrompt />
+      <InstallPrompt />
     </>
   );
 }
