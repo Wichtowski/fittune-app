@@ -47,7 +47,7 @@ export function AddFoodDialog({ open, onOpenChange, date, meal }: {
   };
   const save = useMutation({
     mutationFn: ({ product, grams }: { product: Product; grams: number }) =>
-      fithealth.putEntry(entryId, { date, meal_id: meal.id, product_id: product.id, grams }),
+      fithealth.putEntry(entryId, { date, meal_id: meal.id, product_id: product.id, amount: grams }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.health.day(date) });
       void queryClient.invalidateQueries({ queryKey: ["health", "products"] });

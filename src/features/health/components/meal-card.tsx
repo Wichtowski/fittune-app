@@ -31,10 +31,10 @@ export function MealCard({ meal, onAdd, onEdit }: { meal: DayMeal; onAdd: () => 
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{entry.product_name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {formatAmount(entry.grams, "g")} g{entry.product_brand ? ` · ${entry.product_brand}` : ""}
+                    {formatAmount(entry.amount, entry.unit)} {entry.unit}{entry.product_brand ? ` · ${entry.product_brand}` : ""}
                   </span>
                 </span>
-                <span className="shrink-0 text-sm tabular">{formatAmount(scale(entry.per_100g, entry.grams).energy_kcal, "kcal")} kcal</span>
+                <span className="shrink-0 text-sm tabular">{formatAmount(scale(entry.per_100g, entry.amount).energy_kcal, "kcal")} kcal</span>
               </button>
             </li>
           ))}

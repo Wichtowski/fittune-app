@@ -15,11 +15,13 @@ type WorkoutState = {
   /** Finished workouts the server has not confirmed yet (e.g. finished offline). */
   outbox: DraftWorkout[];
   rest: RestTimer | null;
+  discardingId: string | null;
+  setDiscarding: (id: string | null) => void;
 
   start: (workout: DraftWorkout) => void;
   edit: (edit: Edit) => void;
   finish: () => DraftWorkout | null;
-  discard: () => DraftWorkout | null;
+  discard: (id?: string) => DraftWorkout | null;
 
   markSynced: (id: string, revision: number) => void;
   markFailed: (id: string, revision: number, message: string) => void;
@@ -47,25 +49,30 @@ export const useWorkoutStore = create<WorkoutState>()(
       active: null,
       outbox: [],
       rest: null,
+      discardingId: null,
+      setDiscarding: (discardingId) => set({ discardingId }),
 
-      start: (workout) => set({ active: workout, rest: null, ownerId: useSession.getState().userId }),
+      start: (workout) => {
+        if (!get().active) set({ active: workout, rest: null, ownerId: useSession.getState().userId });
+      },
 
       edit: (edit) => {
         const { active } = get();
-        if (active) set({ active: revise(active, edit) });
+        if (active && !get().discardingId) set({ active: revise(active, edit) });
       },
 
       finish: () => {
         const { active, outbox } = get();
-        if (!active) return null;
+        if (!active || get().discardingId) return null;
         const finished = revise(active, edits.finish());
         set({ active: null, outbox: [...outbox, finished], rest: null });
         return finished;
       },
 
-      discard: () => {
+      discard: (id) => {
         const { active } = get();
-        set({ active: null, rest: null });
+        if (id && active?.id !== id) return null;
+        set({ active: null, rest: null, discardingId: null });
         return active;
       },
 
@@ -108,7 +115,7 @@ export const useWorkoutStore = create<WorkoutState>()(
 
       clearRest: () => set({ rest: null }),
 
-      reset: () => set({ ownerId: null, active: null, outbox: [], rest: null }),
+      reset: () => set({ ownerId: null, active: null, outbox: [], rest: null, discardingId: null }),
     }),
     {
       name: "fittune.workout",

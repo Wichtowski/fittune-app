@@ -1,5 +1,5 @@
 import { t } from "@/lib/i18n";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ClipboardListIcon, CloudDownloadIcon, PlayIcon, RotateCcwIcon } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlacePicker } from "@/features/places/components/place-picker";
+import { useSession } from "@/features/auth/session";
 import { startingPlace } from "@/features/places/select";
 import { formatDay } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
@@ -34,26 +35,27 @@ export function StartWorkout() {
   // Every new workout needs a place, so the exercise picker can match the equipment there
   const place = startingPlace(places.data ?? [], pickedPlaceId, lastWorkout?.place?.id);
 
-  const load = async (id: string) => {
-    try {
-      return await queryClient.fetchQuery(workoutQuery(id));
-    } catch {
-      toast.error(t("Couldn't load that workout. Check your connection."));
-      return null;
-    }
+  const load = useMutation({
+    networkMode: "always",
+    mutationFn: async (id: string) => {
+      const token = useSession.getState().token;
+      return { workout: await queryClient.fetchQuery(workoutQuery(id)), token };
+    },
+    onError: () => toast.error(t("Couldn't load that workout. Check your connection.")),
+  });
+
+  const repeatLast = () => {
+    if (!lastWorkout || load.isPending) return;
+    load.mutate(lastWorkout.id, { onSuccess: ({ workout, token }) => {
+      if (place && useSession.getState().token === token) start({ ...workoutFromPrevious(workout), place });
+    } });
   };
 
-  const repeatLast = async () => {
-    if (!lastWorkout) return;
-    const workout = await load(lastWorkout.id);
-    if (workout && place) start({ ...workoutFromPrevious(workout), place });
-  };
-
-  const continueRemote = async () => {
-    if (!unfinished) return;
-    const workout = await load(unfinished.id);
-    if (!workout) return;
-    start({ ...workout, syncedRevision: workout.revision, failedRevision: null, syncError: null });
+  const continueRemote = () => {
+    if (!unfinished || load.isPending) return;
+    load.mutate(unfinished.id, { onSuccess: ({ workout, token }) => {
+      if (useSession.getState().token === token) start({ ...workout, syncedRevision: workout.revision, failedRevision: null, syncError: null });
+    } });
   };
 
   return (
@@ -66,7 +68,8 @@ export function StartWorkout() {
         {unfinished ? (
           <button
             type="button"
-            onClick={() => void continueRemote()}
+            disabled={load.isPending}
+            onClick={continueRemote}
             className="flex items-center gap-3 rounded-2xl border border-endurance/40 bg-endurance/10 p-4 text-left"
           >
             <CloudDownloadIcon className="size-6 text-endurance-strong" aria-hidden />
@@ -77,11 +80,11 @@ export function StartWorkout() {
           </button>
         ) : null}
 
-        <Button size="lg" className="h-16 text-lg" disabled={!place} onClick={() => place && start(createWorkout({ place }))}>
+        <Button size="lg" className="h-16 text-lg" disabled={!place || load.isPending} onClick={() => place && start(createWorkout({ place }))}>
           <PlayIcon className="fill-current" aria-hidden />{" "}{t("Start workout")}{" "}</Button>
 
         {lastWorkout ? (
-          <Button size="lg" variant="secondary" disabled={!place} onClick={() => void repeatLast()}>
+          <Button size="lg" variant="secondary" disabled={!place || load.isPending} onClick={repeatLast}>
             <RotateCcwIcon aria-hidden />{" "}{t("Repeat “")}{lastWorkout.title}”
           </Button>
         ) : null}
@@ -95,7 +98,7 @@ export function StartWorkout() {
           </Button>
         </div>
 
-        {routines.isPending ? (
+        {routines.isPending || (routines.isError && !routines.data) ? (
           <QueryFallback query={routines}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Skeleton className="h-32" />
@@ -106,7 +109,7 @@ export function StartWorkout() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {routines.data.map((routine) => (
               <li key={routine.id}>
-                <RoutineStartCard routine={routine} disabled={!place} onStart={() => place && start({ ...workoutFromRoutine(routine), place })} />
+                <RoutineStartCard routine={routine} disabled={!place || load.isPending} onStart={() => place && start({ ...workoutFromRoutine(routine), place })} />
               </li>
             ))}
           </ul>

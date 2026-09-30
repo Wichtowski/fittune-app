@@ -42,7 +42,7 @@ function renderDialog(onOpenChange = vi.fn()) {
 it("searches, picks a product and logs the chosen amount", async () => {
   const search = vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [oats], off: [] });
   const put = vi.spyOn(fithealth, "putEntry").mockImplementation((id, input) =>
-    Promise.resolve({ id, ...input, product_id: oats.id, product_name: oats.name, product_brand: oats.brand, per_100g: oats.per_100g }),
+    Promise.resolve({ id, ...input, unit: oats.unit, product_id: oats.id, product_name: oats.name, product_brand: oats.brand, per_100g: oats.per_100g }),
   );
   const onOpenChange = renderDialog();
 
@@ -197,6 +197,7 @@ it("asks for a drink in millilitres and logs the amount in them", async () => {
   );
   renderDialog();
 
+  expect(await screen.findByText("45 kcal / 100 ml")).toBeInTheDocument();
   fireEvent.click(await screen.findByRole("button", { name: /Orange juice/ }));
   expect(await screen.findByRole("spinbutton", { name: "Amount (ml)" })).toHaveValue(250);
   expect(screen.getByRole("button", { name: /1 glass \(250 ml\)/ })).toBeInTheDocument();

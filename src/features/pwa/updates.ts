@@ -35,5 +35,6 @@ export function watchForUpdates(registration: ServiceWorkerRegistration): () => 
  */
 export function applyUpdate(activate: (reload: boolean) => Promise<void>, reload: () => void = () => window.location.reload()) {
   window.setTimeout(reload, TAKEOVER_TIMEOUT_MS);
-  void activate(true);
+  // The reload timer also recovers when activation fails
+  void activate(true).catch(() => {});
 }

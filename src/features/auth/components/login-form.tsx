@@ -65,7 +65,14 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   );
 }
 
-/** Only follow same-app redirects. */
+/** Only follow same-app redirects */
 export function safeRedirect(redirect: string | undefined): string {
-  return redirect?.startsWith("/") && !redirect.startsWith("//") && !redirect.startsWith("/login") ? redirect : "/";
+  if (!redirect?.startsWith("/")) return "/";
+  try {
+    const url = new URL(redirect, window.location.origin);
+    return url.origin === window.location.origin && !url.pathname.startsWith("//") && !url.pathname.startsWith("/login")
+      ? `${url.pathname}${url.search}${url.hash}` : "/";
+  } catch {
+    return "/";
+  }
 }

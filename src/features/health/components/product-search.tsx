@@ -8,16 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { t } from "@/lib/i18n";
-import type { Candidate, Nutrients, Product } from "@/schemas/health";
+import type { Candidate, Nutrients, Product, Unit } from "@/schemas/health";
 
-function ResultButton({ name, brand, per100g, onClick }: { name: string; brand: string | null; per100g: Nutrients | null; onClick: () => void }) {
+function ResultButton({ name, brand, per100g, unit, onClick }: { name: string; brand: string | null; per100g: Nutrients | null; unit: Unit; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className="flex w-full items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-left transition-colors hover:bg-accent">
       <span className="min-w-0">
         <span className="block truncate font-medium">{name}</span>
         {brand ? <span className="block truncate text-xs text-muted-foreground">{brand}</span> : null}
       </span>
-      {per100g ? <span className="shrink-0 text-sm text-muted-foreground tabular">{formatAmount(per100g.energy_kcal, "kcal")} kcal / 100 g</span> : null}
+      {per100g ? <span className="shrink-0 text-sm text-muted-foreground tabular">{formatAmount(per100g.energy_kcal, "kcal")} kcal / 100 {unit}</span> : null}
     </button>
   );
 }
@@ -54,7 +54,7 @@ export function ProductSearch({ query, onQueryChange, onPick, onPickCandidate, o
       <ul className="grid gap-1.5" aria-busy={results.isFetching}>
         {products.map((product) => (
           <li key={product.id}>
-            <ResultButton name={product.name} brand={product.brand} per100g={product.per_100g} onClick={() => onPick(product)} />
+            <ResultButton name={product.name} brand={product.brand} per100g={product.per_100g} unit={product.unit} onClick={() => onPick(product)} />
           </li>
         ))}
       </ul>
@@ -64,7 +64,7 @@ export function ProductSearch({ query, onQueryChange, onPick, onPickCandidate, o
           <ul className="grid gap-1.5">
             {off.map((candidate) => (
               <li key={candidate.barcode}>
-                <ResultButton name={candidate.name} brand={candidate.brand} per100g={candidate.per_100g} onClick={() => onPickCandidate(candidate)} />
+                <ResultButton name={candidate.name} brand={candidate.brand} per100g={candidate.per_100g} unit={candidate.unit} onClick={() => onPickCandidate(candidate)} />
               </li>
             ))}
           </ul>

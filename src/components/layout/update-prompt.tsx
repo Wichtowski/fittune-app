@@ -1,6 +1,6 @@
 import { t } from "@/lib/i18n";
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { applyUpdate, watchForUpdates } from "@/features/pwa/updates";
@@ -10,15 +10,19 @@ import { applyUpdate, watchForUpdates } from "@/features/pwa/updates";
  * its own - an automatic reload in the middle of a set would be hostile
  */
 export function UpdatePrompt() {
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_url, registration) {
-      // Lives as long as the app, so the checks are never cleaned up
-      if (registration) watchForUpdates(registration);
+    onRegisteredSW(_url, registered) {
+      if (registered) setRegistration(registered);
     },
   });
+
+  useEffect(() => {
+    if (registration) return watchForUpdates(registration);
+  }, [registration]);
 
   useEffect(() => {
     if (!needRefresh) return;

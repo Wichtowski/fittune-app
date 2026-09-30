@@ -23,8 +23,8 @@ function EntryEditor({ entry, onDone }: { entry: Entry; onDone: () => void }) {
   const failed = (error: Error) => toast.error(error instanceof ApiError ? error.message : t("Could not save. Try again."));
 
   const save = useMutation({
-    mutationFn: (grams: number) =>
-      fithealth.putEntry(entry.id, { date: entry.date, meal_id: mealId, product_id: entry.product_id ?? "", grams }),
+    mutationFn: (amount: number) =>
+      fithealth.putEntry(entry.id, { date: entry.date, meal_id: mealId, product_id: entry.product_id ?? "", amount }),
     onSuccess: refresh,
     onError: failed,
   });
@@ -56,8 +56,8 @@ function EntryEditor({ entry, onDone }: { entry: Entry; onDone: () => void }) {
       ) : null}
       {entry.product_id ? (
         <AmountStep
-          food={{ name: entry.product_name, brand: entry.product_brand, per_100g: entry.per_100g }}
-          initialGrams={entry.grams}
+          food={{ name: entry.product_name, brand: entry.product_brand, per_100g: entry.per_100g, unit: entry.unit }}
+          initialAmount={entry.amount}
           submitLabel={t("Save")}
           pending={pending}
           onSubmit={(grams) => save.mutate(grams, { onSuccess: onDone })}

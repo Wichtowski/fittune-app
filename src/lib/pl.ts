@@ -856,4 +856,11 @@ export const pl: Record<string, string> = {
   "Dismiss install suggestion": "Zamknij propozycję instalacji",
   "Got it": "Rozumiem",
   "Not now": "Nie teraz",
+  "Amount (ml)": "Ilość (ml)",
+  "Serving (ml)": "Porcja (ml)",
+  "Per 100 g": "Na 100 g",
+  "Per 100 ml": "Na 100 ml",
+  "As on the label": "Jak na etykiecie",
+  "Per 100 ml, as on the label": "Na 100 ml, jak na etykiecie",
+  "Could not install. Try again.": "Nie udało się zainstalować. Spróbuj ponownie.",
 };
