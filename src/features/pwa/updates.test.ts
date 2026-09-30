@@ -64,6 +64,13 @@ describe("watchForUpdates", () => {
 });
 
 describe("applyUpdate", () => {
+  it("recovers from an activation failure through the reload timer", async () => {
+    vi.useFakeTimers();
+    const reload = vi.fn();
+    applyUpdate(vi.fn().mockRejectedValue(new Error("activation failed")), reload);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(reload).toHaveBeenCalledOnce();
+  });
   it("reloads itself when the new version never takes over", async () => {
     vi.useFakeTimers();
     const reload = vi.fn();

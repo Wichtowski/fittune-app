@@ -1,17 +1,17 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { t } from "@/lib/i18n";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EllipsisIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { type DraftWorkout, edits, totals } from "../draft";
 import { useWorkoutStore } from "../store";
+import { SYNC_MUTATION_KEY, useDiscardWorkout } from "../use-workout-sync";
 import { ExerciseCard } from "./exercise-card";
 import { FinishWorkoutDialog } from "./finish-workout-dialog";
 import { RestTimer } from "./rest-timer";
 import { SyncIndicator } from "./sync-indicator";
-import { queryKeys } from "@/api/query-keys";
-import { fittune } from "@/api/fittune";
+import { useSession } from "@/features/auth/session";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +35,7 @@ import { formatVolume } from "@/lib/units";
 
 export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
   const edit = useWorkoutStore((state) => state.edit);
+  const discarding = useWorkoutStore((state) => state.discardingId === workout.id);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const now = useNow();
@@ -45,7 +46,7 @@ export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
   const summary = totals(workout);
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <fieldset disabled={discarding} className="mx-auto min-w-0 max-w-2xl">
       <header className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 pt-[calc(env(safe-area-inset-top)+0.5rem)] pb-3 backdrop-blur-xl md:static md:mx-0 md:px-0 md:pt-8">
         <div className="flex items-center gap-2">
           <input
@@ -118,7 +119,7 @@ export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
       />
       <DiscardDialog open={confirmDiscard} onOpenChange={setConfirmDiscard} workout={workout} />
       <RestTimer />
-    </div>
+    </fieldset>
   );
 }
 
@@ -156,25 +157,18 @@ function DiscardDialog({
   onOpenChange: (open: boolean) => void;
   workout: DraftWorkout;
 }) {
-  const discard = useWorkoutStore((state) => state.discard);
-  const restore = useWorkoutStore((state) => state.start);
+  const remove = useDiscardWorkout();
   const queryClient = useQueryClient();
-  const remove = useMutation({
-    mutationFn: fittune.deleteWorkout,
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all }),
-  });
 
   const onConfirm = () => {
-    const removed = discard();
-    // Only workouts the server has seen need deleting there; the local copy is gone instantly.
-    if (removed && removed.syncedRevision > 0) {
-      remove.mutate(removed.id, {
-        onError: () => {
-          restore(removed);
-          toast.error(t("Couldn't discard the saved workout. Try again when you're online."));
-        },
-      });
-    }
+    if (remove.isPending || useWorkoutStore.getState().active?.id !== workout.id) return;
+    remove.mutate({
+      workout,
+      token: useSession.getState().token,
+      deleteRemote: workout.syncedRevision > 0 || queryClient.isMutating({ mutationKey: SYNC_MUTATION_KEY }) > 0,
+    }, {
+      onError: () => toast.error(t("Couldn't discard the saved workout. Try again when you're online.")),
+    });
   };
 
   return (

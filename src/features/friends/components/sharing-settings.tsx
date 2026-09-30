@@ -34,7 +34,7 @@ export function SharingSettings() {
       if (context?.previous) queryClient.setQueryData(queryKeys.friends.sharing, context.previous);
       toast.error(t("Couldn't save your sharing settings. Try again."));
     },
-    onSettled: () => void queryClient.invalidateQueries({ queryKey: queryKeys.friends.sharing }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.friends.sharing }),
   });
 
   const sharing = query.data;
@@ -58,6 +58,7 @@ export function SharingSettings() {
             <input
               type="checkbox"
               checked={sharing[option.key]}
+              disabled={save.isPending}
               onChange={(event) => save.mutate({ ...sharing, [option.key]: event.target.checked })}
               className="mt-0.5 size-4 accent-primary"
             />

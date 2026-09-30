@@ -9,15 +9,16 @@ import { fittune } from "@/api/fittune";
 import { useSession } from "@/features/auth/session";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 
-const SYNC_MUTATION_KEY = ["workouts", "sync"] as const;
+export const SYNC_MUTATION_KEY = ["workouts", "sync"] as const;
+export const WORKOUT_WRITE_SCOPE = { id: "workout-writes" };
 /** Coalesces rapid edits (typing reps, ticking sets) into one request. */
 const DEBOUNCE_MS = 800;
 const MAX_BACKOFF_MS = 60_000;
 
 /** Id and revision of the next workout that needs uploading, as a primitive for stable selection. */
-function selectNextKey(state: { active: DraftWorkout | null; outbox: DraftWorkout[] }): string | null {
+function selectNextKey(state: { active: DraftWorkout | null; outbox: DraftWorkout[]; discardingId: string | null }): string | null {
   // Finished workouts first: they are complete and the user expects them in history.
-  const next = [...state.outbox, state.active].find((w): w is DraftWorkout => w !== null && needsSync(w));
+  const next = [...state.outbox, state.active].find((w): w is DraftWorkout => w !== null && w.id !== state.discardingId && needsSync(w));
   return next ? `${next.id}:${next.revision}` : null;
 }
 
@@ -47,7 +48,11 @@ export function useWorkoutSync() {
 
   const { mutateAsync } = useMutation({
     mutationKey: SYNC_MUTATION_KEY,
-    mutationFn: (workout: DraftWorkout) => fittune.putWorkout(workout.id, toWorkoutInput(workout)),
+    scope: WORKOUT_WRITE_SCOPE,
+    mutationFn: ({ workout, token }: { workout: DraftWorkout; token: string }) => {
+      if (useSession.getState().token !== token) throw new Error("Session changed");
+      return fittune.putWorkout(workout.id, toWorkoutInput(workout));
+    },
     retry: false,
   });
 
@@ -60,11 +65,11 @@ export function useWorkoutSync() {
 
     const timer = window.setTimeout(async () => {
       const workout = id ? findWorkout(id) : undefined;
-      if (!workout || !needsSync(workout) || !sessionIsCurrent()) return;
+      if (!workout || useWorkoutStore.getState().discardingId === workout.id || !needsSync(workout) || !sessionIsCurrent()) return;
       const store = useWorkoutStore.getState();
       inFlight.current = true;
       try {
-        const saved = await mutateAsync(workout);
+        const saved = await mutateAsync({ workout, token });
         if (!sessionIsCurrent()) return;
         retryAt.current = 0;
         failures.current = 0;
@@ -100,6 +105,36 @@ export function useWorkoutSync() {
 
     return () => window.clearTimeout(timer);
   }, [nextKey, online, attempt, userId, token, ownerId, mutateAsync, queryClient]);
+}
+
+/** Serialize deletion after any upload and retain the draft until deletion succeeds */
+export function useDiscardWorkout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    scope: WORKOUT_WRITE_SCOPE,
+    networkMode: "always",
+    retry: false,
+    mutationFn: async ({ workout, token, deleteRemote }: { workout: DraftWorkout; token: string | null; deleteRemote: boolean }) => {
+      if (useSession.getState().token !== token) throw new Error("Session changed");
+      if (deleteRemote) {
+        try {
+          await fittune.deleteWorkout(workout.id);
+        } catch (error) {
+          if (!(error instanceof ApiError && error.status === 404)) throw error;
+        }
+      }
+    },
+    onMutate: ({ workout }) => useWorkoutStore.getState().setDiscarding(workout.id),
+    onSuccess: (_result, { workout, token }) => {
+      if (useSession.getState().token !== token) return;
+      useWorkoutStore.getState().discard(workout.id);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.workouts.all });
+    },
+    onSettled: (_result, _error, { workout }) => {
+      const store = useWorkoutStore.getState();
+      if (store.discardingId === workout.id) store.setDiscarding(null);
+    },
+  });
 }
 
 export type SyncStatus = "synced" | "saving" | "pending" | "offline" | "error";

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { type Control, type FieldPath, useForm } from "react-hook-form";
+import { type Control, type FieldPath, useForm, useWatch } from "react-hook-form";
 
 import { fithealth } from "@/api/fithealth";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,15 @@ import { Input } from "@/components/ui/input";
 import { applyServerErrors } from "@/lib/form-errors";
 import { t } from "@/lib/i18n";
 import { OffAttribution } from "./off-attribution";
-import { type Nutrients, type Product, type ProductInput, productInputSchema } from "@/schemas/health";
+import { type Nutrients, type Product, type ProductInput, productInputSchema, type Unit, UNITS } from "@/schemas/health";
 
 /** What the form starts from: typed search text, a scanned barcode, or an Open Food Facts listing */
 export type ProductDraft = {
   name: string;
   brand?: string | null;
   per_100g?: Nutrients | null;
-  serving_g?: number | null;
+  serving_amount?: number | null;
+  unit?: Unit;
   serving_name?: string | null;
   barcode?: string | null;
   source?: ProductInput["source"];
@@ -37,7 +38,8 @@ const fromDraft = (draft: ProductDraft): ProductInput => ({
   name: draft.name,
   brand: draft.brand ?? null,
   per_100g: draft.per_100g ?? blankLabel,
-  serving_g: draft.serving_g ?? null,
+  serving_amount: draft.serving_amount ?? null,
+  unit: draft.unit ?? "g",
   serving_name: draft.serving_name ?? null,
   barcode: draft.barcode ?? null,
   source: draft.source ?? "manual",
@@ -78,6 +80,7 @@ function NumberField({ control, name, label, step = "0.1" }: { control: Control<
 /** New products go into the shared database, so the label values are checked like the API does */
 export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDraft; onSaved: (product: Product) => void; onCancel: () => void }) {
   const form = useForm<ProductInput>({ resolver: zodResolver(productInputSchema), defaultValues: fromDraft(initial) });
+  const unit = useWatch({ control: form.control, name: "unit" });
   const mutation = useMutation({
     mutationFn: fithealth.createProduct,
     onError: (error) => applyServerErrors(error, form.setError),
@@ -102,8 +105,19 @@ export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDr
             <FormMessage />
           </FormItem>
         )} />
+        <FormField control={form.control} name="unit" render={({ field }) => (
+          <fieldset className="flex gap-4">
+            <legend className="mb-2 text-sm font-medium">{t("As on the label")}</legend>
+            {UNITS.map((value) => (
+              <label key={value} className="flex items-center gap-2 text-sm">
+                <input type="radio" name={field.name} value={value} checked={field.value === value} onChange={() => field.onChange(value)} onBlur={field.onBlur} ref={field.ref} />
+                {t(`Per 100 ${value}`)}
+              </label>
+            ))}
+          </fieldset>
+        )} />
         <fieldset className="grid gap-3">
-          <legend className="mb-2 text-sm font-medium">{t("Per 100 g, as on the label")}</legend>
+          <legend className="mb-2 text-sm font-medium">{t(`Per 100 ${unit}, as on the label`)}</legend>
           <div className="grid grid-cols-2 gap-3">
             <NumberField control={form.control} name="per_100g.energy_kcal" label={t("Energy (kcal)")} step="1" />
             <NumberField control={form.control} name="per_100g.protein_g" label={t("Protein (g)")} />
@@ -116,7 +130,7 @@ export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDr
           </div>
         </fieldset>
         <div className="grid grid-cols-2 gap-3">
-          <NumberField control={form.control} name="serving_g" label={t("Serving (g)")} step="1" />
+          <NumberField control={form.control} name="serving_amount" label={t(`Serving (${unit})`)} step="1" />
           <FormField control={form.control} name="serving_name" render={({ field }) => (
             <FormItem>
               <FormLabel>{t("Serving name")}</FormLabel>

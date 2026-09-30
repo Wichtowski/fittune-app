@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { currentEnvironment, installMethod } from "@/features/pwa/install";
 import { t } from "@/lib/i18n";
+import { storage } from "@/lib/storage";
+import { toast } from "sonner";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -17,12 +19,8 @@ const dismissDuration = 24 * 60 * 60 * 1_000;
 const SHOWN_ON = new Set(["/train", "/health"]);
 
 function dismissalTimeRemaining() {
-  try {
-    const dismissedAt = Number(window.localStorage.getItem(dismissedAtKey));
-    return Number.isFinite(dismissedAt) ? Math.max(0, dismissDuration - (Date.now() - dismissedAt)) : 0;
-  } catch {
-    return 0;
-  }
+  const dismissedAt = Number(storage.getItem(dismissedAtKey));
+  return Number.isFinite(dismissedAt) ? Math.max(0, dismissDuration - (Date.now() - dismissedAt)) : 0;
 }
 
 /**
@@ -60,19 +58,19 @@ export function InstallPrompt() {
 
   const dismiss = () => {
     setDismissed(true);
-    try {
-      window.localStorage.setItem(dismissedAtKey, String(Date.now()));
-    } catch {
-      // Keep the dismissal for this session if storage is unavailable
-    }
+    storage.setItem(dismissedAtKey, String(Date.now()));
   };
 
   const install = async () => {
     if (!installEvent) return;
-    await installEvent.prompt();
-    const choice = await installEvent.userChoice;
     setInstallEvent(null);
-    if (choice.outcome === "dismissed") dismiss();
+    try {
+      await installEvent.prompt();
+      const choice = await installEvent.userChoice;
+      if (choice.outcome === "dismissed") dismiss();
+    } catch {
+      toast.error(t("Could not install. Try again."));
+    }
   };
 
   const method = installed ? null : installMethod(currentEnvironment(installEvent !== null));

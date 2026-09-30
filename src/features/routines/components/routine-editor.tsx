@@ -32,7 +32,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import { applyServerErrors } from "@/lib/form-errors";
 import { setKindLabels } from "@/lib/labels";
 import { SET_KINDS } from "@/schemas/common";
-import { type Routine, type RoutineFormInput, type RoutineFormOutput, routineFormSchema } from "@/schemas/routine";
+import { type Routine, type RoutineFormInput, type RoutineFormOutput, routineFormSchemaFor } from "@/schemas/routine";
 
 type FormControlType = Control<RoutineFormInput, unknown, RoutineFormOutput>;
 
@@ -43,7 +43,7 @@ export function RoutineEditor({ routine }: { routine?: Routine }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const form = useForm<RoutineFormInput, unknown, RoutineFormOutput>({
-    resolver: zodResolver(routineFormSchema),
+    resolver: zodResolver(routineFormSchemaFor(units)),
     defaultValues: toRoutineForm(routine, units),
   });
   const exercises = useFieldArray({ control: form.control, name: "exercises" });

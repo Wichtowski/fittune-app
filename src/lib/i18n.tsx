@@ -2,11 +2,12 @@ import { createContext, Fragment, type ReactNode, useContext, useState } from "r
 import { z } from "zod";
 
 import { pl } from "./pl";
+import { storage } from "./storage";
 
 export type Locale = "en" | "pl";
 
 function initialLocale(): Locale {
-  const saved = localStorage.getItem("fittune-locale");
+  const saved = storage.getItem("fittune-locale");
   return saved === "en" || saved === "pl" ? saved : navigator.language.toLowerCase().startsWith("pl") ? "pl" : "en";
 }
 
@@ -35,7 +36,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [current, setCurrent] = useState(locale);
   const setLocale = (next: Locale) => {
     locale = next;
-    localStorage.setItem("fittune-locale", next);
+    storage.setItem("fittune-locale", next);
     document.documentElement.lang = next;
     z.config(z.locales[next]());
     setCurrent(next);
