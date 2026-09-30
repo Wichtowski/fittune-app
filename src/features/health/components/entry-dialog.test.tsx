@@ -9,7 +9,7 @@ import type { Entry } from "@/schemas/health";
 
 const entry: Entry = {
   id: "entry-a", date: "2026-09-28", meal_id: "meal", product_id: "product",
-  product_name: "Oats", product_brand: null, grams: 50,
+  product_name: "Oats", product_brand: null, amount: 50, unit: "g",
   per_100g: { energy_kcal: 372, protein_g: 13, fat_g: 7, carbs_g: 60, saturated_fat_g: null, sugars_g: null, fiber_g: null, salt_g: null },
 };
 
@@ -28,7 +28,7 @@ it("does not close a new entry when the previous entry finishes saving", async (
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
 
   rerender(view(null));
-  rerender(view({ ...entry, id: "entry-b", date: "2026-09-29", grams: 100 }));
+  rerender(view({ ...entry, id: "entry-b", date: "2026-09-29", amount: 100 }));
   expect(screen.getByRole("spinbutton", { name: "Amount (g)" })).toHaveValue(100);
   await act(async () => complete(entry));
 

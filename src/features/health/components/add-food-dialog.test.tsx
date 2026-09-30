@@ -20,8 +20,9 @@ const oats: Product = {
   brand: "Melvit",
   barcode: null,
   per_100g: { energy_kcal: 372, protein_g: 13, fat_g: 7, carbs_g: 60, saturated_fat_g: null, sugars_g: null, fiber_g: null, salt_g: null },
-  serving_g: 40,
+  serving_amount: 40,
   serving_name: "4 tablespoons",
+  unit: "g",
   source: "manual",
 };
 const meal = { id: "00000000-0000-4000-8000-0000000000aa", name: "Breakfast" };
@@ -59,7 +60,7 @@ it("searches, picks a product and logs the chosen amount", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Add to Breakfast" }));
 
   await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
-  expect(put.mock.calls[0]?.[1]).toEqual({ date: "2026-09-29", meal_id: meal.id, product_id: oats.id, grams: 50 });
+  expect(put.mock.calls[0]?.[1]).toEqual({ date: "2026-09-29", meal_id: meal.id, product_id: oats.id, amount: 50 });
   await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
 });
 
@@ -76,7 +77,7 @@ it.each(["", "0.01", "5001"])("does not save an invalid amount (%s)", async (val
 
 it("creates a missing product and continues to the amount", async () => {
   vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
-  const create = vi.spyOn(fithealth, "createProduct").mockResolvedValue({ ...oats, serving_g: null, serving_name: null });
+  const create = vi.spyOn(fithealth, "createProduct").mockResolvedValue({ ...oats, serving_amount: null, serving_name: null });
   renderDialog();
 
   fireEvent.change(screen.getByRole("searchbox", { name: "Search products" }), { target: { value: "Oat flakes" } });
@@ -99,8 +100,9 @@ const candidate: Candidate = {
   brand: "Melvit",
   main_category: "en:oat-flakes",
   per_100g: oats.per_100g,
-  serving_g: 40,
+  serving_amount: 40,
   serving_name: "40 g",
+  unit: "g",
 };
 
 async function scan(code: string) {
@@ -134,7 +136,7 @@ it("prefills an Open Food Facts product and saves it as confirmed", async () => 
   fireEvent.click(screen.getByRole("button", { name: "Save product" }));
 
   await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
-  expect(create.mock.calls[0]?.[0]).toMatchObject({ name: "Płatki owsiane górskie", barcode: "5900259127761", source: "off", serving_g: 40 });
+  expect(create.mock.calls[0]?.[0]).toMatchObject({ name: "Płatki owsiane górskie", barcode: "5900259127761", source: "off", serving_amount: 40 });
   expect(await screen.findByRole("spinbutton", { name: "Amount (g)" })).toBeInTheDocument();
 });
 
@@ -176,4 +178,49 @@ it("keeps search open when a cancelled product creation finishes", async () => {
 
   expect(screen.getByRole("searchbox", { name: "Search products" })).toBeInTheDocument();
   expect(screen.queryByRole("spinbutton", { name: "Amount (g)" })).not.toBeInTheDocument();
+});
+
+it("asks for a drink in millilitres and logs the amount in them", async () => {
+  const juice: Product = {
+    ...oats,
+    id: "00000000-0000-4000-8000-000000000002",
+    name: "Orange juice",
+    brand: null,
+    per_100g: { energy_kcal: 45, protein_g: 0.7, fat_g: 0.2, carbs_g: 10, saturated_fat_g: null, sugars_g: null, fiber_g: null, salt_g: null },
+    serving_amount: 250,
+    serving_name: "1 glass",
+    unit: "ml",
+  };
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [juice], off: [] });
+  const put = vi.spyOn(fithealth, "putEntry").mockImplementation((id, input) =>
+    Promise.resolve({ id, ...input, unit: "ml", product_id: juice.id, product_name: juice.name, product_brand: null, per_100g: juice.per_100g }),
+  );
+  renderDialog();
+
+  fireEvent.click(await screen.findByRole("button", { name: /Orange juice/ }));
+  expect(await screen.findByRole("spinbutton", { name: "Amount (ml)" })).toHaveValue(250);
+  expect(screen.getByRole("button", { name: /1 glass \(250 ml\)/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Add to Breakfast" }));
+
+  await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
+  expect(put.mock.calls[0]?.[1]).toMatchObject({ product_id: juice.id, amount: 250 });
+});
+
+it("creates a drink labelled per 100 ml", async () => {
+  vi.spyOn(fithealth, "searchProducts").mockResolvedValue({ products: [], off: [] });
+  const create = vi.spyOn(fithealth, "createProduct").mockImplementation((input) => Promise.resolve({ ...oats, ...input, id: oats.id, barcode: null }));
+  renderDialog();
+
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search products" }), { target: { value: "Kefir" } });
+  fireEvent.click(await screen.findByRole("button", { name: "Create product" }));
+  fireEvent.click(screen.getByRole("radio", { name: "Per 100 ml" }));
+  for (const [label, value] of [["Energy (kcal)", "50"], ["Protein (g)", "3"], ["Fat (g)", "2"], ["Carbohydrate (g)", "4"]]) {
+    fireEvent.change(screen.getByRole("spinbutton", { name: label }), { target: { value } });
+  }
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Serving (ml)" }), { target: { value: "400" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save product" }));
+
+  await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+  expect(create.mock.calls[0]?.[0]).toMatchObject({ name: "Kefir", unit: "ml", serving_amount: 400 });
+  expect(await screen.findByRole("spinbutton", { name: "Amount (ml)" })).toHaveValue(400);
 });

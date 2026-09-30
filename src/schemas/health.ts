@@ -3,7 +3,12 @@ import { z } from "zod";
 const grams = z.number().min(0).max(100);
 const optionalGrams = grams.nullable();
 
-/** Values per 100 g, as on an EU nutrition label */
+/** What a product is measured in: its values are per 100 of it, amounts and servings in it */
+export const UNITS = ["g", "ml"] as const;
+export const unitSchema = z.enum(UNITS);
+export type Unit = z.infer<typeof unitSchema>;
+
+/** Values per 100 g, or per 100 ml for drinks, as on an EU nutrition label */
 export const nutrientsSchema = z.object({
   energy_kcal: z.number().min(0).max(900),
   protein_g: grams,
@@ -34,8 +39,9 @@ export const productSchema = z.object({
   brand: z.string().nullable(),
   barcode: z.string().nullable(),
   per_100g: nutrientsSchema,
-  serving_g: z.number().nullable(),
+  serving_amount: z.number().nullable(),
   serving_name: z.string().nullable(),
+  unit: unitSchema,
   source: z.string(),
 });
 export type Product = z.infer<typeof productSchema>;
@@ -58,10 +64,11 @@ export const productInputSchema = z
       fiber_g: optionalLabelValue,
       salt_g: optionalLabelValue,
     }),
-    serving_g: z.number().min(0.1).max(2000).nullable(),
+    serving_amount: z.number().min(0.1).max(2000).nullable(),
     serving_name: z.string().trim().max(40).nullable(),
     barcode: z.string().nullable(),
     source: z.enum(["manual", "off"]),
+    unit: unitSchema,
   })
   .superRefine((value, ctx) => {
     const n = value.per_100g;
@@ -84,8 +91,9 @@ export const candidateSchema = z.object({
   brand: z.string().nullable(),
   main_category: z.string().nullable(),
   per_100g: nutrientsSchema.nullable(),
-  serving_g: z.number().nullable(),
+  serving_amount: z.number().nullable(),
   serving_name: z.string().nullable(),
+  unit: unitSchema,
 });
 export type Candidate = z.infer<typeof candidateSchema>;
 
@@ -107,13 +115,15 @@ export const entrySchema = z.object({
   date: z.iso.date(),
   meal_id: z.guid(),
   product_id: z.guid().nullable(),
-  grams: z.number(),
+  amount: z.number(),
+  unit: unitSchema,
   product_name: z.string(),
   product_brand: z.string().nullable(),
   per_100g: nutrientsSchema,
 });
 export type Entry = z.infer<typeof entrySchema>;
-export type EntryInput = { date: string; meal_id: string; product_id: string; grams: number };
+/** `amount` is in the product's unit */
+export type EntryInput = { date: string; meal_id: string; product_id: string; amount: number };
 
 export const targetsSchema = z.object({
   energy_kcal: z.number(),

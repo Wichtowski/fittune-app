@@ -1,9 +1,9 @@
 import { getLocale } from "@/lib/i18n";
 import type { Nutrients, Totals } from "@/schemas/health";
 
-/** What `grams` of a food with the given per-100 g values contains */
-export function scale(per100g: Nutrients, grams: number): Totals {
-  const f = grams / 100;
+/** What `amount` (in the product's unit) of a food with the given per-100 values contains */
+export function scale(per100g: Nutrients, amount: number): Totals {
+  const f = amount / 100;
   return {
     energy_kcal: per100g.energy_kcal * f,
     protein_g: per100g.protein_g * f,
@@ -23,8 +23,8 @@ export function progress(eaten: number, target: number | undefined): { ratio: nu
   return { ratio: Math.min(eaten / target, 1), left: Math.round(target - eaten), over: eaten > target };
 }
 
-/** Whole calories; grams with one decimal only while small enough for it to matter */
-export function formatAmount(value: number, unit: "kcal" | "g"): string {
-  const digits = unit === "g" && Math.abs(value) < 10 ? 1 : 0;
+/** Whole calories; grams and millilitres with one decimal only while small enough to matter */
+export function formatAmount(value: number, unit: "kcal" | "g" | "ml"): string {
+  const digits = unit !== "kcal" && Math.abs(value) < 10 ? 1 : 0;
   return new Intl.NumberFormat(getLocale(), { maximumFractionDigits: digits }).format(value);
 }
