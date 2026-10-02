@@ -1,3 +1,8 @@
+import { useSession } from "@/features/auth/session";
+import { useState } from "react";
+import { LabelScanner } from "../ocr/label-scanner";
+import { OCR_FIELDS, type Extraction, type OcrField } from "@/schemas/ocr";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { type Control, type FieldPath, useForm, useWatch } from "react-hook-form";
@@ -79,7 +84,34 @@ function NumberField({ control, name, label, step = "0.1" }: { control: Control<
 
 /** New products go into the shared database, so the label values are checked like the API does */
 export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDraft; onSaved: (product: Product) => void; onCancel: () => void }) {
+  const token = useSession((state) => state.token);
   const form = useForm<ProductInput>({ resolver: zodResolver(productInputSchema), defaultValues: fromDraft(initial) });
+  const [suggestions, setSuggestions] = useState<Partial<Record<OcrField, { value: number; source: "ocr" | "ai" }>>>({});
+  const [scanning, setScanning] = useState(false);
+  const applyLabel = (result: Extraction) => {
+    if (!result.unit) return;
+    const currentUnit = form.getValues("unit");
+    const existing = OCR_FIELDS.some((field) => Number.isFinite(form.getValues(`per_100g.${field}`)));
+    if (currentUnit !== result.unit && (existing || form.getFieldState("unit").isDirty)) {
+      form.setError("root", { message: t("Suggestion units differ from your form. Choose the matching unit before applying.") });
+      return;
+    }
+    form.clearErrors("root");
+    let applied = false;
+    for (const field of OCR_FIELDS) {
+      const path = `per_100g.${field}` as const;
+      const value = result.values[field];
+      if (value !== null && !form.getFieldState(path).isDirty && !Number.isFinite(form.getValues(path))) {
+        form.setValue(path, value, { shouldDirty: true, shouldValidate: true });
+        setSuggestions((prior) => ({ ...prior, [field]: { value, source: result.source } }));
+        applied = true;
+      }
+    }
+    if (applied) {
+      form.setValue("unit", result.unit, { shouldDirty: true });
+      setScanning(false);
+    }
+  };
   const unit = useWatch({ control: form.control, name: "unit" });
   const mutation = useMutation({
     mutationFn: fithealth.createProduct,
@@ -88,7 +120,11 @@ export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDr
 
   return (
     <Form {...form}>
-      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values, { onSuccess: onSaved }))} noValidate>
+      <form className="grid gap-4" onSubmit={form.handleSubmit((values) => {
+        const retained = Object.entries(suggestions).filter(([field, suggestion]) => values.per_100g[field as OcrField] === suggestion?.value).map(([, suggestion]) => suggestion?.source);
+        const source = initial.source === "off" ? "off" : retained.includes("ai") ? "ai" : retained.includes("ocr") ? "ocr" : initial.source ?? "manual";
+        mutation.mutate({ ...values, source }, { onSuccess: onSaved });
+      })} noValidate>
         {initial.barcode ? (
           <p className="text-sm text-muted-foreground">{t("Barcode")}: <span className="font-medium text-foreground tabular">{initial.barcode}</span></p>
         ) : null}
@@ -116,6 +152,8 @@ export function ProductForm({ initial, onSaved, onCancel }: { initial: ProductDr
             ))}
           </fieldset>
         )} />
+        {scanning ? <LabelScanner key={token} onApply={applyLabel} onClose={() => setScanning(false)} /> : <Button type="button" variant="outline" onClick={() => setScanning(true)}>{t("Read nutrition label")}</Button>}
+        {form.formState.errors.root ? <p role="alert" className="text-sm text-destructive">{form.formState.errors.root.message}</p> : null}
         <fieldset className="grid gap-3">
           <legend className="mb-2 text-sm font-medium">{t(`Per 100 ${unit}, as on the label`)}</legend>
           <div className="grid grid-cols-2 gap-3">

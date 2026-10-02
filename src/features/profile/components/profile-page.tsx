@@ -28,8 +28,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { signOut } from "@/features/auth/sign-out";
 import { SharingSettings } from "@/features/friends/components/sharing-settings";
-import { CreateInvite } from "@/features/invites/components/create-invite";
-import { InviteList } from "@/features/invites/components/invite-list";
 import { OfflineData } from "@/features/offline/components/offline-data";
 import { SyncIndicator } from "@/features/workouts/components/sync-indicator";
 import { usePendingWorkouts } from "@/features/workouts/store";
@@ -94,13 +92,7 @@ export function ProfilePage() {
         </Section>
 
         {user?.role === "admin" ? (
-          <Section title={t("Invites")}>
-            <p className="mb-4 text-sm text-muted-foreground">{t("FitTune is invite only. Create a code for each person you want to let in.")}</p>
-            <div className="grid gap-6">
-              <CreateInvite />
-              <InviteList />
-            </div>
-          </Section>
+          <Section title={t("Administration")}><Link to="/admin" className="flex items-center justify-between rounded-xl border p-3 font-medium">{t("Admin panel")}<ChevronRightIcon className="size-4" aria-hidden /></Link></Section>
         ) : null}
 
         <Card className="grid gap-2 p-5 text-sm text-muted-foreground">

@@ -41,5 +41,5 @@ export const PERSIST_MAX_AGE = 7 * DAY;
  */
 export function shouldPersistQuery(query: Query) {
   const scope = query.queryKey[0];
-  return defaultShouldDehydrateQuery(query) && scope !== "friends" && scope !== "health";
+  return defaultShouldDehydrateQuery(query) && scope !== "friends" && scope !== "health" && scope !== "admin" && scope !== "invites";
 }

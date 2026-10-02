@@ -17,6 +17,7 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly fields: Record<string, string>;
+  retryAfter?: number;
 
   constructor(status: number, code: string, message: string, fields: Record<string, string> = {}) {
     super(message);
@@ -63,6 +64,9 @@ export function apiUrl(path: string) {
 }
 
 export type RequestOptions<T extends z.ZodType | undefined> = {
+  timeoutMs?: number;
+  /** Optional services can fail without making the whole app offline */
+  trackConnectivity?: boolean;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number | undefined | null>;
@@ -82,7 +86,8 @@ export async function send<T extends z.ZodType | undefined = undefined>(
   }
 
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  const multipart = options.body instanceof FormData;
+  if (options.body !== undefined && !multipart) headers["Content-Type"] = "application/json";
   const token = options.anonymous ? null : hooks.getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -92,7 +97,7 @@ export async function send<T extends z.ZodType | undefined = undefined>(
   const timer = setTimeout(() => {
     timedOut = true;
     controller.abort();
-  }, REQUEST_TIMEOUT_MS);
+  }, options.timeoutMs ?? REQUEST_TIMEOUT_MS);
   const forwardAbort = () => controller.abort();
   if (options.signal?.aborted) controller.abort();
   options.signal?.addEventListener("abort", forwardAbort);
@@ -101,11 +106,11 @@ export async function send<T extends z.ZodType | undefined = undefined>(
     const response = await fetch(url, {
       method: options.method ?? "GET",
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.body === undefined ? undefined : multipart ? options.body as FormData : JSON.stringify(options.body),
       signal: controller.signal,
     });
 
-    reportResponse(response.status);
+    if (options.trackConnectivity !== false) reportResponse(response.status);
     if (response.status === 401 && token) reportUnauthorized(token);
 
     if (!response.ok) {
@@ -117,12 +122,15 @@ export async function send<T extends z.ZodType | undefined = undefined>(
         message?: string;
         fields?: Record<string, string>;
       } | null;
-      throw new ApiError(
+      const failure = new ApiError(
         response.status,
         body?.code ?? "http_error",
         body?.message ?? `Request failed (${response.status})`,
         body?.fields ?? {},
       );
+      const seconds = Number(response.headers.get("Retry-After"));
+      if (seconds > 0 && Number.isFinite(seconds)) failure.retryAfter = seconds;
+      throw failure;
     }
 
     if (response.status === 204 || !options.schema) {
@@ -136,7 +144,7 @@ export async function send<T extends z.ZodType | undefined = undefined>(
     });
     const parsed = options.schema.safeParse(json);
     if (!parsed.success) {
-      console.error("Unexpected API response", path, parsed.error.issues);
+      console.error("Unexpected API response", path);
       throw new ApiError(response.status, "invalid_response", "The server sent an unexpected response.");
     }
     return parsed.data as T extends z.ZodType ? z.infer<T> : void;
@@ -144,7 +152,7 @@ export async function send<T extends z.ZodType | undefined = undefined>(
     if (error instanceof ApiError) throw error;
     // A caller's abort (a cancelled query) is not a failure; our own timeout is
     if (!timedOut && error instanceof DOMException && error.name === "AbortError") throw error;
-    reportNoResponse();
+    if (options.trackConnectivity !== false) reportNoResponse();
     throw timedOut
       ? new ApiError(0, "timeout", "FitTune is taking too long to respond. Try again later.")
       : new ApiError(0, "network_error", "Can't reach FitTune right now. Check your connection.");

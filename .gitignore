@@ -9,3 +9,5 @@ dev-dist
 coverage
 *.tsbuildinfo
 .DS_Store
+
+public/ocr/

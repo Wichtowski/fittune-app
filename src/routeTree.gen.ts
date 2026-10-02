@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AppActivityRouteImport } from './routes/_app/activity'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppHealthRouteImport } from './routes/_app/health'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppProgressRouteImport } from './routes/_app/progress'
@@ -53,6 +54,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const AppActivityRoute = AppActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHealthRoute = AppHealthRouteImport.update({
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/activity': typeof AppActivityRoute
+  '/admin': typeof AppAdminRoute
   '/health': typeof AppHealthRouteWithChildren
   '/profile': typeof AppProfileRoute
   '/progress': typeof AppProgressRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/activity': typeof AppActivityRoute
+  '/admin': typeof AppAdminRoute
   '/profile': typeof AppProfileRoute
   '/progress': typeof AppProgressRoute
   '/train': typeof AppTrainRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_app/activity': typeof AppActivityRoute
+  '/_app/admin': typeof AppAdminRoute
   '/_app/health': typeof AppHealthRouteWithChildren
   '/_app/profile': typeof AppProfileRoute
   '/_app/progress': typeof AppProgressRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/activity'
+    | '/admin'
     | '/health'
     | '/profile'
     | '/progress'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/activity'
+    | '/admin'
     | '/profile'
     | '/progress'
     | '/train'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_app/activity'
+    | '/_app/admin'
     | '/_app/health'
     | '/_app/profile'
     | '/_app/progress'
@@ -314,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof AppActivityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/health': {
@@ -447,6 +466,7 @@ const AppHealthRouteWithChildren = AppHealthRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
+  AppAdminRoute: typeof AppAdminRoute
   AppHealthRoute: typeof AppHealthRouteWithChildren
   AppProfileRoute: typeof AppProfileRoute
   AppProgressRoute: typeof AppProgressRoute
@@ -465,6 +485,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
+  AppAdminRoute: AppAdminRoute,
   AppHealthRoute: AppHealthRouteWithChildren,
   AppProfileRoute: AppProfileRoute,
   AppProgressRoute: AppProgressRoute,
