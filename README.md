@@ -66,7 +66,7 @@ Sign in with any of these; the dev-only password is `FitTune#Dev1`:
 | `demo@fittune.test` | Dashboard, Progress (charts, muscle map, records), Workouts history with pages, exercise details such as Barbell Bench Press, routines and places |
 | `casual@fittune.test` | Pounds and miles, and continuing a workout started on another device |
 | `newbie@fittune.test` | First-run experience: no places, routines or history |
-| `admin@fittune.test` | Profile → Invites with active, used, expired and revoked invites |
+| `admin@fittune.test` | Profile → Admin panel → Invites with active, used, expired and revoked invites |
 
 **Workout in progress.** The API holds an unfinished "Full Body A" for `casual`, as if it were started on a phone.
 Like any server-side workout it does not restore itself into this browser: open the Workout tab and tap "Continue “Full Body A”".

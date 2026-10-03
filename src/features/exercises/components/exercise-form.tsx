@@ -33,7 +33,7 @@ function defaults(exercise?: Exercise): ExerciseInputForm {
 }
 
 /** Create or edit a custom exercise; the same Zod schema validates the form and the request. */
-export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone: (exercise: Exercise) => void }) {
+export function ExerciseForm({ exercise, onDone, catalog = false }: { exercise?: Exercise; catalog?: boolean; onDone: (exercise: Exercise) => void }) {
   const queryClient = useQueryClient();
   const form = useForm<ExerciseInputForm, unknown, ExerciseInput>({
     resolver: zodResolver(exerciseInputSchema),
@@ -41,7 +41,7 @@ export function ExerciseForm({ exercise, onDone }: { exercise?: Exercise; onDone
   });
 
   const mutation = useMutation({
-    mutationFn: (input: ExerciseInput) => (exercise ? fittune.updateExercise(exercise.id, input) : fittune.createExercise(input)),
+    mutationFn: (input: ExerciseInput) => (exercise ? fittune.updateExercise(exercise.id, input) : fittune.createExercise({ ...input, global: catalog })),
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.exercises.detail(saved.id), saved);
       void queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all });

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { extractionSchema, type OcrInput } from "@/schemas/ocr";
+
 import { ApiClient } from "./client";
 import {
   daySchema,
@@ -31,6 +33,16 @@ class FitHealthClient extends ApiClient {
     this.request("/products", { method: "POST", body: input, schema: productSchema });
   updateProduct = (id: string, input: ProductInput) =>
     this.request(`/products/${id}`, { method: "PUT", body: input, schema: productSchema });
+
+  ocrCapabilities = (signal?: AbortSignal) => this.request("/ocr/capabilities", { schema: z.object({ ai: z.boolean(), rapid: z.boolean() }), signal, trackConnectivity: false });
+  parseLabel = (input: OcrInput, signal?: AbortSignal) => this.request("/ocr/parse", { method: "POST", body: input, schema: extractionSchema, signal, trackConnectivity: false });
+  extractLabel = (engine: "rapid" | "ai", file: Blob, text: string, column?: number, signal?: AbortSignal) => {
+    const body = new FormData();
+    body.append("file", file, "label.jpg");
+    body.append("text", text);
+    if (column !== undefined) body.append("column", String(column));
+    return this.request(`/ocr/${engine}`, { method: "POST", body, schema: extractionSchema, timeoutMs: 30_000, signal, trackConnectivity: false });
+  };
 
   // Meals
   getMeals = (signal?: AbortSignal) => this.request("/meals", { schema: z.array(mealSchema), signal });
