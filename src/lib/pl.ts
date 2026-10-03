@@ -927,6 +927,8 @@ export const pl: Record<string, string> = {
   "Photo resolution is too large. Use a photo below 24 megapixels.": "Rozdzielczość jest zbyt duża. Wybierz zdjęcie poniżej 24 megapikseli.",
   "Could not open this photo. Choose a JPEG, PNG or WebP image.": "Nie udało się otworzyć zdjęcia. Wybierz obraz JPEG, PNG lub WebP.",
   "Several nutrient labels share an OCR row; recrop or try AI": "Kilka składników trafiło do jednego wiersza OCR. Popraw kadr lub spróbuj AI.",
+  "Possible lost decimal point; adjusted using the other macros and detected kcal. Confirm the label": "Możliwy brak przecinka. Wartość skorygowano na podstawie pozostałych makroskładników i odczytanych kcal. Potwierdź ją na etykiecie.",
+  "Detected kcal is above the macro estimate; automatic macro correction skipped": "Odczytane kcal przewyższają wynik obliczony z makroskładników. Pominięto automatyczną korektę.",
   "Printed kJ and kcal disagree; check the label": "Wydrukowane wartości kJ i kcal są sprzeczne. Sprawdź etykietę.",
   "Multiple readings disagree; enter the label value": "Odczyty są sprzeczne. Wpisz wartość z etykiety.",
   "Energy unit is missing; include kcal or kJ in the crop": "Brakuje jednostki energii. Uwzględnij kcal lub kJ w kadrze.",
