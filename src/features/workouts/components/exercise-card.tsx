@@ -5,6 +5,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CheckIcon,
+  ChevronRightIcon,
   EllipsisVerticalIcon,
   NotebookPenIcon,
   PlusIcon,
@@ -20,8 +21,8 @@ import { setWeightStep, useWeightStep, WEIGHT_STEPS } from "../weight-step";
 import { SET_GRID, SET_VALUES, SetRow } from "./set-row";
 import { exerciseHistoryQuery } from "@/api/exercises";
 import { Button } from "@/components/ui/button";
-import { ExercisePhoto, ExerciseVideo, exerciseVideoSource } from "@/features/exercises/components/exercise-media";
-import { MuscleMap } from "@/features/exercises/components/muscle-illustration";
+import { ExerciseDemoDialog, hasExerciseDemo } from "@/features/exercises/components/exercise-demo-dialog";
+import { ExercisePhoto } from "@/features/exercises/components/exercise-media";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,12 +52,12 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
   const preferences = usePreferences();
   const weightStep = useWeightStep(preferences.weightUnit);
   const [showNotes, setShowNotes] = useState(exercise.notes !== null);
+  const [showDemo, setShowDemo] = useState(false);
   const { data: history } = useQuery({ ...exerciseHistoryQuery(exercise.exercise_id), staleTime: 10 * 60_000 });
 
   const previous = useMemo(() => previousSets(history, workoutId), [history, workoutId]);
   const labels = useMemo(() => setLabels(exercise.sets.map((set) => set.kind)), [exercise.sets]);
   const exerciseId = exercise.id;
-  const videoSource = history ? exerciseVideoSource(history.exercise) : null;
 
   const onChange = useCallback(
     (setId: string, patch: Partial<Omit<DraftSet, "id">>) => edit(edits.updateSet(exerciseId, setId, patch)),
@@ -192,15 +193,17 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
         </DropdownMenu>
       </header>
 
-      <details className="mb-3 rounded-xl border bg-muted/20">
-        <summary className="cursor-pointer rounded-xl px-3 py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">
-          {videoSource ? t("Muscles & demo") : t("Muscles worked")}
-        </summary>
-        <div className={`grid items-start gap-3 p-3 pt-0 ${videoSource ? "sm:grid-cols-2" : ""}`}>
-          <MuscleMap muscle={exercise.primary_muscle} secondaryMuscles={history?.exercise.secondary_muscles} />
-          {videoSource ? <ExerciseVideo key={`${videoSource.provider}-${videoSource.id}`} source={videoSource} name={exercise.exercise_name} /> : null}
-        </div>
-      </details>
+      <Button variant="outline" className="mb-3 w-full justify-between" onClick={() => setShowDemo(true)}>
+        {hasExerciseDemo(history?.exercise) ? t("Muscles & demo") : t("Muscles worked")}
+        <ChevronRightIcon className="size-4 text-muted-foreground" aria-hidden />
+      </Button>
+      <ExerciseDemoDialog
+        open={showDemo}
+        onOpenChange={setShowDemo}
+        name={exercise.exercise_name}
+        muscle={exercise.primary_muscle}
+        exercise={history?.exercise}
+      />
 
       {showNotes ? (
         <Textarea
