@@ -27,7 +27,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import { formatDay, formatDuration, formatShortDate } from "@/lib/format";
 import { difficultyLabels, equipmentLabels, muscleLabels, trackingLabels } from "@/lib/labels";
 import { formatDistance, formatVolume, formatWeight, kgTo, metresTo, trimNumber } from "@/lib/units";
-import type { ExerciseHistory } from "@/schemas/exercise";
+import { type ExerciseHistory, exerciseOrigin, isOwnExercise } from "@/schemas/exercise";
 
 const AnatomyViewer = lazy(() => import("./anatomy-viewer"));
 
@@ -59,6 +59,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const hasAnimation = exerciseAnimationUrl(exercise.media) !== null;
   const hasDemo = hasAnimation || hasPhotos || videoSource !== null;
   const steps = instructionSteps(exercise);
+  const origin = exerciseOrigin(exercise);
 
   return (
     <>
@@ -67,7 +68,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
           <Link to="/exercises" className="hover:underline">{t("Exercises")}{" "}</Link>
         }
         title={exercise.name}
-        actions={exercise.is_custom && !exercise.archived_at ? <CustomActions history={history} onEdit={() => setEditing(true)} /> : null}
+        actions={isOwnExercise(exercise) && !exercise.archived_at ? <CustomActions history={history} onEdit={() => setEditing(true)} /> : null}
       />
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -79,6 +80,7 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
         ))}
         <Badge variant="secondary">{t(equipmentLabels[exercise.equipment])}</Badge>
         <Badge variant="secondary">{t(difficultyLabels[exercise.difficulty])}</Badge>
+        {origin ? <Badge variant="outline">{origin.own || !origin.by ? t("Custom") : t("Created by {name}", { name: origin.by })}</Badge> : null}
         {exercise.archived_at ? <Badge variant="destructive">{t("Archived")}</Badge> : null}
       </div>
 

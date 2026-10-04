@@ -42,7 +42,12 @@ export const exerciseSchema = z.object({
   // out to stay small: read them from one exercise or its history
   instructions: z.string().nullable(),
   instructions_pl: z.string().nullable().default(null),
+  // Created by a user instead of coming with the catalog. Created exercises are shared, so
+  // `created_by` names whose it is and `is_own` says whether it is this user's to change;
+  // an API that predates sharing sends neither and only ever lists the user's own
   is_custom: z.boolean(),
+  is_own: z.boolean().optional(),
+  created_by: z.string().nullable().default(null),
   archived_at: timestampSchema.nullable(),
   created_at: timestampSchema,
   updated_at: timestampSchema,
@@ -50,6 +55,17 @@ export const exerciseSchema = z.object({
   media: z.array(exerciseMediaSchema).default([]),
 });
 export type Exercise = z.infer<typeof exerciseSchema>;
+
+/** Whether the signed-in user created the exercise and may edit or archive it */
+export function isOwnExercise(exercise: Pick<Exercise, "is_own" | "is_custom">): boolean {
+  return exercise.is_own ?? exercise.is_custom;
+}
+
+/** What tells a created exercise apart in a list: that it is yours, or whose it is */
+export function exerciseOrigin(exercise: Pick<Exercise, "is_own" | "is_custom" | "created_by">): { own: boolean; by: string | null } | null {
+  if (!exercise.is_custom) return null;
+  return { own: isOwnExercise(exercise), by: exercise.created_by };
+}
 
 /** Used both by the custom-exercise form and as the API request body. */
 export const exerciseInputSchema = z.object({

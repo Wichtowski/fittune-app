@@ -956,4 +956,13 @@ export const pl: Record<string, string> = {
   "Battle ropes": "Liny treningowe",
   "Climbing rope": "Lina do wspinania",
   "Tire and sledgehammer": "Opona i młot",
+  "Browse exercises": "Przeglądaj ćwiczenia",
+  "See how each one is done, or add your own": "Zobacz, jak wykonać każde z nich, albo dodaj własne",
+  "Created by {name}": "Autor: {name}",
+  "Created by users": "Utworzone przez użytkowników",
+  "Weight step": "Skok ciężaru",
+  "Decrease {field} by {step}": "Zmniejsz {field} o {step}",
+  "Increase {field} by {step}": "Zwiększ {field} o {step}",
+  "Mark set {label} not done": "Oznacz serię {label} jako nieukończoną",
+  "Complete set {label}": "Ukończ serię {label}",
 };

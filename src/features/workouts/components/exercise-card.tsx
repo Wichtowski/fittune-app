@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  CheckIcon,
   EllipsisVerticalIcon,
   NotebookPenIcon,
   PlusIcon,
@@ -15,7 +16,8 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { type DraftExercise, type DraftSet, edits, isSetLogged } from "../draft";
 import { previousSets, setLabels, summariseSet } from "../previous";
 import { useWorkoutStore } from "../store";
-import { SET_GRID, SetRow } from "./set-row";
+import { setWeightStep, useWeightStep, WEIGHT_STEPS } from "../weight-step";
+import { SET_GRID, SET_VALUES, SetRow } from "./set-row";
 import { exerciseHistoryQuery } from "@/api/exercises";
 import { Button } from "@/components/ui/button";
 import { ExercisePhoto, ExerciseVideo, exerciseVideoSource } from "@/features/exercises/components/exercise-media";
@@ -47,6 +49,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
   const edit = useWorkoutStore((state) => state.edit);
   const startRest = useWorkoutStore((state) => state.startRest);
   const preferences = usePreferences();
+  const weightStep = useWeightStep(preferences.weightUnit);
   const [showNotes, setShowNotes] = useState(exercise.notes !== null);
   const { data: history } = useQuery({ ...exerciseHistoryQuery(exercise.exercise_id), staleTime: 10 * 60_000 });
 
@@ -163,6 +166,25 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
               <ArrowDownIcon aria-hidden />{" "}{t("Move down")}{" "}</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setShowNotes(true)}>
               <NotebookPenIcon aria-hidden />{" "}{t("Add note")}{" "}</DropdownMenuItem>
+            {exercise.tracking === "weight_reps" ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>{t("Weight step")}</DropdownMenuLabel>
+                {WEIGHT_STEPS[preferences.weightUnit].map((step) => (
+                  // Stays open, so the new step can be seen applied before leaving the menu
+                  <DropdownMenuItem
+                    key={step}
+                    onSelect={(event) => {
+                      event.preventDefault();
+                      setWeightStep(preferences.weightUnit, step);
+                    }}
+                  >
+                    {step} {preferences.weightUnit}
+                    {weightStep === step ? <CheckIcon className="ml-auto" aria-hidden /> : null}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            ) : null}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={() => edit(edits.removeExercise(exerciseId))}>
               <Trash2Icon aria-hidden />{" "}{t("Remove exercise")}{" "}</DropdownMenuItem>
@@ -193,8 +215,11 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
       <div className={`${SET_GRID} px-1.5 pb-1 text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase`}>
         <span className="text-center">{t("Set")}</span>
         <span>{t("Previous")}</span>
-        <span className="text-center">{columns[0]}</span>
-        <span className="text-center">{columns[1]}</span>
+        {/* On phones the values sit on their own line and carry their captions themselves */}
+        <div className={`${SET_VALUES} hidden sm:grid`}>
+          <span className="text-center">{columns[0]}</span>
+          <span className="text-center">{columns[1]}</span>
+        </div>
         <span className="sr-only">{t("Done")}</span>
       </div>
 
@@ -210,6 +235,7 @@ export const ExerciseCard = memo(function ExerciseCard({ workoutId, exercise, in
               previous={prev ? summariseSet(prev, exercise.tracking, preferences) : null}
               weightUnit={preferences.weightUnit}
               distanceUnit={preferences.distanceUnit}
+              weightStep={weightStep}
               onChange={onChange}
               onToggleComplete={onToggleComplete}
               onKind={onKind}
