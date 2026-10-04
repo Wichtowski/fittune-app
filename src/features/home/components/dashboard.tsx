@@ -1,7 +1,7 @@
 import { t } from "@/lib/i18n";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ActivityIcon, FlameIcon, PlayIcon, TrophyIcon } from "lucide-react";
+import { ActivityIcon, PlayIcon, TrophyIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { activitiesInfiniteQuery } from "@/api/activities";
@@ -29,15 +29,18 @@ import { formatDay, formatDuration, greeting } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
 import { formatDistance, formatVolume, formatWeight } from "@/lib/units";
 import { BrowseExercisesLink } from "@/features/exercises/components/browse-exercises-link";
+import { WeeklyStreak } from "@/features/progress/components/weekly-streak";
+import { useNow } from "@/hooks/use-now";
 
 export function Dashboard() {
   const { data: me } = useQuery(meQuery());
   const preferences = usePreferences();
   const hasActive = useWorkoutStore((state) => state.active !== null);
 
-  const week = useMemo(() => currentWeek(), []);
-  const twelveWeeks = useMemo(() => rangePeriod("12w"), []);
-  const month = useMemo(() => rangePeriod("4w"), []);
+  const now = useNow(60_000);
+  const week = useMemo(() => currentWeek(new Date(now)), [now]);
+  const twelveWeeks = useMemo(() => rangePeriod("12w", new Date(now)), [now]);
+  const month = useMemo(() => rangePeriod("4w", new Date(now)), [now]);
 
   const overview = useQuery({ ...overviewQuery(week, timeZone), placeholderData: keepPreviousData });
   const timeline = useQuery(timelineQuery(twelveWeeks, timeZone, "week"));
@@ -119,13 +122,7 @@ export function Dashboard() {
         )}
       </section>
 
-      {overview.data && overview.data.streak_weeks > 0 ? (
-        <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-          <FlameIcon className="size-4 text-endurance-strong" aria-hidden />
-          <span>
-            <span className="font-semibold text-foreground">{t("Training streak (weeks): {count}", { count: overview.data.streak_weeks })}</span></span>
-        </p>
-      ) : null}
+      <div className="mt-4"><WeeklyStreak /></div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <ChartCard
