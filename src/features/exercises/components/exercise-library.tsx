@@ -2,7 +2,7 @@ import { t } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { SearchIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { type ExerciseFilter, filterExercises } from "../filter";
 import { ExercisePhoto, MediaCredits } from "./exercise-media";
@@ -13,9 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useIncrementalList } from "@/hooks/use-incremental-list";
 import { equipmentLabels, muscleLabels, trackingLabels } from "@/lib/labels";
 import { EQUIPMENT, type Equipment, MUSCLES, type Muscle } from "@/schemas/common";
+import { exerciseOrigin } from "@/schemas/exercise";
+
+/** Long enough to skip the keystrokes of a word, short enough to feel immediate */
+const SEARCH_DEBOUNCE_MS = 200;
 
 type ExerciseLibraryProps = {
   filter: ExerciseFilter;
@@ -24,7 +29,17 @@ type ExerciseLibraryProps = {
 
 export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps) {
   const { data, error, isPending, fetchStatus, refetch } = useQuery(exercisesQuery());
-  const results = useMemo(() => filterExercises(data ?? [], filter), [data, filter]);
+  // The search text lives here, not in `filter`: the owner keeps `filter` in the URL, which
+  // updates a moment after the keystroke, and a controlled input that is handed its previous
+  // value back loses the caret position. The owner only hears about the text once it settles
+  const [query, setQuery] = useState(filter.q ?? "");
+  const settledQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
+  useEffect(() => {
+    if (settledQuery !== (filter.q ?? "")) onFilterChange({ ...filter, q: settledQuery || undefined });
+    // Only a settled query is news for the owner; the filter changing is the owner's own doing
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settledQuery]);
+  const results = useMemo(() => filterExercises(data ?? [], { ...filter, q: settledQuery }), [data, filter, settledQuery]);
   const { shown, hasMore, showMore } = useIncrementalList(results);
   const shownMedia = useMemo(() => shown.flatMap((exercise) => exercise.media), [shown]);
 
@@ -35,8 +50,8 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
           <SearchIcon className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
             type="search"
-            value={filter.q ?? ""}
-            onChange={(event) => onFilterChange({ ...filter, q: event.target.value || undefined })}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
             placeholder={t("Search exercises")}
             aria-label={t("Search exercises")}
             className="pl-11"
@@ -115,7 +130,7 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
                       {t(trackingLabels[exercise.tracking])}
                     </span>
                   </span>
-                  {exercise.is_custom ? <Badge variant="secondary">{t("Custom")}</Badge> : null}
+                  <OriginBadge exercise={exercise} />
                 </Link>
               </li>
             ))}
@@ -125,5 +140,17 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
         </>
       )}
     </div>
+  );
+}
+
+/** Marks an exercise a user created: "Custom" for your own, the creator's name for others' */
+function OriginBadge({ exercise }: { exercise: Parameters<typeof exerciseOrigin>[0] }) {
+  const origin = exerciseOrigin(exercise);
+  if (!origin) return null;
+  if (origin.own || !origin.by) return <Badge variant="secondary">{t("Custom")}</Badge>;
+  return (
+    <Badge variant="outline" className="max-w-28 truncate" title={t("Created by {name}", { name: origin.by })}>
+      {origin.by}
+    </Badge>
   );
 }

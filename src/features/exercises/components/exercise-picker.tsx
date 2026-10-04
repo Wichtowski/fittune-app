@@ -13,11 +13,12 @@ import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { equipmentSummary } from "@/features/places/format";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useIncrementalList } from "@/hooks/use-incremental-list";
 import { equipmentLabels, muscleLabels } from "@/lib/labels";
 import { MUSCLES, type Muscle } from "@/schemas/common";
 import type { Place } from "@/schemas/place";
-import type { Exercise } from "@/schemas/exercise";
+import { type Exercise, exerciseOrigin } from "@/schemas/exercise";
 
 type ExercisePickerProps = {
   open: boolean;
@@ -35,7 +36,9 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exer
   const [muscle, setMuscle] = useState<Muscle | undefined>();
   const [selected, setSelected] = useState<string[]>([]);
 
-  const results = useMemo(() => filterExercises(data ?? [], { q, muscle, availableEquipment: place && !showAll ? place.equipment : undefined }), [data, q, muscle, place, showAll]);
+  // Typing stays instant; the list of over a thousand is only filtered once the text settles
+  const settledQ = useDebouncedValue(q, 200);
+  const results = useMemo(() => filterExercises(data ?? [], { q: settledQ, muscle, availableEquipment: place && !showAll ? place.equipment : undefined }), [data, settledQ, muscle, place, showAll]);
 
   const { shown, hasMore, showMore } = useIncrementalList(results);
   const shownMedia = useMemo(() => shown.flatMap((exercise) => exercise.media), [shown]);
@@ -135,7 +138,7 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exer
                         <span className="block truncate font-medium">{exercise.name}</span>
                         <span className="block truncate text-sm text-muted-foreground">
                           {t(muscleLabels[exercise.primary_muscle])} · {t(equipmentLabels[exercise.equipment])}
-                          {exercise.is_custom ? ` · ${t("Custom")}` : ""}
+                          {originNote(exercise)}
                         </span>
                       </span>
                     </button>
@@ -165,4 +168,10 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exer
       </div>
     </ResponsiveDialog>
   );
+}
+
+function originNote(exercise: Exercise): string {
+  const origin = exerciseOrigin(exercise);
+  if (!origin) return "";
+  return ` · ${origin.own || !origin.by ? t("Custom") : t("Created by {name}", { name: origin.by })}`;
 }

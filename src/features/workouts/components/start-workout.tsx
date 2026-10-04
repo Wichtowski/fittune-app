@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { createWorkout, workoutFromPrevious, workoutFromRoutine } from "../draft";
 import { useWorkoutStore } from "../store";
 import { placesQuery } from "@/api/places";
+import { BrowseExercisesLink } from "@/features/exercises/components/browse-exercises-link";
 import { routinesQuery } from "@/api/routines";
 import { workoutQuery, workoutsInfiniteQuery } from "@/api/workouts";
 import { EmptyState } from "@/components/empty-state";
@@ -126,6 +127,8 @@ export function StartWorkout() {
           />
         )}
       </section>
+
+      <BrowseExercisesLink className="mt-8" />
     </div>
   );
 }

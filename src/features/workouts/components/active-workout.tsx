@@ -72,7 +72,8 @@ export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
 
       <PlacePicker value={workout.place} onChange={(place) => edit(edits.setPlace(place))} />
 
-      <div className="mt-2 grid gap-3">
+      {/* One shrinkable column: an auto one grows to its widest card and pushes it off a phone */}
+      <div className="mt-2 grid grid-cols-1 gap-3">
         {workout.exercises.map((exercise, index) => (
           <ExerciseCard
             key={exercise.id}

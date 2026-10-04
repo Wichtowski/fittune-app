@@ -16,6 +16,7 @@ function exercise(name: string, overrides: Partial<Exercise> = {}): Exercise {
     video_id: null,
     instructions: null,
     instructions_pl: null,
+    created_by: null,
     is_custom: false,
     archived_at: null,
     created_at: "",

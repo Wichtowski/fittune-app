@@ -28,6 +28,7 @@ import { currentWeek, rangePeriod, timeZone } from "@/lib/dates";
 import { formatDay, formatDuration, greeting } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
 import { formatDistance, formatVolume, formatWeight } from "@/lib/units";
+import { BrowseExercisesLink } from "@/features/exercises/components/browse-exercises-link";
 
 export function Dashboard() {
   const { data: me } = useQuery(meQuery());
@@ -76,6 +77,7 @@ export function Dashboard() {
             </Button>
           </div>
         )}
+        <BrowseExercisesLink />
       </div>
 
       <section aria-label={t("This week")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
