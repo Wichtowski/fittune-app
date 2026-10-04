@@ -5,13 +5,15 @@ import { SearchIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { type ExerciseFilter, filterExercises } from "../filter";
-import { ExercisePhoto } from "./exercise-media";
+import { ExercisePhoto, MediaCredits } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
+import { LoadMore } from "@/components/load-more";
 import { QueryError, QueryFallback } from "@/components/query-error";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIncrementalList } from "@/hooks/use-incremental-list";
 import { equipmentLabels, muscleLabels, trackingLabels } from "@/lib/labels";
 import { EQUIPMENT, type Equipment, MUSCLES, type Muscle } from "@/schemas/common";
 
@@ -23,9 +25,11 @@ type ExerciseLibraryProps = {
 export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps) {
   const { data, error, isPending, fetchStatus, refetch } = useQuery(exercisesQuery());
   const results = useMemo(() => filterExercises(data ?? [], filter), [data, filter]);
+  const { shown, hasMore, showMore } = useIncrementalList(results);
+  const shownMedia = useMemo(() => shown.flatMap((exercise) => exercise.media), [shown]);
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_12rem_12rem]">
         <div className="relative">
           <SearchIcon className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -90,8 +94,8 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
           <p className="text-sm text-muted-foreground">
             {t("Exercises: {count}", { count: results.length })}
           </p>
-          <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-            {results.map((exercise) => (
+          <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {shown.map((exercise) => (
               <li key={exercise.id}>
                 <Link
                   to="/exercises/$exerciseId"
@@ -116,6 +120,8 @@ export function ExerciseLibrary({ filter, onFilterChange }: ExerciseLibraryProps
               </li>
             ))}
           </ul>
+          {hasMore ? <LoadMore key={shown.length} onLoadMore={showMore} /> : null}
+          <MediaCredits media={shownMedia} />
         </>
       )}
     </div>

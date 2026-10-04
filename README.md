@@ -175,7 +175,10 @@ endurance. Tokens live in `src/styles.css` (light and dark), and training number
 condensed display face. Chart colours are separate data tokens, checked for colour-blind
 separation and contrast in both themes. Every chart has a table view.
 
-Exercise photos come from the [public domain Free Exercise DB](https://github.com/yuhonas/free-exercise-db/blob/a859101d633a01c4a1a920d6a8ce41dabba0705f/LICENSE.md) at a pinned revision and load while online.
+Exercise thumbnails and animated demos come from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) and load while online.
+They are © [Gym visual](https://gymvisual.com/) and are not covered by the dataset's MIT licence, so the app shows the credit the API returns with each file wherever the media appear: under the demo, the library and the exercise picker.
+Three exercises without a counterpart in that dataset keep their photos from the [public domain Free Exercise DB](https://github.com/yuhonas/free-exercise-db/blob/a859101d633a01c4a1a920d6a8ce41dabba0705f/LICENSE.md).
+The library is over 1,300 exercises, so its lists render a page at a time and its instruction texts load with each exercise instead of with the list.
 Bodypart illustrations are bundled with the app and remain available offline.
 YouTube exercise demos load only after the user taps Watch demo.
 The Barbell Curl demo opens its original Vimeo page; the video is not copied into FitTune.

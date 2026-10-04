@@ -10,9 +10,20 @@ import {
   trackingSchema,
 } from "./common";
 
+// Stored by the API; `url` is relative to the API origin. `attribution` is the credit the
+// media's licence requires next to it
+const storedMedia = {
+  id: z.guid(),
+  provider: z.literal("fittune"),
+  position: z.number().int(),
+  url: z.string().startsWith("/"),
+  attribution: z.string().optional(),
+};
+
 export const exerciseMediaSchema = z.discriminatedUnion("kind", [
-  // Stored by the API; `url` is relative to the API origin
-  z.object({ id: z.guid(), kind: z.literal("photo"), provider: z.literal("fittune"), position: z.number().int(), url: z.string().startsWith("/") }),
+  z.object({ ...storedMedia, kind: z.literal("photo") }),
+  // An animated GIF of the movement
+  z.object({ ...storedMedia, kind: z.literal("animation") }),
   z.object({ id: z.guid(), kind: z.literal("video"), provider: z.enum(["youtube", "vimeo"]), position: z.number().int(), external_id: z.string() }),
 ]);
 export type ExerciseMedia = z.infer<typeof exerciseMediaSchema>;
@@ -27,12 +38,15 @@ export const exerciseSchema = z.object({
   requires: z.array(equipmentItemSchema),
   difficulty: difficultySchema,
   video_id: z.string().nullable(),
+  // English for catalog exercises. Both texts are null in the library list, which leaves them
+  // out to stay small: read them from one exercise or its history
   instructions: z.string().nullable(),
+  instructions_pl: z.string().nullable().default(null),
   is_custom: z.boolean(),
   archived_at: timestampSchema.nullable(),
   created_at: timestampSchema,
   updated_at: timestampSchema,
-  // Photos, then videos, each by position; absent from APIs that predate it
+  // Photos, then animations, then videos, each by position; absent from APIs that predate it
   media: z.array(exerciseMediaSchema).default([]),
 });
 export type Exercise = z.infer<typeof exerciseSchema>;
