@@ -67,7 +67,7 @@ export const productInputSchema = z
     serving_amount: z.number().min(0.1).max(2000).nullable(),
     serving_name: z.string().trim().max(40).nullable(),
     barcode: z.string().nullable(),
-    source: z.enum(["manual", "off"]),
+    source: z.enum(["manual", "off", "ocr", "ai"]),
     unit: unitSchema,
   })
   .superRefine((value, ctx) => {

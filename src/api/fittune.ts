@@ -32,7 +32,7 @@ class FitTuneClient extends ApiClient {
   getExercise = (id: string, signal?: AbortSignal) => this.request(`/exercises/${id}`, { schema: exerciseSchema, signal });
   getExerciseHistory = (id: string, signal?: AbortSignal) =>
     this.request(`/exercises/${id}/history`, { schema: exerciseHistorySchema, query: { sessions: 50 }, signal });
-  createExercise = (input: ExerciseInput) =>
+  createExercise = (input: ExerciseInput & { global?: boolean }) =>
     this.request("/exercises", { method: "POST", body: input, schema: exerciseSchema });
   updateExercise = (id: string, input: ExerciseInput) =>
     this.request(`/exercises/${id}`, { method: "PUT", body: input, schema: exerciseSchema });

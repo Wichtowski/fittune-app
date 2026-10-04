@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { ocrSettingsSchema } from "@/schemas/ocr";
+
 import { ApiClient } from "./client";
 import {
   blockedUserSchema,
@@ -40,7 +42,10 @@ class AccountClient extends ApiClient {
   changePassword = (body: { current_password: string; new_password: string }) =>
     this.request("/me/password", { method: "POST", body });
   deleteAccount = (password: string) => this.request("/me", { method: "DELETE", body: { password } });
-  listUsers = () => this.request("/users", { schema: z.array(userSchema) });
+  listUsers = (offset = 0, signal?: AbortSignal) => this.request("/users", { schema: z.array(userSchema), query: { offset, limit: 50 }, signal });
+
+  getOcrSettings = (signal?: AbortSignal) => this.request("/admin/ocr-settings", { schema: ocrSettingsSchema, signal });
+  setOcrModel = (ocr_model: string) => this.request("/admin/ocr-settings", { method: "PUT", body: { ocr_model }, schema: ocrSettingsSchema });
 
   // Invites (admin)
   getInvites = (signal?: AbortSignal) => this.request("/admin/invites", { schema: inviteSchema.array(), signal });

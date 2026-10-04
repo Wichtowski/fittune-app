@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos } from "./exercise-media";
+import { ExerciseAnimation, exerciseAnimationUrl, ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos, MediaCredits, mediaAttributions } from "./exercise-media";
 import { API_BASE_URL } from "@/lib/env";
 import { exerciseSchema, type ExerciseMedia } from "@/schemas/exercise";
 
@@ -11,6 +11,67 @@ const media: ExerciseMedia[] = [
   { id: "7c7f3c1e-1f7a-4c1e-9d3a-3e5b0c1d2a02", kind: "photo", provider: "fittune", position: 1, url: "/api/v1/exercise-media/finish/file" },
   { id: "7c7f3c1e-1f7a-4c1e-9d3a-3e5b0c1d2a03", kind: "video", provider: "vimeo", position: 0, external_id: "278191577" },
 ];
+
+const gymVisual = "© Gym visual - https://gymvisual.com/";
+const thumbnailId = "7c7f3c1e-1f7a-4c1e-9d3a-3e5b0c1d2a11";
+const animationId = "7c7f3c1e-1f7a-4c1e-9d3a-3e5b0c1d2a12";
+// What the API returns for an exercise imported from the dataset
+const imported: ExerciseMedia[] = [
+  { id: thumbnailId, kind: "photo", provider: "fittune", position: 0, url: `/api/v1/train/exercise-media/${thumbnailId}/file`, attribution: gymVisual },
+  { id: animationId, kind: "animation", provider: "fittune", position: 0, url: `/api/v1/train/exercise-media/${animationId}/file`, attribution: gymVisual },
+  { id: "7c7f3c1e-1f7a-4c1e-9d3a-3e5b0c1d2a13", kind: "video", provider: "youtube", position: 0, external_id: "hWbUlkb5Ms4" },
+];
+
+describe("imported exercise media", () => {
+  it("parses animations and credits from the API", () => {
+    const parsed = exerciseSchema.shape.media.parse(imported);
+    expect(parsed).toEqual(imported);
+    expect(exerciseAnimationUrl(parsed)).toBe(`${API_BASE_URL}/api/v1/train/exercise-media/${animationId}/file`);
+    expect(exerciseAnimationUrl(media)).toBeNull();
+  });
+
+  it("plays the animation and names the exercise", () => {
+    const { container } = render(<ExerciseAnimation name="Barbell Bench Press" muscle="chest" media={imported} />);
+    expect(within(container).getByAltText("Barbell Bench Press animated demo")).toHaveAttribute(
+      "src",
+      `${API_BASE_URL}/api/v1/train/exercise-media/${animationId}/file`,
+    );
+  });
+
+  it("falls back to the thumbnail when the animation cannot load", () => {
+    const { container } = render(<ExerciseAnimation name="Barbell Bench Press" muscle="chest" media={imported} />);
+    fireEvent.error(within(container).getByAltText("Barbell Bench Press animated demo"));
+    // A lone photo is a thumbnail, not a start position
+    expect(within(container).getByAltText("Barbell Bench Press")).toHaveAttribute(
+      "src",
+      `${API_BASE_URL}/api/v1/train/exercise-media/${thumbnailId}/file`,
+    );
+  });
+
+  it("waits for a tap when the system asks for reduced motion", () => {
+    const matchMedia = window.matchMedia;
+    window.matchMedia = (query: string) => ({ ...matchMedia(query), matches: query.includes("prefers-reduced-motion") });
+    try {
+      const { container } = render(<ExerciseAnimation name="Barbell Bench Press" muscle="chest" media={imported} />);
+      expect(within(container).queryByAltText("Barbell Bench Press animated demo")).toBeNull();
+      fireEvent.click(within(container).getByRole("button", { name: "Play animation" }));
+      expect(within(container).getByAltText("Barbell Bench Press animated demo")).toBeInTheDocument();
+    } finally {
+      window.matchMedia = matchMedia;
+    }
+  });
+
+  it("credits each source once and links it", () => {
+    const freeExerciseDb = media.map((item) => (item.kind === "video" ? item : { ...item, attribution: "Free Exercise DB" }));
+    expect(mediaAttributions([...imported, ...freeExerciseDb])).toEqual([gymVisual, "Free Exercise DB"]);
+    expect(mediaAttributions(media)).toEqual([]);
+
+    const { container } = render(<MediaCredits media={imported} />);
+    expect(container).toHaveTextContent("Exercise media: © Gym visual - gymvisual.com");
+    expect(within(container).getByRole("link", { name: "gymvisual.com" })).toHaveAttribute("href", "https://gymvisual.com/");
+    expect(render(<MediaCredits media={media} />).container).toBeEmptyDOMElement();
+  });
+});
 
 describe("exercise media", () => {
   it("loads catalog photos from the API", () => {
@@ -69,6 +130,7 @@ describe("exercise media", () => {
       updated_at: "2026-09-28T12:00:00Z",
     });
     expect(exercise.media).toEqual([]);
+    expect(exercise.instructions_pl).toBeNull();
     expect(exerciseVideoSource(exercise)).toEqual({ provider: "youtube", id: "dQw4w9WgXcQ" });
     expect(exerciseVideoSource({ media: [], video_id: null })).toBeNull();
   });

@@ -44,7 +44,8 @@ configureApiClient({
 /** Bump when cached response shapes change so stale persisted data is dropped. */
 // 2: exercises gained `requires` and places list equipment items instead of categories
 // 3: exercise media URLs moved under /api/v1/train
-const CACHE_SCHEMA_VERSION = "3";
+// 4: exercises gained animations and Polish instructions, and the library list lost its texts
+const CACHE_SCHEMA_VERSION = "4";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");

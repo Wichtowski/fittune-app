@@ -18,6 +18,8 @@ it("keeps FitHealth data out of the persisted offline cache", () => {
   const client = new QueryClient();
   client.setQueryData(queryKeys.places, []);
   client.setQueryData(["health", "diary", "2026-09-28"], []);
+  client.setQueryData(["admin", "ocr"], { ocr_model: "gpt-6-luna" });
+  client.setQueryData(queryKeys.invites, [{ code: "private-invite" }]);
 
   const persisted = dehydrate(client, { shouldDehydrateQuery: shouldPersistQuery }).queries.map((q) => q.queryKey);
   expect(persisted).toEqual([queryKeys.places]);

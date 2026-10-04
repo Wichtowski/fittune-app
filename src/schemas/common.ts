@@ -29,13 +29,14 @@ export type Equipment = z.infer<typeof equipmentSchema>;
 
 // Specific equipment, matched against what an exercise requires. Order is the API's canonical order
 export const EQUIPMENT_ITEMS = [
-  "barbell", "ez_bar", "dumbbells", "kettlebells",
-  "flat_bench", "adjustable_bench", "squat_rack", "pull_up_bar", "dip_station",
+  "barbell", "ez_bar", "trap_bar", "dumbbells", "kettlebells", "weight_plates",
+  "flat_bench", "adjustable_bench", "preacher_bench", "back_extension_bench", "squat_rack", "pull_up_bar", "dip_station",
   "leg_press", "leg_extension", "leg_curl", "calf_raise_machine", "smith_machine",
-  "chest_press_machine", "pec_deck", "shoulder_press_machine", "assisted_pull_up_machine",
+  "chest_press_machine", "pec_deck", "shoulder_press_machine", "assisted_pull_up_machine", "strength_machines",
   "cable_station", "lat_pulldown", "seated_row",
-  "treadmill", "rowing_machine", "stationary_bike",
-  "resistance_band", "ab_wheel", "jump_rope",
+  "treadmill", "rowing_machine", "stationary_bike", "cardio_machines",
+  "resistance_band", "suspension_trainer", "stability_ball", "bosu_ball", "medicine_ball", "foam_roller", "plyo_box",
+  "ab_wheel", "jump_rope", "battle_ropes", "climbing_rope", "sledgehammer_tire",
 ] as const;
 export const equipmentItemSchema = z.enum(EQUIPMENT_ITEMS);
 export type EquipmentItem = z.infer<typeof equipmentItemSchema>;

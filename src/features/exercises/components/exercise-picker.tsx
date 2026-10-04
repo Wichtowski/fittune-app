@@ -4,14 +4,16 @@ import { CheckIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { filterExercises } from "../filter";
-import { ExercisePhoto } from "./exercise-media";
+import { ExercisePhoto, MediaCredits } from "./exercise-media";
 import { exercisesQuery } from "@/api/exercises";
+import { LoadMore } from "@/components/load-more";
 import { QueryError, QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { equipmentSummary } from "@/features/places/format";
+import { useIncrementalList } from "@/hooks/use-incremental-list";
 import { equipmentLabels, muscleLabels } from "@/lib/labels";
 import { MUSCLES, type Muscle } from "@/schemas/common";
 import type { Place } from "@/schemas/place";
@@ -34,6 +36,9 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exer
   const [selected, setSelected] = useState<string[]>([]);
 
   const results = useMemo(() => filterExercises(data ?? [], { q, muscle, availableEquipment: place && !showAll ? place.equipment : undefined }), [data, q, muscle, place, showAll]);
+
+  const { shown, hasMore, showMore } = useIncrementalList(results);
+  const shownMedia = useMemo(() => shown.flatMap((exercise) => exercise.media), [shown]);
 
   const close = (next: boolean) => {
     onOpenChange(next);
@@ -98,8 +103,8 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exer
               </div>
             </QueryFallback>
           ) : (
-            <ul className="grid gap-0.5">
-              {results.map((exercise) => {
+            <ul className="grid grid-cols-1 gap-0.5">
+              {shown.map((exercise) => {
                 const isSelected = selected.includes(exercise.id);
                 return (
                   <li key={exercise.id}>
@@ -137,6 +142,16 @@ export function ExercisePicker({ open, onOpenChange, onPick, title = t("Add exer
                   </li>
                 );
               })}
+              {hasMore ? (
+                <li>
+                  <LoadMore key={shown.length} onLoadMore={showMore} />
+                </li>
+              ) : null}
+              {shown.length > 0 ? (
+                <li className="px-2 pt-2">
+                  <MediaCredits media={shownMedia} />
+                </li>
+              ) : null}
               {results.length === 0 && data ? (
                 <li className="px-4 py-10 text-center text-sm text-muted-foreground">{t("No exercises match. Create a custom one from the Exercises page.")}{" "}</li>
               ) : null}

@@ -1,4 +1,4 @@
-import { t } from "@/lib/i18n";
+import { getLocale, t } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArchiveIcon, PencilIcon } from "lucide-react";
@@ -6,7 +6,7 @@ import { lazy, Suspense, useState } from "react";
 import { toast } from "sonner";
 
 import { ExerciseForm } from "./exercise-form";
-import { ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos } from "./exercise-media";
+import { ExerciseAnimation, exerciseAnimationUrl, ExercisePhoto, ExerciseVideo, exerciseVideoSource, hasExercisePhotos, MediaCredits } from "./exercise-media";
 import { MuscleMap } from "./muscle-illustration";
 import { fittune } from "@/api/fittune";
 import { exerciseHistoryQuery } from "@/api/exercises";
@@ -56,6 +56,9 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
   const trend = trendSeries(history, preferences);
   const videoSource = exerciseVideoSource(exercise);
   const hasPhotos = hasExercisePhotos(exercise.media);
+  const hasAnimation = exerciseAnimationUrl(exercise.media) !== null;
+  const hasDemo = hasAnimation || hasPhotos || videoSource !== null;
+  const steps = instructionSteps(exercise);
 
   return (
     <>
@@ -106,19 +109,20 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
         )}
       </div>
 
-      <Card className={`mt-6 grid items-start gap-4 p-4 ${hasPhotos || videoSource ? "md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.7fr)]" : "mx-auto w-full max-w-lg"}`}>
-        {hasPhotos || videoSource ? (
+      <Card className={`mt-6 grid items-start gap-4 p-4 ${hasDemo ? "md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.7fr)]" : "mx-auto w-full max-w-lg"}`}>
+        {hasDemo ? (
           <div className="min-w-0">
             <h2 className="mb-3 font-semibold">{t("Exercise demo")}</h2>
-            {hasPhotos ? (
-              <>
-                <div className="grid grid-cols-2 gap-2">
-                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} className="aspect-[4/3] rounded-xl" />
-                  <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} frame={1} className="aspect-[4/3] rounded-xl" />
-                </div>
-                <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noreferrer" className="mt-2 block text-xs text-muted-foreground hover:underline">{t("Exercise photos: Free Exercise DB")}{" "}</a>
-              </>
+            {hasAnimation ? (
+              // The source is 180px wide, so it is shown at no more than twice that
+              <ExerciseAnimation name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} className="mx-auto aspect-square w-full max-w-[22.5rem] rounded-xl" />
+            ) : hasPhotos ? (
+              <div className="grid grid-cols-2 gap-2">
+                <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} className="aspect-[4/3] rounded-xl" />
+                <ExercisePhoto name={exercise.name} muscle={exercise.primary_muscle} media={exercise.media} frame={1} className="aspect-[4/3] rounded-xl" />
+              </div>
             ) : null}
+            <MediaCredits media={exercise.media} className="mt-2" />
             {videoSource ? <div className="mt-3"><ExerciseVideo key={`${videoSource.provider}-${videoSource.id}`} source={videoSource} name={exercise.name} /></div> : null}
           </div>
         ) : null}
@@ -179,8 +183,15 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
             <p className="mt-1 text-sm text-muted-foreground">{t(trackingLabels[exercise.tracking])}</p>
             <h3 className="mt-4 font-semibold">{t("Equipment needed")}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{requirementSummary(exercise.requires)}</p>
-            {exercise.instructions ? (
-              <p className="mt-4 text-sm whitespace-pre-wrap">{exercise.instructions}</p>
+            {steps.length > 0 ? <h3 className="mt-4 font-semibold">{t("Instructions")}</h3> : null}
+            {steps.length > 1 && !exercise.is_custom ? (
+              <ol className="mt-1 grid list-decimal gap-1.5 pl-5 text-sm">
+                {steps.map((step, index) => (
+                  <li key={index}>{step}</li>
+                ))}
+              </ol>
+            ) : steps.length > 0 ? (
+              <p className="mt-1 text-sm whitespace-pre-wrap">{steps.join("\n")}</p>
             ) : null}
           </Card>
         </aside>
@@ -198,6 +209,12 @@ function ExerciseView({ history }: { history: ExerciseHistory }) {
       </ResponsiveDialog>
     </>
   );
+}
+
+/** Instructions in the app's language when the catalog has them, one step per line */
+function instructionSteps(exercise: ExerciseHistory["exercise"]): string[] {
+  const text = (getLocale() === "pl" ? exercise.instructions_pl : null) ?? exercise.instructions ?? "";
+  return text.split("\n").filter((line) => line.trim() !== "");
 }
 
 function CustomActions({ history, onEdit }: { history: ExerciseHistory; onEdit: () => void }) {
