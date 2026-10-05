@@ -21,13 +21,17 @@ import { RANGES, type RangeKey, rangePeriod, timeZone } from "@/lib/dates";
 import { formatDay, formatDuration } from "@/lib/format";
 import { muscleLabels } from "@/lib/labels";
 import { formatDistance, formatVolume, formatWeight } from "@/lib/units";
+import { WeeklyStreak } from "./weekly-streak";
+import { MuscleVolumeMap } from "./muscle-volume-map";
+import { useNow } from "@/hooks/use-now";
 
 type Metric = "volume" | "workouts" | "distance";
 
 export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; onRangeChange: (range: RangeKey) => void }) {
   const preferences = usePreferences();
   const [metric, setMetric] = useState<Metric>("volume");
-  const period = useMemo(() => rangePeriod(range), [range]);
+  const now = useNow(60_000);
+  const period = useMemo(() => rangePeriod(range, new Date(now)), [range, now]);
   const bucket = RANGES[range].bucket;
   const comparedTo = t("previous {range}", { range: t(RANGES[range].label) });
 
@@ -68,7 +72,7 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
 
   return (
     <div className="grid gap-6">
-      {/* One filter row scopes everything below it. */}
+      {/* The range applies to totals, volume and muscle distribution */}
       <ToggleGroup
         type="single"
         value={range}
@@ -77,7 +81,7 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
         className="w-full md:w-auto md:justify-self-start"
       >
         {(Object.keys(RANGES) as RangeKey[]).map((key) => (
-          <ToggleGroupItem key={key} value={key}>
+          <ToggleGroupItem key={key} value={key} className="px-2 text-xs sm:px-3 sm:text-sm">
             {t(RANGES[key].label)}
           </ToggleGroupItem>
         ))}
@@ -115,6 +119,8 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
           </QueryFallback>
         )}
       </section>
+
+      <WeeklyStreak />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard
@@ -164,15 +170,18 @@ export function ProgressDashboard({ range, onRangeChange }: { range: RangeKey; o
           }}
         >
           {muscles.data && muscles.data.length > 0 ? (
-            <BarList
-              items={muscles.data.map((m) => ({
-                key: m.muscle,
-                label: t(muscleLabels[m.muscle]),
-                value: m.sets,
-                display: String(m.sets),
-                detail: formatVolume(m.volume_kg, preferences.weightUnit),
-              }))}
-            />
+            <div className="grid gap-5">
+              <MuscleVolumeMap rows={muscles.data} />
+              <BarList
+                items={muscles.data.map((m) => ({
+                  key: m.muscle,
+                  label: t(muscleLabels[m.muscle]),
+                  value: m.sets,
+                  display: String(m.sets),
+                  detail: formatVolume(m.volume_kg, preferences.weightUnit),
+                }))}
+              />
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">{t("No strength training in this period.")}</p>
           )}

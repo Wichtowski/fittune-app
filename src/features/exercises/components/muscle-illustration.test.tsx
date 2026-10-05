@@ -42,12 +42,12 @@ describe("muscle map", () => {
     expect(screen.getByText("Secondary").querySelector("span")).toHaveClass("bg-muscle-load-low");
   });
 
-  it("draws the skeleton without ever highlighting bones as worked muscles", () => {
+  it("keeps head, hands and other unmapped regions neutral even for full-body exercises", () => {
     const { container } = render(<MuscleMap muscle="full_body" />);
-    const bones = container.querySelectorAll('[data-kind="bone"]');
-    expect(bones.length).toBeGreaterThan(0);
-    for (const bone of bones) expect(bone).not.toHaveAttribute("data-engagement");
-    expect(screen.getByRole("link", { name: /BodyParts3D/ })).toHaveAttribute("href", "https://dbarchive.biosciencedbc.jp/en/bodyparts3d/");
+    const neutral = container.querySelectorAll('[data-kind="neutral"]');
+    expect(neutral.length).toBeGreaterThan(0);
+    for (const region of neutral) expect(region).not.toHaveAttribute("data-engagement");
+    expect(screen.getByRole("link", { name: /MuscleMap/ })).toHaveAttribute("href", "https://github.com/melihcolpan/MuscleMap");
   });
 
   it("keeps compact thumbnails to the view that shows the worked muscles", () => {

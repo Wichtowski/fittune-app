@@ -180,6 +180,13 @@ They are © [Gym visual](https://gymvisual.com/) and are not covered by the data
 Three exercises without a counterpart in that dataset keep their photos from the [public domain Free Exercise DB](https://github.com/yuhonas/free-exercise-db/blob/a859101d633a01c4a1a920d6a8ce41dabba0705f/LICENSE.md).
 The library is over 1,300 exercises, so its lists render a page at a time and its instruction texts load with each exercise instead of with the list.
 Bodypart illustrations are bundled with the app and remain available offline.
+The 2D muscle figure uses MIT-licensed [MuscleMap](https://github.com/melihcolpan/MuscleMap) geometry by Melih Colpan, with the licence in `public/licenses/muscle-map.txt`.
+Regenerate it with `python3 scripts/anatomy/build-muscle-map.py`; the source revision is pinned in that script.
+Exercise maps distinguish primary and secondary muscles; Progress shades actual working sets by primary muscle relative to the most trained group in the selected period.
+Full-body sets count for every muscle group, while secondary effort and recovery are not estimated.
+The optional 3D viewer continues to use BodyParts3D under CC BY 4.0.
+Weekly streaks on Home and Progress use the existing API calculation: consecutive Monday-to-Sunday weeks with a completed workout or logged activity, in the device's time zone.
+The current week stays open until Sunday ends, and the 12-week strip shows sessions per week independently of the selected Progress chart range.
 YouTube exercise demos load only after the user taps Watch demo.
 The Barbell Curl demo opens its original Vimeo page; the video is not copied into FitTune.
 
