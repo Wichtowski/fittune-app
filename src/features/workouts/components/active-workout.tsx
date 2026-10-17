@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { type DraftWorkout, edits, totals } from "../draft";
 import { useWorkoutStore } from "../store";
 import { SYNC_MUTATION_KEY, useDiscardWorkout } from "../use-workout-sync";
+import { AddWorkoutExercises } from "./add-workout-exercises";
 import { ExerciseCard } from "./exercise-card";
 import { FinishWorkoutDialog } from "./finish-workout-dialog";
 import { RestTimer } from "./rest-timer";
@@ -26,7 +27,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { PlacePicker } from "@/features/places/components/place-picker";
-import { ExercisePicker } from "@/features/exercises/components/exercise-picker";
 import { useNow } from "@/hooks/use-now";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -101,22 +101,11 @@ export function ActiveWorkout({ workout }: { workout: DraftWorkout }) {
         />
       </div>
 
-      <ExercisePicker
-        place={workout.place}
+      <AddWorkoutExercises
+        key={workout.id}
+        workout={workout}
         open={pickerOpen}
         onOpenChange={setPickerOpen}
-        onPick={(exercises) =>
-          edit(
-            edits.addExercises(
-              exercises.map((e) => ({
-                exercise_id: e.id,
-                exercise_name: e.name,
-                tracking: e.tracking,
-                primary_muscle: e.primary_muscle,
-              })),
-            ),
-          )
-        }
       />
       <DiscardDialog open={confirmDiscard} onOpenChange={setConfirmDiscard} workout={workout} />
       <RestTimer />

@@ -1,4 +1,10 @@
 export const pl: Record<string, string> = {
+  "Also save exercises to the routine?": "Zapisać ćwiczenia również w planie?",
+  "The exercises are added to this workout. Save them to the routine to include them next time, too.": "Ćwiczenia zostały dodane do tego treningu. Zapisz je w planie, aby pojawiły się również przy kolejnym treningu.",
+  "Only this workout": "Tylko ten trening",
+  "Save to routine": "Zapisz w planie",
+  "Exercises saved to routine": "Ćwiczenia zapisane w planie",
+  "Couldn't save exercises to the routine. They are kept in this workout. Try again when you're online.": "Nie udało się zapisać ćwiczeń w planie. Pozostają w bieżącym treningu. Spróbuj ponownie, gdy będziesz mieć połączenie z internetem.",
   "Weekly streak": "Seria tygodni",
   "This week complete": "Ten tydzień zaliczony",
   "Keep it going this week": "Podtrzymaj serię w tym tygodniu",
