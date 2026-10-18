@@ -41,7 +41,7 @@ export function FriendsPage() {
         </section>
         <section className="grid min-w-0 grid-cols-1 gap-3 lg:order-1">
           <Heading>{t("Recent sessions")}</Heading>
-          <FriendFeed emptyDescription={t("Finished workouts and activities your friends choose to share show up here.")} />
+          <FriendFeed emptyDescription={t("Workouts, activities and progress photos your friends choose to share show up here.")} />
         </section>
       </div>
     </>

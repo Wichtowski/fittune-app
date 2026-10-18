@@ -14,6 +14,7 @@ const options: { key: keyof Sharing; label: string; description: string }[] = [
   { key: "activities", label: "Activities", description: "Runs, rides and other sessions: distance and time. Never notes or heart rate." },
   { key: "stats", label: "Stats", description: "Totals and your weekly streak." },
   { key: "personal_records", label: "Personal records", description: "Your best lifts and efforts per exercise." },
+  { key: "photos", label: "Progress photos", description: "Every progress photo in your gallery, without the workout it belongs to." },
 ];
 
 /** What friends can see. Each change saves on its own */
@@ -48,7 +49,7 @@ export function SharingSettings() {
 
   return (
     <div className="grid grid-cols-1 gap-3">
-      <p className="text-sm text-muted-foreground">{t("Choose what your friends can see. Nothing is shared until you turn it on, and progress photos are never shared.")}</p>
+      <p className="text-sm text-muted-foreground">{t("Choose what your friends can see. Nothing is shared until you turn it on.")}</p>
       <div className="grid grid-cols-1 gap-2">
         {options.map((option) => (
           <label

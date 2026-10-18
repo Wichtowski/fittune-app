@@ -135,24 +135,7 @@ class FitTuneClient extends ApiClient {
       xhr.send(form);
     });
 
-  photoBlob = async (id: string, size: "full" | "thumb"): Promise<Blob> => {
-    const token = this.token();
-    if (!token) throw new ApiError(401, "unauthorized", "Sign in to view photos.");
-    let response: Response;
-    try {
-      response = await fetch(this.url(`/progress-photos/${id}/file?size=${size}`), {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
-    } catch {
-      reportNoResponse();
-      throw new ApiError(0, "network_error", "Photo unavailable while offline.");
-    }
-    reportResponse(response.status);
-    if (response.status === 401) this.unauthorized(token);
-    if (!response.ok) throw new ApiError(response.status, "photo_unavailable", "Could not load photo.");
-    return response.blob();
-  };
+  photoBlob = (id: string, size: "full" | "thumb") => this.imageBlob(`/progress-photos/${id}/file?size=${size}`);
 }
 
 export const fittune = new FitTuneClient();

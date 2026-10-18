@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { DumbbellIcon, UsersIcon } from "lucide-react";
+import { CameraIcon, DumbbellIcon, UsersIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { friendFeedQuery } from "@/api/friends";
 import { EmptyState } from "@/components/empty-state";
@@ -8,6 +9,7 @@ import { QueryFallback } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { activityIcons, activityRate } from "@/features/activity/meta";
+import { ProgressPhotoImage } from "@/features/progress/components/progress-photo";
 import { usePreferences } from "@/hooks/use-preferences";
 import { formatDay, formatDuration, formatTime } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -16,8 +18,16 @@ import { formatDistance, formatVolume } from "@/lib/units";
 import type { DistanceUnit, WeightUnit } from "@/schemas/common";
 import { displayName, type FeedEntry } from "@/schemas/friend";
 
-/** Shared sessions of every friend, or only of `userId` on a friend's profile */
-export function FriendFeed({ userId, emptyDescription }: { userId?: string; emptyDescription: string }) {
+/** Shared sessions and photos of every friend, or only of `userId` on a friend's profile */
+export function FriendFeed({
+  userId,
+  emptyDescription,
+  emptyAction,
+}: {
+  userId?: string;
+  emptyDescription: string;
+  emptyAction?: ReactNode;
+}) {
   const query = useInfiniteQuery(friendFeedQuery(userId));
   const { weightUnit, distanceUnit } = usePreferences();
   const entries = query.data?.pages.flatMap((page) => page.items);
@@ -32,7 +42,9 @@ export function FriendFeed({ userId, emptyDescription }: { userId?: string; empt
       </QueryFallback>
     );
   }
-  if (!entries.length) return <EmptyState icon={UsersIcon} title={t("Nothing shared yet")} description={emptyDescription} />;
+  if (!entries.length) {
+    return <EmptyState icon={UsersIcon} title={t("Nothing shared yet")} description={emptyDescription} action={emptyAction} />;
+  }
 
   return (
     <div className="grid grid-cols-1 gap-2">
@@ -63,6 +75,43 @@ function FeedEntryCard({
   weightUnit: WeightUnit;
   distanceUnit: DistanceUnit;
 }) {
+  const userLink = showUser ? (
+    <Link
+      to="/friends/$userId"
+      params={{ userId: entry.user.id }}
+      className="block truncate text-sm font-medium text-primary-strong underline-offset-4 hover:underline"
+    >
+      {displayName(entry.user)}
+    </Link>
+  ) : null;
+
+  if (entry.type === "photo") {
+    return (
+      <article className="grid gap-3 rounded-2xl border bg-card p-4">
+        <div className="flex gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <CameraIcon className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            {userLink}
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="truncate font-semibold">{t("Progress photo")}</h3>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {formatDay(entry.taken_at)} · {formatTime(entry.taken_at)}
+              </span>
+            </div>
+          </div>
+        </div>
+        <ProgressPhotoImage
+          id={entry.id}
+          ownerId={entry.user.id}
+          alt={t("Progress photo of {name}", { name: displayName(entry.user) })}
+          className="aspect-[3/4] w-full max-w-72 rounded-xl object-cover"
+        />
+      </article>
+    );
+  }
+
   const workout = entry.type === "workout";
   const Icon = workout ? DumbbellIcon : activityIcons[entry.kind];
   const rate = workout ? null : activityRate(entry.kind, entry.duration_seconds, entry.distance_m, distanceUnit);
@@ -75,15 +124,7 @@ function FeedEntryCard({
         <Icon className="size-5" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
-        {showUser ? (
-          <Link
-            to="/friends/$userId"
-            params={{ userId: entry.user.id }}
-            className="block truncate text-sm font-medium text-primary-strong underline-offset-4 hover:underline"
-          >
-            {displayName(entry.user)}
-          </Link>
-        ) : null}
+        {userLink}
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="truncate font-semibold">{entry.title}</h3>
           <span className="shrink-0 text-xs text-muted-foreground">

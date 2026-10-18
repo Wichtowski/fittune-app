@@ -15,7 +15,7 @@ afterEach(() => {
   getSharing.mockReset();
 });
 
-const nothing = { workouts: false, activities: false, stats: false, personal_records: false };
+const nothing = { workouts: false, activities: false, stats: false, personal_records: false, photos: false };
 
 function show() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
@@ -24,12 +24,12 @@ function show() {
 }
 
 describe("sharing settings", () => {
-  it("starts private and never offers progress photos", () => {
+  it("starts private, progress photos included", () => {
     show();
     const boxes = screen.getAllByRole("checkbox");
-    expect(boxes).toHaveLength(4);
+    expect(boxes).toHaveLength(5);
     for (const box of boxes) expect(box).not.toBeChecked();
-    expect(screen.queryByRole("checkbox", { name: /photo/i })).toBeNull();
+    expect(screen.getByRole("checkbox", { name: /Progress photos/ })).not.toBeChecked();
   });
 
   it("prevents overlapping privacy changes until the save and refresh finish", async () => {

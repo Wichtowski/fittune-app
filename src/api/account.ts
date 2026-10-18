@@ -64,7 +64,7 @@ class AccountClient extends ApiClient {
   getSharing = (signal?: AbortSignal) => this.request("/me/sharing", { schema: sharingSchema, signal });
   lookupUser = (username: string, signal?: AbortSignal) =>
     this.request("/users/lookup", { schema: userWithRelationshipSchema, query: { username }, signal });
-  /** Every friend's shared sessions, or one friend's when `userId` is given */
+  /** Every friend's shared sessions and photos, or one friend's when `userId` is given */
   getFriendFeed = (userId: string | undefined, cursor: string | undefined, signal?: AbortSignal) =>
     this.request(userId ? `/friends/${userId}/feed` : "/friends/feed", {
       schema: feedPageSchema,
@@ -76,6 +76,8 @@ class AccountClient extends ApiClient {
     this.request(`/friends/${userId}/stats/overview`, { schema: overviewSchema, query: { ...period, tz }, signal });
   getFriendRecords = (userId: string, signal?: AbortSignal) =>
     this.request(`/friends/${userId}/records`, { schema: z.array(exerciseRecordSchema), signal });
+  friendPhotoBlob = (userId: string, photoId: string, size: "full" | "thumb") =>
+    this.imageBlob(`/friends/${userId}/photos/${photoId}/file?size=${size}`);
   sendFriendRequest = (username: string) =>
     this.request("/friends/requests", { method: "POST", body: { username }, schema: userWithRelationshipSchema });
   acceptFriendRequest = (userId: string) =>

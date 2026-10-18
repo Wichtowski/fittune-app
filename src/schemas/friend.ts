@@ -10,12 +10,13 @@ export const publicUserSchema = z.object({
 });
 export type PublicUser = z.infer<typeof publicUserSchema>;
 
-/** What a user lets friends see. Progress photos are never shared */
+/** What a user lets friends see. Everything is private until the user opts in */
 export const sharingSchema = z.object({
   workouts: z.boolean(),
   activities: z.boolean(),
   stats: z.boolean(),
   personal_records: z.boolean(),
+  photos: z.boolean(),
 });
 export type Sharing = z.infer<typeof sharingSchema>;
 
@@ -70,7 +71,16 @@ const feedActivitySchema = z.object({
   elevation_gain_m: z.number().nullable(),
 });
 
-export const feedEntrySchema = z.discriminatedUnion("type", [feedWorkoutSchema, feedActivitySchema]);
+const feedPhotoSchema = z.object({
+  type: z.literal("photo"),
+  user: publicUserSchema,
+  id: z.guid(),
+  taken_at: timestampSchema,
+  width: z.number(),
+  height: z.number(),
+});
+
+export const feedEntrySchema = z.discriminatedUnion("type", [feedWorkoutSchema, feedActivitySchema, feedPhotoSchema]);
 export type FeedEntry = z.infer<typeof feedEntrySchema>;
 export const feedPageSchema = pageSchema(feedEntrySchema);
 

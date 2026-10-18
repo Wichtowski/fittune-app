@@ -47,6 +47,7 @@ const sharingLabels: Record<keyof Sharing, string> = {
   activities: "Activities",
   stats: "Stats",
   personal_records: "Personal records",
+  photos: "Progress photos",
 };
 
 export function FriendProfile({ userId }: { userId: string }) {
@@ -117,7 +118,7 @@ function FriendView({ friend }: { friend: Friend }) {
         {sharing.stats ? <FriendTotals userId={user.id} /> : null}
         {sharing.personal_records ? <FriendRecords userId={user.id} /> : null}
         {/* Last, since it pages on without end */}
-        {sharing.workouts || sharing.activities ? (
+        {sharing.workouts || sharing.activities || sharing.photos ? (
           <Section title={t("Recent sessions")}>
             <FriendFeed userId={user.id} emptyDescription={t("No finished sessions yet.")} />
           </Section>
